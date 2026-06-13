@@ -2,7 +2,16 @@
 
 import * as React from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, ArrowUp, Sparkles, FileText, BookOpen, Calculator, Wand2, Shuffle } from "lucide-react";
+import {
+  Search,
+  ArrowUp,
+  Sparkles,
+  FileText,
+  BookOpen,
+  Calculator,
+  Wand2,
+  Shuffle,
+} from "lucide-react";
 import { HERO_SEARCH_PLACEHOLDERS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
@@ -28,6 +37,7 @@ export function SearchMockup() {
   React.useEffect(() => {
     const target = HERO_SEARCH_PLACEHOLDERS[index] ?? "";
     let i = 0;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setTyped("");
     const id = window.setInterval(() => {
       i += 1;
@@ -51,12 +61,12 @@ export function SearchMockup() {
       {/* Glow behind */}
       <div
         aria-hidden="true"
-        className="absolute -inset-6 -z-10 rounded-[2rem] bg-brand-gradient opacity-20 blur-3xl"
+        className="bg-brand-gradient absolute -inset-6 -z-10 rounded-[2rem] opacity-20 blur-3xl"
       />
 
-      <div className="relative overflow-hidden rounded-2xl border border-border/80 bg-white/90 p-2 shadow-soft-lg backdrop-blur-xl">
-        <div className="flex items-center gap-2 rounded-xl bg-white px-4 py-3 shadow-soft">
-          <Search className="h-5 w-5 shrink-0 text-muted" />
+      <div className="border-border/80 shadow-soft-lg relative overflow-hidden rounded-2xl border bg-white/90 p-2 backdrop-blur-xl">
+        <div className="shadow-soft flex items-center gap-2 rounded-xl bg-white px-4 py-3">
+          <Search className="text-muted h-5 w-5 shrink-0" />
           <div className="relative flex-1 overflow-hidden">
             <AnimatePresence mode="wait">
               <motion.div
@@ -67,24 +77,24 @@ export function SearchMockup() {
                 transition={{ duration: 0.25 }}
                 className="flex items-center gap-2 text-sm sm:text-base"
               >
-                <ActiveIcon className="h-4 w-4 text-primary" />
+                <ActiveIcon className="text-primary h-4 w-4" />
                 <span className="text-foreground">
                   {typed}
-                  <span className="ml-0.5 inline-block h-4 w-px translate-y-0.5 animate-pulse bg-primary" />
+                  <span className="bg-primary ml-0.5 inline-block h-4 w-px translate-y-0.5 animate-pulse" />
                 </span>
               </motion.div>
             </AnimatePresence>
           </div>
           <kbd
             aria-hidden="true"
-            className="hidden h-7 select-none items-center gap-1 rounded-md border border-border bg-muted/5 px-2 font-mono text-xs text-muted sm:inline-flex"
+            className="border-border bg-muted/5 text-muted hidden h-7 items-center gap-1 rounded-md border px-2 font-mono text-xs select-none sm:inline-flex"
           >
             <span className="text-xs">⌘</span>K
           </kbd>
           <button
             type="button"
             aria-label="Search"
-            className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-brand-gradient text-white shadow-glow-sm transition-transform hover:scale-105"
+            className="bg-brand-gradient shadow-glow-sm inline-flex h-9 w-9 items-center justify-center rounded-lg text-white transition-transform hover:scale-105"
           >
             <ArrowUp className="h-4 w-4 rotate-45" />
           </button>
@@ -92,13 +102,13 @@ export function SearchMockup() {
 
         {/* Suggestion row */}
         <div className="mt-2 flex flex-wrap items-center gap-1.5 px-2 pb-1.5">
-          <span className="text-xs text-muted">Try:</span>
+          <span className="text-muted text-xs">Try:</span>
           {HERO_SEARCH_PLACEHOLDERS.slice(0, 4).map((s) => (
             <button
               key={s}
               type="button"
               className={cn(
-                "rounded-full border border-border/80 bg-white px-2.5 py-1 text-xs text-muted transition-colors",
+                "border-border/80 text-muted rounded-full border bg-white px-2.5 py-1 text-xs transition-colors",
                 "hover:border-primary/40 hover:bg-primary/5 hover:text-primary"
               )}
             >
@@ -109,16 +119,8 @@ export function SearchMockup() {
       </div>
 
       {/* Floating chip cards */}
-      <FloatingChip
-        className="-left-6 -top-6 hidden sm:flex"
-        label="AI Powered"
-        delay={0.6}
-      />
-      <FloatingChip
-        className="-right-4 top-12 hidden sm:flex"
-        label="500+ Tools"
-        delay={0.8}
-      />
+      <FloatingChip className="-top-6 -left-6 hidden sm:flex" label="AI Powered" delay={0.6} />
+      <FloatingChip className="top-12 -right-4 hidden sm:flex" label="500+ Tools" delay={0.8} />
       <FloatingChip
         className="-bottom-4 left-8 hidden sm:flex"
         label="Lightning Fast"
@@ -143,7 +145,7 @@ function FloatingChip({
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ delay, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
       className={cn(
-        "absolute z-10 items-center gap-1.5 rounded-full border border-border/80 bg-white px-3 py-1.5 text-xs font-medium text-foreground shadow-soft",
+        "border-border/80 text-foreground shadow-soft absolute z-10 items-center gap-1.5 rounded-full border bg-white px-3 py-1.5 text-xs font-medium",
         className
       )}
     >

@@ -32,8 +32,11 @@ export function Hero() {
   // play a subtle keystroke sound using WebAudio
   function playKeystroke() {
     try {
-      const Ctx = (window as any).AudioContext || (window as any).webkitAudioContext;
-      const ctx = new Ctx();
+      const Ctor =
+        window.AudioContext ??
+        (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+      if (!Ctor) return;
+      const ctx = new Ctor();
       const o = ctx.createOscillator();
       const g = ctx.createGain();
       o.type = "sine";
@@ -59,13 +62,17 @@ export function Hero() {
     if (phase === "typing") {
       const next = current.slice(0, displayText.length + 1);
       if (next === displayText) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setPhase("pausing");
       } else {
-        t = setTimeout(() => {
-          setDisplayText(next);
-          playKeystroke();
-          if (next === current) setPhase("pausing");
-        }, 80 + Math.random() * 60);
+        t = setTimeout(
+          () => {
+            setDisplayText(next);
+            playKeystroke();
+            if (next === current) setPhase("pausing");
+          },
+          80 + Math.random() * 60
+        );
       }
     } else if (phase === "pausing") {
       t = setTimeout(() => setPhase("deleting"), 900 + Math.random() * 400);
@@ -91,7 +98,7 @@ export function Hero() {
     >
       <AnimatedBackground />
 
-      <div className="container relative">
+      <div className="relative container">
         <div className="mx-auto flex max-w-3xl flex-col items-center text-center">
           <ComingSoonBadge />
 
@@ -99,7 +106,7 @@ export function Hero() {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-            className="mt-8 text-display-md font-semibold tracking-tight text-foreground sm:text-display-lg lg:text-display-xl whitespace-nowrap"
+            className="text-display-md text-foreground sm:text-display-lg lg:text-display-xl mt-8 font-semibold tracking-tight whitespace-nowrap"
           >
             Every tool you need in one place
           </motion.h1>
@@ -108,7 +115,7 @@ export function Hero() {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.25, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-            className="mt-4 max-w-2xl text-base leading-relaxed text-muted sm:text-lg"
+            className="text-muted mt-4 max-w-2xl text-base leading-relaxed sm:text-lg"
           >
             At your fingertips. Fast, simple, and 100% free.
           </motion.p>
@@ -117,7 +124,7 @@ export function Hero() {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.35, duration: 0.6 }}
-            className="mt-6 text-base font-medium text-foreground"
+            className="text-foreground mt-6 text-base font-medium"
           >
             Can’t find a tool you need?
           </motion.p>
@@ -126,7 +133,7 @@ export function Hero() {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.45, duration: 0.6 }}
-            className="mt-2 max-w-xl text-sm text-muted"
+            className="text-muted mt-2 max-w-xl text-sm"
           >
             Tell us what you want — we’ll build it for you.
           </motion.p>
@@ -154,7 +161,6 @@ export function Hero() {
           <div className="mt-12 w-full">
             <SearchMockup />
           </div>
- 
         </div>
       </div>
     </section>

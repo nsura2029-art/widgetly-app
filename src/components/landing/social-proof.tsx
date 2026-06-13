@@ -1,7 +1,14 @@
 "use client";
 
 import * as React from "react";
-import { motion, useInView, useMotionValue, useTransform, animate, useMotionValueEvent, type MotionValue } from "framer-motion";
+import {
+  useInView,
+  useMotionValue,
+  useTransform,
+  animate,
+  useMotionValueEvent,
+  type MotionValue,
+} from "framer-motion";
 import { Star, Users, Wrench, Layers } from "lucide-react";
 import { STATS } from "@/lib/constants";
 import { FadeIn } from "@/components/shared/fade-in";
@@ -16,22 +23,19 @@ export function SocialProof() {
   return (
     <section
       aria-labelledby="social-proof-title"
-      className="relative border-t border-border/60 bg-muted/5 py-16 sm:py-20"
+      className="border-border/60 bg-muted/5 relative border-t py-16 sm:py-20"
     >
       <div className="container">
         <FadeIn>
           <h2
             id="social-proof-title"
-            className="text-center text-xs font-medium uppercase tracking-wider text-muted"
+            className="text-muted text-center text-xs font-medium tracking-wider uppercase"
           >
             Trusted by builders around the world
           </h2>
         </FadeIn>
 
-        <Stagger
-          className="mt-10 grid grid-cols-2 gap-6 sm:grid-cols-4"
-          stagger={0.1}
-        >
+        <Stagger className="mt-10 grid grid-cols-2 gap-6 sm:grid-cols-4" stagger={0.1}>
           <Stat
             icon={<Wrench className="h-4 w-4" />}
             value={500}
@@ -63,15 +67,10 @@ export function SocialProof() {
         </Stagger>
 
         <FadeIn delay={0.3} className="mt-12 text-center">
-          <p className="text-sm text-muted">
-            <span className="font-semibold text-foreground">
-              {STATS.freeTools}
-            </span>{" "}
-            free tools ·{" "}
-            <span className="font-semibold text-foreground">
-              {STATS.uptimeTarget}
-            </span>{" "}
-            uptime target · zero ads
+          <p className="text-muted text-sm">
+            <span className="text-foreground font-semibold">{STATS.freeTools}</span> free tools ·{" "}
+            <span className="text-foreground font-semibold">{STATS.uptimeTarget}</span> uptime
+            target · zero ads
           </p>
         </FadeIn>
       </div>
@@ -111,17 +110,15 @@ function Stat({
     <StaggerItem>
       <div ref={ref} className="text-center">
         <div
-          className={`mx-auto mb-3 inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border/80 bg-white shadow-soft ${accent}`}
+          className={`border-border/80 shadow-soft mx-auto mb-3 inline-flex h-9 w-9 items-center justify-center rounded-lg border bg-white ${accent}`}
         >
           {icon}
         </div>
-        <div className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+        <div className="text-foreground text-3xl font-semibold tracking-tight sm:text-4xl">
           <CountUp value={rounded} />
           {suffix && <span className="text-foreground">{suffix}</span>}
         </div>
-        <div className="mt-1 text-xs font-medium uppercase tracking-wider text-muted">
-          {label}
-        </div>
+        <div className="text-muted mt-1 text-xs font-medium tracking-wider uppercase">{label}</div>
       </div>
     </StaggerItem>
   );

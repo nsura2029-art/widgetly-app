@@ -16,6 +16,9 @@ dist/
 # production
 .vercel/
 
+# opennext (Cloudflare Workers)
+.open-next/
+
 # misc
 .DS_Store
 *.pem

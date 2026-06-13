@@ -8,3 +8,5 @@ onlyBuiltDependencies:
   - sharp
   - unrs-resolver
   - workerd
+patchedDependencies:
+  '@opennextjs/aws@4.0.2': patches/@opennextjs__aws@4.0.2.patch

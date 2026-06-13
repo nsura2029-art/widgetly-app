@@ -78,9 +78,11 @@ export function LandmarksCollage({ variant = "collage" }: { variant?: Variant })
         {LANDMARKS.slice(0, 3).map((l) => (
           <figure
             key={l.file}
-            className="group overflow-hidden rounded-md border border-border/60 bg-white/5"
+            className="group border-border/60 overflow-hidden rounded-md border bg-white/5"
           >
             <div className="relative aspect-square w-full">
+              {/* Local SVG in /public — next/image not needed. */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={`/images/landmarks/${l.file}`}
                 alt={`${l.name} illustration`}
@@ -89,7 +91,7 @@ export function LandmarksCollage({ variant = "collage" }: { variant?: Variant })
                 className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
               />
             </div>
-            <figcaption className="px-2 py-1.5 text-[10px] font-medium text-muted">
+            <figcaption className="text-muted px-2 py-1.5 text-[10px] font-medium">
               {l.name}
             </figcaption>
           </figure>
@@ -103,9 +105,11 @@ export function LandmarksCollage({ variant = "collage" }: { variant?: Variant })
       {LANDMARKS.map((l) => (
         <figure
           key={l.file}
-          className="group relative overflow-hidden rounded-lg border border-border/60 bg-white/5 transition-colors hover:border-primary/40"
+          className="group border-border/60 hover:border-primary/40 relative overflow-hidden rounded-lg border bg-white/5 transition-colors"
         >
           <div className="relative aspect-square w-full">
+            {/* Local SVG in /public — next/image not needed. */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={`/images/landmarks/${l.file}`}
               alt={`${l.name} — ${l.location}`}
@@ -120,8 +124,8 @@ export function LandmarksCollage({ variant = "collage" }: { variant?: Variant })
             </div>
           </div>
           <figcaption className="flex items-baseline justify-between gap-2 px-3 py-2">
-            <span className="text-xs font-semibold text-foreground">{l.name}</span>
-            <span className="text-[10px] text-muted">{l.location}</span>
+            <span className="text-foreground text-xs font-semibold">{l.name}</span>
+            <span className="text-muted text-[10px]">{l.location}</span>
           </figcaption>
         </figure>
       ))}

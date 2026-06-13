@@ -1,7 +1,11 @@
 import type { NextConfig } from "next";
+import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare";
+
+initOpenNextCloudflareForDev();
 
 const nextConfig: NextConfig = {
-  output: "export",
+  // `output: "export"` was removed in Next 16. OpenNext handles the
+  // Workers output via its own adapter (see wrangler.toml).
   images: {
     unoptimized: true,
   },
@@ -12,31 +16,9 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: ["lucide-react", "framer-motion"],
   },
-  async headers() {
-    return [
-      {
-        source: "/(.*)",
-        headers: [
-          { key: "X-Content-Type-Options", value: "nosniff" },
-          { key: "X-Frame-Options", value: "DENY" },
-          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
-          {
-            key: "Permissions-Policy",
-            value: "camera=(), microphone=(), geolocation=()",
-          },
-        ],
-      },
-      {
-        source: "/fonts/(.*)",
-        headers: [
-          {
-            key: "Cache-Control",
-            value: "public, max-age=31536000, immutable",
-          },
-        ],
-      },
-    ];
-  },
+  // Security headers are applied via public/_headers (Cloudflare convention).
+  // For Workers, `headers()` here is no longer the right place since static
+  // export is gone and the response is produced by the worker at request time.
 };
 
 export default nextConfig;
