@@ -1,0 +1,139 @@
+"use client";
+
+import * as React from "react";
+import { motion, useInView, useMotionValue, useTransform, animate, useMotionValueEvent, type MotionValue } from "framer-motion";
+import { Star, Users, Wrench, Layers } from "lucide-react";
+import { STATS } from "@/lib/constants";
+import { FadeIn } from "@/components/shared/fade-in";
+import { Stagger, StaggerItem } from "@/components/shared/stagger";
+
+/**
+ * Social proof band. Stars on GitHub, waitlist signups, planned tools,
+ * and category count. Numbers animate from 0 to their target when the
+ * section enters the viewport.
+ */
+export function SocialProof() {
+  return (
+    <section
+      aria-labelledby="social-proof-title"
+      className="relative border-t border-border/60 bg-muted/5 py-16 sm:py-20"
+    >
+      <div className="container">
+        <FadeIn>
+          <h2
+            id="social-proof-title"
+            className="text-center text-xs font-medium uppercase tracking-wider text-muted"
+          >
+            Trusted by builders around the world
+          </h2>
+        </FadeIn>
+
+        <Stagger
+          className="mt-10 grid grid-cols-2 gap-6 sm:grid-cols-4"
+          stagger={0.1}
+        >
+          <Stat
+            icon={<Wrench className="h-4 w-4" />}
+            value={500}
+            suffix="+"
+            label="Tools Planned"
+            accent="text-primary"
+          />
+          <Stat
+            icon={<Layers className="h-4 w-4" />}
+            value={50}
+            suffix="+"
+            label="Categories"
+            accent="text-secondary"
+          />
+          <Stat
+            icon={<Star className="h-4 w-4" />}
+            value={2400}
+            suffix="+"
+            label="GitHub Stars"
+            accent="text-accent"
+          />
+          <Stat
+            icon={<Users className="h-4 w-4" />}
+            value={8500}
+            suffix="+"
+            label="Waitlist Signups"
+            accent="text-primary"
+          />
+        </Stagger>
+
+        <FadeIn delay={0.3} className="mt-12 text-center">
+          <p className="text-sm text-muted">
+            <span className="font-semibold text-foreground">
+              {STATS.freeTools}
+            </span>{" "}
+            free tools ·{" "}
+            <span className="font-semibold text-foreground">
+              {STATS.uptimeTarget}
+            </span>{" "}
+            uptime target · zero ads
+          </p>
+        </FadeIn>
+      </div>
+    </section>
+  );
+}
+
+function Stat({
+  icon,
+  value,
+  suffix,
+  label,
+  accent,
+}: {
+  icon: React.ReactNode;
+  value: number;
+  suffix?: string;
+  label: string;
+  accent: string;
+}) {
+  const ref = React.useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { once: true, margin: "-50px" });
+  const count = useMotionValue(0);
+  const rounded = useTransform(count, (v) => Math.round(v).toLocaleString());
+
+  React.useEffect(() => {
+    if (inView) {
+      const controls = animate(count, value, {
+        duration: 1.8,
+        ease: [0.16, 1, 0.3, 1],
+      });
+      return controls.stop;
+    }
+  }, [inView, value, count]);
+
+  return (
+    <StaggerItem>
+      <div ref={ref} className="text-center">
+        <div
+          className={`mx-auto mb-3 inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border/80 bg-white shadow-soft ${accent}`}
+        >
+          {icon}
+        </div>
+        <div className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+          <CountUp value={rounded} />
+          {suffix && <span className="text-foreground">{suffix}</span>}
+        </div>
+        <div className="mt-1 text-xs font-medium uppercase tracking-wider text-muted">
+          {label}
+        </div>
+      </div>
+    </StaggerItem>
+  );
+}
+
+/**
+ * Subscribes to a MotionValue<string> and renders its current value as
+ * a plain React text child. Avoids "Objects are not valid as a React child"
+ * by never letting a MotionValue reach React's renderer directly.
+ */
+function CountUp({ value }: { value: MotionValue<string> }) {
+  const [text, setText] = React.useState(value.get());
+  useMotionValueEvent(value, "change", (latest) => setText(latest));
+  return <>{text}</>;
+}

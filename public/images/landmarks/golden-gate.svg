@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none" role="img" aria-label="Golden Gate Bridge">
+  <defs>
+    <linearGradient id="gg-sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FCE7F3"/>
+      <stop offset="100%" stop-color="#EEF0FF"/>
+    </linearGradient>
+  </defs>
+  <rect width="200" height="200" rx="20" fill="url(#gg-sky)"/>
+  <!-- sun -->
+  <circle cx="155" cy="45" r="12" fill="#A855F7" opacity=".4"/>
+  <circle cx="155" cy="45" r="7" fill="#A855F7" opacity=".6"/>
+  <!-- distant hills -->
+  <path d="M0 130 Q30 115 60 125 Q90 110 120 122 Q150 108 180 120 Q190 122 200 125 L200 140 L0 140 Z" fill="#7B61FF" opacity=".2"/>
+  <!-- main cables curve -->
+  <path d="M20 75 Q100 165 180 75" fill="none" stroke="#5B6CFF" stroke-width="2" opacity=".7"/>
+  <!-- left tower -->
+  <rect x="42" y="55" width="8" height="100" fill="#A855F7"/>
+  <rect x="38" y="70" width="16" height="6" fill="#A855F7"/>
+  <rect x="38" y="110" width="16" height="6" fill="#A855F7"/>
+  <polygon points="42,55 50,55 46,40" fill="#7B61FF"/>
+  <!-- right tower -->
+  <rect x="150" y="55" width="8" height="100" fill="#A855F7"/>
+  <rect x="146" y="70" width="16" height="6" fill="#A855F7"/>
+  <rect x="146" y="110" width="16" height="6" fill="#A855F7"/>
+  <polygon points="150,55 158,55 154,40" fill="#7B61FF"/>
+  <!-- vertical suspender cables -->
+  <g stroke="#5B6CFF" stroke-width=".8" opacity=".6">
+    <line x1="55" y1="73" x2="55" y2="100"/>
+    <line x1="70" y1="93" x2="70" y2="100"/>
+    <line x1="85" y1="110" x2="85" y2="100"/>
+    <line x1="100" y1="122" x2="100" y2="100"/>
+    <line x1="115" y1="110" x2="115" y2="100"/>
+    <line x1="130" y1="93" x2="130" y2="100"/>
+    <line x1="145" y1="73" x2="145" y2="100"/>
+  </g>
+  <!-- bridge deck -->
+  <rect x="20" y="100" width="160" height="6" fill="#5B6CFF"/>
+  <rect x="20" y="106" width="160" height="4" fill="#7B61FF"/>
+  <!-- deck supports -->
+  <g stroke="#5B6CFF" stroke-width="1.2">
+    <line x1="50" y1="100" x2="50" y2="155"/>
+    <line x1="100" y1="100" x2="100" y2="155"/>
+    <line x1="154" y1="100" x2="154" y2="155"/>
+  </g>
+  <!-- water -->
+  <path d="M0 155 Q50 152 100 155 T200 155 L200 200 L0 200 Z" fill="#5B6CFF" opacity=".45"/>
+  <g stroke="#FFFFFF" stroke-width="1" stroke-linecap="round" opacity=".5">
+    <path d="M15 170 Q30 168 45 170" fill="none"/>
+    <path d="M75 178 Q100 176 125 178" fill="none"/>
+    <path d="M155 170 Q175 168 190 170" fill="none"/>
+    <path d="M30 188 Q55 186 75 188" fill="none"/>
+  </g>
+  <!-- small boat -->
+  <path d="M30 165 L45 165 L42 170 L33 170 Z" fill="#FFFFFF" opacity=".9"/>
+  <line x1="37" y1="165" x2="37" y2="158" stroke="#7B61FF" stroke-width="1"/>
+  <path d="M37 158 L42 165 L37 165 Z" fill="#A855F7"/>
+  <!-- fog wisps -->
+  <g fill="#FFFFFF" opacity=".4">
+    <ellipse cx="50" cy="30" rx="20" ry="3"/>
+    <ellipse cx="140" cy="22" rx="25" ry="3"/>
+  </g>
+</svg>

@@ -1,0 +1,15 @@
+/* TEAM
+  Widgetly is built by a small, distributed team. Contact: hello@widgetly.app
+*/
+
+# Owner
+Widgetly
+Site: https://widgetly.app
+Email: hello@widgetly.app
+GitHub: https://github.com/widgetly
+
+# Pages
+/        — Coming soon landing page
+/blog    — Product updates and guides
+/about   — About Widgetly
+/contact — Get in touch

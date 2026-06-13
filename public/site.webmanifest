@@ -1,0 +1,44 @@
+{
+  "name": "Widgetly",
+  "short_name": "Widgetly",
+  "description": "All-in-one AI tools platform: 500+ free online tools, calculators, converters, generators, PDF editors, and AI assistants.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FFFFFF",
+  "theme_color": "#FFFFFF",
+  "lang": "en-US",
+  "categories": ["productivity", "utilities", "education", "business"],
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "PDF Tools",
+      "url": "/#categories",
+      "description": "Merge, split, compress, and convert PDF files"
+    },
+    {
+      "name": "AI Tools",
+      "url": "/#categories",
+      "description": "AI writing, summarising, and generation tools"
+    },
+    {
+      "name": "Join Waitlist",
+      "url": "/#waitlist",
+      "description": "Get early access to Widgetly"
+    }
+  ]
+}

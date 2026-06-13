@@ -1,0 +1,166 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --font-inter: "Inter", system-ui, sans-serif;
+
+    /* Brand palette */
+    --brand-primary: 91 108 255;     /* #5B6CFF */
+    --brand-secondary: 123 97 255;   /* #7B61FF */
+    --brand-accent: 168 85 247;      /* #A855F7 */
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1, "ss01" 1, "cv11" 1;
+  }
+
+  /* Selection styling */
+  ::selection {
+    @apply bg-primary/20 text-foreground;
+  }
+
+  /* Focus ring reset that still respects keyboard nav */
+  :focus-visible {
+    @apply outline-none ring-2 ring-primary/50 ring-offset-2 ring-offset-background;
+  }
+
+  /* Reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer components {
+  /* Reusable gradient text utility */
+  .text-gradient {
+    @apply bg-brand-gradient bg-clip-text text-transparent;
+  }
+
+  /* Glassmorphism card */
+  .glass {
+    @apply border border-white/40 bg-white/70 backdrop-blur-xl backdrop-saturate-150;
+  }
+
+  /* Section container with consistent vertical rhythm */
+  .section {
+    @apply py-20 sm:py-28 lg:py-32;
+  }
+
+  /* Subtle dot grid for backgrounds */
+  .bg-dot-grid {
+    background-image: radial-gradient(
+      circle at 1px 1px,
+      rgba(15, 23, 42, 0.08) 1px,
+      transparent 0
+    );
+    background-size: 24px 24px;
+  }
+
+  /* Animated gradient border (used on focus / hover) */
+  .gradient-border {
+    position: relative;
+  }
+  .gradient-border::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(135deg, #5b6cff, #7b61ff, #a855f7);
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+}
+
+@layer utilities {
+  /* Hide scrollbar but keep functionality */
+  .scrollbar-none {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Text balance for headlines */
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  /* Minimal long-form content styling for SEO copy blocks and blog posts.
+     Avoids pulling in @tailwindcss/typography as a dep — covers what we
+     actually use: paragraphs, headings, lists, links, strong. */
+  .prose {
+    color: #475569;
+  }
+  .prose p {
+    margin-top: 1em;
+    margin-bottom: 1em;
+  }
+  .prose p:first-child {
+    margin-top: 0;
+  }
+  .prose p:last-child {
+    margin-bottom: 0;
+  }
+  .prose h2 {
+    margin-top: 2em;
+    margin-bottom: 0.5em;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #0f172a;
+    letter-spacing: -0.01em;
+  }
+  .prose h3 {
+    margin-top: 1.5em;
+    margin-bottom: 0.5em;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #0f172a;
+  }
+  .prose strong {
+    color: #0f172a;
+    font-weight: 600;
+  }
+  .prose ul {
+    margin-top: 1em;
+    margin-bottom: 1em;
+    padding-left: 1.5em;
+    list-style: disc;
+  }
+  .prose li {
+    margin-top: 0.25em;
+    margin-bottom: 0.25em;
+  }
+  .prose a {
+    color: #5b6cff;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+}

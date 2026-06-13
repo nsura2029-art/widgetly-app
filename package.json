@@ -1,0 +1,60 @@
+{
+  "name": "widgetly",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Widgetly - One Search. Endless Possibilities. An AI-powered utility platform with 500+ tools.",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "render:remotion": "remotion render src/remotion/index.tsx Audience out/remotion.mp4 --codec h264 --frames-per-second 30 --quality 80",
+    "lint": "next lint",
+    "type-check": "tsc --noEmit",
+    "format": "prettier --write \"**/*.{ts,tsx,md,json,css}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,md,json,css}\"",
+    "prepare": "husky",
+    "deploy": "wrangler pages deploy .vercel/output/static --project-name widgetly"
+  },
+  "remotion": {
+    "webpackOverride": "./remotion/webpack.override.js"
+  },
+  "dependencies": {
+    "@radix-ui/react-slot": "^1.1.0",
+    "class-variance-authority": "^0.7.0",
+    "clsx": "^2.1.1",
+    "framer-motion": "^11.11.17",
+    "lucide-react": "^0.460.0",
+    "next": "15.0.3",
+    "react": "^19.0.0-rc-66855b96-20241106",
+    "react-dom": "^19.0.0-rc-66855b96-20241106",
+    "tailwind-merge": "^2.5.4",
+    "tailwindcss-animate": "^1.0.7"
+  },
+  "devDependencies": {
+    "@cloudflare/next-on-pages": "^1.13.1",
+    "@types/node": "^22.9.0",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "autoprefixer": "^10.4.20",
+    "eslint": "^8.57.1",
+    "eslint-config-next": "15.0.3",
+    "husky": "^9.1.6",
+    "lint-staged": "^15.2.10",
+    "postcss": "^8.4.49",
+    "prettier": "^3.3.3",
+    "prettier-plugin-tailwindcss": "^0.6.8",
+    "remotion": "^4.0.475",
+    "tailwindcss": "^3.4.14",
+    "typescript": "^5.6.3",
+    "wrangler": "^3.85.0"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx}": [
+      "prettier --write",
+      "eslint --fix --max-warnings=0"
+    ],
+    "*.{json,md,css}": [
+      "prettier --write"
+    ]
+  }
+}

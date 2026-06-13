@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none" role="img" aria-label="Niagara Falls">
+  <defs>
+    <linearGradient id="nf-sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#EEF0FF"/>
+      <stop offset="100%" stop-color="#FFFFFF"/>
+    </linearGradient>
+    <linearGradient id="nf-water" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#5B6CFF"/>
+      <stop offset="100%" stop-color="#7B61FF"/>
+    </linearGradient>
+  </defs>
+  <rect width="200" height="200" rx="20" fill="url(#nf-sky)"/>
+  <!-- cliff top edge -->
+  <path d="M0 80 Q40 75 80 82 T160 80 Q180 78 200 82 L200 90 L0 90 Z" fill="#7B61FF" opacity=".25"/>
+  <!-- water falling -->
+  <path d="M30 90 L25 145 Q40 150 55 145 L50 90 Z" fill="url(#nf-water)"/>
+  <path d="M60 90 L58 150 Q75 155 90 150 L85 90 Z" fill="url(#nf-water)"/>
+  <path d="M95 90 L92 148 Q110 154 125 148 L122 90 Z" fill="url(#nf-water)"/>
+  <path d="M130 90 L128 150 Q145 155 160 150 L155 90 Z" fill="url(#nf-water)"/>
+  <path d="M165 90 L170 145 Q185 150 195 145 L195 90 Z" fill="url(#nf-water)"/>
+  <!-- white water streaks -->
+  <g stroke="#FFFFFF" stroke-width="1.4" stroke-linecap="round" opacity=".7">
+    <line x1="35" y1="100" x2="34" y2="135"/>
+    <line x1="42" y1="105" x2="41" y2="140"/>
+    <line x1="68" y1="100" x2="67" y2="140"/>
+    <line x1="78" y1="105" x2="77" y2="142"/>
+    <line x1="102" y1="100" x2="101" y2="138"/>
+    <line x1="112" y1="105" x2="111" y2="142"/>
+    <line x1="138" y1="100" x2="137" y2="140"/>
+    <line x1="148" y1="105" x2="147" y2="142"/>
+    <line x1="178" y1="100" x2="178" y2="138"/>
+  </g>
+  <!-- mist at bottom -->
+  <ellipse cx="100" cy="160" rx="95" ry="12" fill="#EEF0FF" opacity=".8"/>
+  <ellipse cx="60" cy="168" rx="40" ry="6" fill="#FFFFFF" opacity=".7"/>
+  <ellipse cx="140" cy="170" rx="50" ry="7" fill="#FFFFFF" opacity=".7"/>
+  <!-- pool / river -->
+  <path d="M0 165 Q50 160 100 165 T200 165 L200 200 L0 200 Z" fill="#5B6CFF" opacity=".35"/>
+  <g stroke="#FFFFFF" stroke-width="1" stroke-linecap="round" opacity=".5">
+    <path d="M20 180 Q35 178 50 180" fill="none"/>
+    <path d="M80 185 Q100 183 120 185" fill="none"/>
+    <path d="M150 180 Q170 178 185 180" fill="none"/>
+  </g>
+  <!-- cliff detail -->
+  <path d="M0 82 Q40 76 80 80 T160 78 Q180 76 200 80" fill="none" stroke="#7B61FF" stroke-width="2" opacity=".6"/>
+  <!-- small trees on top -->
+  <g fill="#5B6CFF" opacity=".7">
+    <circle cx="20" cy="76" r="3"/>
+    <circle cx="185" cy="74" r="3"/>
+  </g>
+  <!-- sun -->
+  <circle cx="160" cy="35" r="10" fill="#A855F7" opacity=".25"/>
+  <circle cx="160" cy="35" r="6" fill="#A855F7" opacity=".5"/>
+</svg>

@@ -1,0 +1,151 @@
+"use client";
+
+import * as React from "react";
+import Link from "next/link";
+import { ChevronRight, Home } from "lucide-react";
+import { cn } from "@/lib/utils";
+import {
+  generateBreadcrumbs,
+  generateBreadcrumbSchema,
+  type Crumb,
+} from "@/lib/breadcrumbs";
+
+/**
+ * Breadcrumb navigation. Server-rendered on the initial request (Next.js
+ * SSRs client components) so the visible nav and the JSON-LD are both in
+ * the initial HTML for crawlers. The first item ("Home") is always
+ * present; remove it via `hideHome`. The current page's last crumb is
+ * rendered as a non-interactive `<span>` with `aria-current="page"`.
+ * Intermediate items are real `<Link>`s (Next/Link → crawlable, prefetched).
+ *
+ * Pass `items` to skip path-based generation (e.g. when the visible
+ * trail is not derivable from the URL alone).
+ */
+export type BreadcrumbProps = {
+  /** The current path. Defaults to whatever the layout passes; pass explicitly in tests. */
+  path?: string;
+  /** Override the auto-generated trail. */
+  items?: Crumb[];
+  /** Override the auto-generated label for a given segment. */
+  customLabels?: Record<string, string>;
+  /** Drop the leading "Home" crumb. */
+  hideHome?: boolean;
+  /** Extra classes for the outer `<nav>`. */
+  className?: string;
+  /**
+   * Render the trailing JSON-LD script. Defaults to true. Disable if the
+   * page already emits breadcrumb schema (e.g. blog index) and you want
+   * to avoid duplication.
+   */
+  withSchema?: boolean;
+};
+
+export function Breadcrumb({
+  path = "/",
+  items,
+  customLabels,
+  hideHome = false,
+  className,
+  withSchema = true,
+}: BreadcrumbProps) {
+  // Memoize the trail so the JSON-LD and the visible nav stay in sync
+  // and re-renders are cheap.
+  const crumbs = React.useMemo(
+    () =>
+      items
+        ? items
+        : generateBreadcrumbs(path, { customLabels, hideHome }),
+    [items, path, customLabels, hideHome],
+  );
+  const schema = React.useMemo(
+    () => (withSchema ? generateBreadcrumbSchema(crumbs) : null),
+    [crumbs, withSchema],
+  );
+
+  // No trail → render nothing.
+  if (crumbs.length === 0) return null;
+
+  const lastIndex = crumbs.length - 1;
+
+  return (
+    <>
+      <nav
+        aria-label="Breadcrumb"
+        className={cn(
+          "border-b border-border/60 bg-white/60 backdrop-blur supports-[backdrop-filter]:bg-white/50",
+          className,
+        )}
+      >
+        <div className="container">
+          <ol
+            itemScope
+            itemType="https://schema.org/BreadcrumbList"
+            className="flex flex-wrap items-center gap-x-1.5 gap-y-1 py-2.5 text-sm text-muted sm:gap-x-2 sm:py-3 sm:text-sm"
+          >
+            {crumbs.map((crumb, i) => {
+              const isLast = i === lastIndex;
+              const position = i + 1;
+              return (
+                <li
+                  key={`${crumb.href}-${i}`}
+                  itemProp="itemListElement"
+                  itemScope
+                  itemType="https://schema.org/ListItem"
+                  className="inline-flex min-w-0 max-w-full items-center"
+                >
+                  <meta itemProp="position" content={String(position)} />
+
+                  {isLast ? (
+                    <span
+                      itemProp="name"
+                      aria-current="page"
+                      className="truncate font-semibold text-foreground"
+                      title={crumb.label}
+                    >
+                      {crumb.label}
+                    </span>
+                  ) : (
+                    <Link
+                      href={crumb.href}
+                      itemProp="item"
+                      className={cn(
+                        "inline-flex max-w-[12rem] items-center gap-1 truncate rounded-md px-1 py-0.5 align-middle",
+                        "transition-colors hover:text-foreground focus-visible:text-foreground",
+                        "sm:max-w-[16rem]",
+                      )}
+                      title={crumb.label}
+                    >
+                      {i === 0 && !hideHome ? (
+                        <Home
+                          aria-hidden="true"
+                          className="h-3.5 w-3.5 shrink-0"
+                        />
+                      ) : null}
+                      <span itemProp="name" className="truncate">
+                        {crumb.label}
+                      </span>
+                    </Link>
+                  )}
+
+                  {!isLast ? (
+                    <ChevronRight
+                      aria-hidden="true"
+                      className="mx-1 h-3.5 w-3.5 shrink-0 text-muted/70 sm:mx-1.5"
+                    />
+                  ) : null}
+                </li>
+              );
+            })}
+          </ol>
+        </div>
+      </nav>
+      {schema ? (
+        <script
+          type="application/ld+json"
+          // No user input; safe to inline.
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+        />
+      ) : null}
+    </>
+  );
+}
