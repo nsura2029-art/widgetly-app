@@ -32,9 +32,9 @@ export default function ContactPage() {
           <h1 className="text-2xl font-semibold">Thanks — message received</h1>
           <p className="text-muted mt-4">We'll get back to you shortly.</p>
           <div className="mt-6 flex justify-center">
-            <Link href="/">
-              <Button>Back to Home</Button>
-            </Link>
+            <Button asChild>
+              <Link href="/">Back to Home</Link>
+            </Button>
           </div>
         </div>
       </PageShell>
@@ -98,9 +98,9 @@ export default function ContactPage() {
 
           <div className="mt-4 flex items-center gap-3">
             <Button type="submit">Send message</Button>
-            <Link href="/">
-              <Button variant="outline">Cancel</Button>
-            </Link>
+            <Button asChild variant="outline">
+              <Link href="/">Cancel</Link>
+            </Button>
           </div>
         </form>
       </div>
