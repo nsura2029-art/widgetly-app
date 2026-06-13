@@ -2,25 +2,23 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Clock } from "lucide-react";
-import { BLOG_POSTS, BLOG_POSTS as ALL_POSTS, getBlogPost } from "@/lib/blog";
+import { BLOG_POSTS as ALL_POSTS, getBlogPost } from "@/lib/blog";
 import { SITE_CONFIG } from "@/lib/constants";
 import { articleJsonLd, breadcrumbJsonLd } from "@/lib/seo-schemas";
+import { PageShell } from "@/components/layout/page-shell";
+import { BreadcrumbConfig } from "@/components/layout/breadcrumb-nav";
 
 /**
  * Static-export friendly: enumerate every blog slug at build time.
  * `dynamicParams = false` means unknown slugs 404.
  */
 export function generateStaticParams() {
-  return BLOG_POSTS.map((p) => ({ slug: p.slug }));
+  return ALL_POSTS.map((p) => ({ slug: p.slug }));
 }
 
 export const dynamic = "force-static";
 
-export function generateMetadata({
-  params,
-}: {
-  params: { slug: string };
-}): Metadata {
+export function generateMetadata({ params }: { params: { slug: string } }): Metadata {
   const post = getBlogPost(params.slug);
   if (!post) return { title: "Not Found" };
   const canonical = `${SITE_CONFIG.url}/blog/${post.slug}`;
@@ -48,11 +46,7 @@ export function generateMetadata({
   };
 }
 
-export default function BlogPostPage({
-  params,
-}: {
-  params: { slug: string };
-}) {
+export default function BlogPostPage({ params }: { params: { slug: string } }) {
   const post = getBlogPost(params.slug);
   if (!post) notFound();
 
@@ -89,24 +83,27 @@ export default function BlogPostPage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(ldBreadcrumb) }}
       />
-      <main className="container max-w-3xl py-20">
+      {/* Override the auto-generated label for the slug segment with the
+          real post title (the URL slug alone is opaque). */}
+      <BreadcrumbConfig customLabels={{ [post.slug]: post.title }} suppressSchema />
+      <PageShell width="wide">
         <Link
           href="/blog"
-          className="inline-flex items-center gap-1 text-sm text-muted hover:text-foreground"
+          className="text-muted hover:text-foreground inline-flex items-center gap-1 text-sm"
         >
           <ArrowLeft className="h-3.5 w-3.5" /> All posts
         </Link>
 
         <article className="mt-8">
           <header>
-            <div className="text-xs font-medium uppercase tracking-wider text-primary">
+            <div className="text-primary text-xs font-medium tracking-wider uppercase">
               {post.category}
             </div>
-            <h1 className="mt-2 text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+            <h1 className="text-foreground mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">
               {post.title}
             </h1>
-            <p className="mt-4 text-lg text-muted">{post.description}</p>
-            <div className="mt-6 flex flex-wrap items-center gap-3 text-sm text-muted">
+            <p className="text-muted mt-4 text-lg">{post.description}</p>
+            <div className="text-muted mt-6 flex flex-wrap items-center gap-3 text-sm">
               <span>By {post.author}</span>
               <span aria-hidden="true">·</span>
               <time dateTime={post.publishedAt}>
@@ -124,16 +121,13 @@ export default function BlogPostPage({
             </div>
           </header>
 
-          <div className="prose prose-slate mt-10 max-w-none text-base leading-relaxed text-foreground">
+          <div className="prose prose-slate text-foreground mt-10 max-w-none text-base leading-relaxed">
             <p>
-              This is a preview post on the Widgetly blog. Full content
-              arrives at launch — in the meantime, every post is indexable,
-              has rich-result schema, and links back to relevant tools and
-              categories across the site.
+              This is a preview post on the Widgetly blog. Full content arrives at launch — in the
+              meantime, every post is indexable, has rich-result schema, and links back to relevant
+              tools and categories across the site.
             </p>
-            <p>
-              {post.description}
-            </p>
+            <p>{post.description}</p>
             <h2>What you'll learn</h2>
             <ul>
               {post.tags.map((t) => (
@@ -144,30 +138,26 @@ export default function BlogPostPage({
         </article>
 
         {related.length > 0 && (
-          <aside className="mt-16 border-t border-border/60 pt-10">
-            <h2 className="text-lg font-semibold tracking-tight text-foreground">
-              Related posts
-            </h2>
+          <aside className="border-border/60 mt-16 border-t pt-10">
+            <h2 className="text-foreground text-lg font-semibold tracking-tight">Related posts</h2>
             <ul className="mt-6 grid gap-4 sm:grid-cols-3">
               {related.map((p) => (
                 <li key={p.slug}>
                   <Link
                     href={`/blog/${p.slug}`}
-                    className="block rounded-xl border border-border/60 bg-white p-4 shadow-soft transition-colors hover:border-primary/40"
+                    className="border-border/60 shadow-soft hover:border-primary/40 block rounded-xl border bg-white p-4 transition-colors"
                   >
-                    <div className="text-xs font-medium uppercase tracking-wider text-primary">
+                    <div className="text-primary text-xs font-medium tracking-wider uppercase">
                       {p.category}
                     </div>
-                    <h3 className="mt-2 text-sm font-semibold text-foreground">
-                      {p.title}
-                    </h3>
+                    <h3 className="text-foreground mt-2 text-sm font-semibold">{p.title}</h3>
                   </Link>
                 </li>
               ))}
             </ul>
           </aside>
         )}
-      </main>
+      </PageShell>
     </>
   );
 }

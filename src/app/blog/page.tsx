@@ -4,6 +4,7 @@ import { ArrowRight, Clock } from "lucide-react";
 import { BLOG_POSTS, type BlogPostMeta } from "@/lib/blog";
 import { SITE_CONFIG } from "@/lib/constants";
 import { blogJsonLd } from "@/lib/seo-schemas";
+import { PageShell } from "@/components/layout/page-shell";
 
 export const metadata: Metadata = {
   title: "Blog | Widgetly — Product Updates, Guides & Best-Of Lists",
@@ -30,17 +31,17 @@ export default function BlogIndexPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(ldBlog) }}
       />
-      <main className="container max-w-4xl py-20">
+      <PageShell width="wide">
         <header className="mx-auto max-w-2xl text-center">
-          <span className="inline-flex items-center rounded-full border border-border/80 bg-white px-3 py-1 text-xs font-medium text-muted shadow-soft">
+          <span className="border-border/80 text-muted shadow-soft inline-flex items-center rounded-full border bg-white px-3 py-1 text-xs font-medium">
             Widgetly Blog
           </span>
-          <h1 className="mt-4 text-display-sm font-semibold tracking-tight text-foreground sm:text-display-md">
+          <h1 className="text-display-sm text-foreground sm:text-display-md mt-4 font-semibold tracking-tight">
             Product updates, guides, and curated best-of lists
           </h1>
-          <p className="mt-4 text-base text-muted sm:text-lg">
-            Writing on AI tools, productivity, PDF, developer utilities, and
-            everything in between. New posts weekly.
+          <p className="text-muted mt-4 text-base sm:text-lg">
+            Writing on AI tools, productivity, PDF, developer utilities, and everything in between.
+            New posts weekly.
           </p>
         </header>
 
@@ -51,27 +52,24 @@ export default function BlogIndexPage() {
             </li>
           ))}
         </ul>
-      </main>
+      </PageShell>
     </>
   );
 }
 
 function BlogCard({ post }: { post: BlogPostMeta }) {
   return (
-    <article className="group h-full rounded-2xl border border-border/60 bg-white p-6 shadow-soft transition-all hover:border-primary/40 hover:shadow-soft-lg">
-      <div className="text-xs font-medium uppercase tracking-wider text-primary">
+    <article className="group border-border/60 shadow-soft hover:border-primary/40 hover:shadow-soft-lg relative h-full rounded-2xl border bg-white p-6 transition-all">
+      <div className="text-primary text-xs font-medium tracking-wider uppercase">
         {post.category}
       </div>
-      <h2 className="mt-2 text-lg font-semibold tracking-tight text-foreground">
-        <Link
-          href={`/blog/${post.slug}`}
-          className="after:absolute after:inset-0 hover:underline"
-        >
+      <h2 className="text-foreground mt-2 text-lg font-semibold tracking-tight">
+        <Link href={`/blog/${post.slug}`} className="after:absolute after:inset-0 hover:underline">
           {post.title}
         </Link>
       </h2>
-      <p className="mt-2 text-sm text-muted line-clamp-3">{post.description}</p>
-      <div className="mt-4 flex items-center gap-3 text-xs text-muted">
+      <p className="text-muted mt-2 line-clamp-3 text-sm">{post.description}</p>
+      <div className="text-muted mt-4 flex items-center gap-3 text-xs">
         <time dateTime={post.publishedAt}>{formatDate(post.publishedAt)}</time>
         <span aria-hidden="true">·</span>
         <span className="inline-flex items-center gap-1">
@@ -81,7 +79,7 @@ function BlogCard({ post }: { post: BlogPostMeta }) {
       </div>
       <Link
         href={`/blog/${post.slug}`}
-        className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-primary group-hover:gap-2"
+        className="text-primary mt-4 inline-flex items-center gap-1 text-sm font-semibold group-hover:gap-2"
       >
         Read post <ArrowRight className="h-3.5 w-3.5" />
       </Link>

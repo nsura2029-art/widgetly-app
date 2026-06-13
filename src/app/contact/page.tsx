@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { PageShell } from "@/components/layout/page-shell";
 
 export default function ContactPage() {
   const [name, setName] = useState("");
@@ -26,25 +27,27 @@ export default function ContactPage() {
 
   if (submitted) {
     return (
-      <div className="container py-20">
-        <div className="mx-auto max-w-2xl rounded-xl border border-border/60 bg-white/90 p-8 text-center shadow-soft">
+      <PageShell width="narrow">
+        <div className="border-border/60 shadow-soft rounded-2xl border bg-white p-8 text-center sm:p-10">
           <h1 className="text-2xl font-semibold">Thanks — message received</h1>
-          <p className="mt-4 text-muted">We'll get back to you shortly.</p>
+          <p className="text-muted mt-4">We'll get back to you shortly.</p>
           <div className="mt-6 flex justify-center">
             <Link href="/">
               <Button>Back to Home</Button>
             </Link>
           </div>
         </div>
-      </div>
+      </PageShell>
     );
   }
 
   return (
-    <div className="container py-20">
-      <div className="mx-auto max-w-2xl rounded-xl border border-border/60 bg-white/90 p-8 shadow-soft">
+    <PageShell width="narrow">
+      <div className="border-border/60 shadow-soft rounded-2xl border bg-white p-6 sm:p-8">
         <h1 className="text-2xl font-semibold">Contact us</h1>
-        <p className="mt-2 text-sm text-muted">Contact us to report a problem, clarify any doubts about Widgetly, or just find out more.</p>
+        <p className="text-muted mt-2 text-sm">
+          Contact us to report a problem, clarify any doubts about Widgetly, or just find out more.
+        </p>
 
         <form onSubmit={handleSubmit} className="mt-6 space-y-4">
           <div>
@@ -53,7 +56,7 @@ export default function ContactPage() {
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full rounded-md border border-border/70 px-3 py-2"
+              className="border-border/70 w-full rounded-md border px-3 py-2"
               placeholder="Your name"
             />
           </div>
@@ -64,7 +67,7 @@ export default function ContactPage() {
               required
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full rounded-md border border-border/70 px-3 py-2"
+              className="border-border/70 w-full rounded-md border px-3 py-2"
               rows={4}
               placeholder="How can we help?"
             />
@@ -75,7 +78,7 @@ export default function ContactPage() {
             <input
               value={category}
               onChange={(e) => setCategory(e.target.value)}
-              className="w-full rounded-md border border-border/70 px-3 py-2"
+              className="border-border/70 w-full rounded-md border px-3 py-2"
               placeholder="e.g. Bug report, Billing, Feature request"
             />
           </div>
@@ -86,7 +89,7 @@ export default function ContactPage() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-md border border-border/70 px-3 py-2"
+              className="border-border/70 w-full rounded-md border px-3 py-2"
               placeholder="your@email.com"
             />
           </div>
@@ -101,6 +104,6 @@ export default function ContactPage() {
           </div>
         </form>
       </div>
-    </div>
+    </PageShell>
   );
 }

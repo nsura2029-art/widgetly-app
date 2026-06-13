@@ -29,24 +29,12 @@ const jsonLdOrg = organizationJsonLd();
 const jsonLdApp = softwareApplicationJsonLd();
 const jsonLdFaq = faqJsonLd(FAQS);
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html
-      lang="en"
-      className={inter.variable}
-      suppressHydrationWarning
-    >
+    <html lang="en" className={inter.variable} suppressHydrationWarning>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link
-          rel="preconnect"
-          href="https://fonts.gstatic.com"
-          crossOrigin="anonymous"
-        />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         {/* DNS prefetch for any future third-party origins (analytics, ads). */}
         <link rel="dns-prefetch" href="//www.google-analytics.com" />
         <link rel="dns-prefetch" href="//cdn.jsdelivr.net" />
@@ -68,16 +56,28 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdFaq) }}
         />
       </head>
-      <body className="min-h-screen bg-background font-sans antialiased">
+      <body className="bg-background min-h-screen font-sans antialiased">
         <a
           href="#main"
-          className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[100] focus:rounded-md focus:bg-foreground focus:px-3 focus:py-2 focus:text-sm focus:text-background"
+          className="focus:bg-foreground focus:text-background sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[100] focus:rounded-md focus:px-3 focus:py-2 focus:text-sm"
         >
           Skip to content
         </a>
         <ClientHeader />
-        <BreadcrumbNav />
+        {/*
+          The root <main> is provided here exactly once. Pages must NOT
+          wrap their content in another <main> - use <PageShell /> (or a
+          Tailwind `.container` for the rare full-width case) instead.
+
+          The sticky 64px header is cleared by `pt-16` on <main>. The
+          breadcrumb lives INSIDE <main> at the top so it shares the
+          same `.container` width as the page body (predictable
+          alignment, important for future ad slots) and sits in a
+          predictable place on every page, including the legal pages.
+          The breadcrumb itself is hidden on the homepage.
+        */}
         <main id="main" className="pt-16">
+          <BreadcrumbNav />
           {children}
         </main>
         <Footer />

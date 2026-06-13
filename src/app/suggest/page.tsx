@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { PageShell } from "@/components/layout/page-shell";
 
 export default function SuggestPage() {
   const [name, setName] = useState("");
@@ -26,24 +27,25 @@ export default function SuggestPage() {
 
   if (submitted) {
     return (
-      <div className="container py-20">
-        <div className="mx-auto max-w-2xl rounded-xl border border-border/60 bg-white/90 p-8 text-center shadow-soft">
+      <PageShell width="narrow">
+        <div className="border-border/60 shadow-soft rounded-2xl border bg-white p-8 text-center sm:p-10">
           <h1 className="text-2xl font-semibold">Got it!</h1>
-          <p className="mt-4 text-muted">We'll build it if enough users request it.</p>
+          <p className="text-muted mt-4">We'll build it if enough users request it.</p>
           <div className="mt-6 flex justify-center">
             <Link href="/">
               <Button>Back to Home</Button>
             </Link>
           </div>
         </div>
-      </div>
+      </PageShell>
     );
   }
+
   return (
-    <div className="container py-20">
-      <div className="mx-auto max-w-2xl rounded-xl border border-border/60 bg-white/90 p-8 shadow-soft">
+    <PageShell width="narrow">
+      <div className="border-border/60 shadow-soft rounded-2xl border bg-white p-6 sm:p-8">
         <h1 className="text-2xl font-semibold">Suggest a Tool</h1>
-        <p className="mt-2 text-sm text-muted">Let us know what you'd like to see added.</p>
+        <p className="text-muted mt-2 text-sm">Let us know what you'd like to see added.</p>
 
         <form onSubmit={handleSubmit} className="mt-6 space-y-4">
           <div>
@@ -52,7 +54,7 @@ export default function SuggestPage() {
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full rounded-md border border-border/70 px-3 py-2"
+              className="border-border/70 w-full rounded-md border px-3 py-2"
               placeholder="e.g. PDF Summarizer"
             />
           </div>
@@ -63,7 +65,7 @@ export default function SuggestPage() {
               required
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full rounded-md border border-border/70 px-3 py-2"
+              className="border-border/70 w-full rounded-md border px-3 py-2"
               rows={4}
               placeholder="Briefly describe what the tool does and why it's useful"
             />
@@ -74,7 +76,7 @@ export default function SuggestPage() {
             <input
               value={category}
               onChange={(e) => setCategory(e.target.value)}
-              className="w-full rounded-md border border-border/70 px-3 py-2"
+              className="border-border/70 w-full rounded-md border px-3 py-2"
               placeholder="e.g. Productivity, AI, Education"
             />
           </div>
@@ -85,7 +87,7 @@ export default function SuggestPage() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-md border border-border/70 px-3 py-2"
+              className="border-border/70 w-full rounded-md border px-3 py-2"
               placeholder="your@email.com"
             />
           </div>
@@ -100,6 +102,6 @@ export default function SuggestPage() {
           </div>
         </form>
       </div>
-    </div>
+    </PageShell>
   );
 }
