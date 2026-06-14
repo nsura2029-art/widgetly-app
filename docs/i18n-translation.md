@@ -8,10 +8,9 @@ translating string values (not keys).
 
 ## Quick start (local)
 
-```bash
-# Pick a provider and run a full pass.
-# The script is idempotent: re-runs skip strings already translated.
+### Option A: API-based (needs a key)
 
+```bash
 # 1. DeepL (best quality for European languages, ~$0.05 for 196 × 22 strings)
 DEEPL_API_KEY=... pnpm i18n:translate:deepl
 
@@ -34,6 +33,63 @@ DEEPL_API_KEY=... node scripts/translate-messages.mjs --provider=deepl --locales
 
 # 7. Dry-run preview (no API calls, no file writes)
 pnpm i18n:translate:dry
+```
+
+### Option B: File-based (no API key, works with DeepL web UI / Google web UI / ChatGPT / human translators)
+
+```bash
+# 1. Generate the per-locale .txt files for translation.
+pnpm i18n:export
+# This creates:
+#   tmp/translate/en.json             (copy of source for reference)
+#   tmp/translate/<locale>.txt        (one line per string: <id>\t<text>)
+#   tmp/translate/<locale>.ids.json   (id -> { path, tags } mapping)
+
+# 2. Upload each tmp/translate/<locale>.txt to the translator of choice:
+#    - DeepL web UI:    deepl.com/translator -> "Translate files" -> upload .txt
+#    - Google Translate: translate.google.com -> "Documents" tab -> upload .txt
+#    - ChatGPT:         paste the file contents, ask for translation,
+#                       save the response back to the same path
+#    - Human:           send the .txt to a translator, get it back translated
+#
+#    DeepL Pro/Free tips:
+#      - "Preserve formatting" should be ON (it is by default)
+#      - "Source language" = English, "Target language" = <locale>
+#      - For zh-CN / zh-TW, pick the matching Chinese variant
+#    After translation, download the file back to tmp/translate/<locale>.txt.
+
+# 3. Import the translated files.
+pnpm i18n:import
+#   ✓ es  196 imported,   0 skipped,   0 placeholder warnings
+#   ✓ pt  196 imported,   0 skipped,   0 placeholder warnings
+#   ✓ fr  196 imported,   0 skipped,   0 placeholder warnings
+
+# 4. Clean up.
+rm -rf tmp/translate
+```
+
+The file-based workflow is:
+- **API-free** (no DeepL/Google API key needed)
+- **Provider-agnostic** (any tool that can translate a .txt works)
+- **Auditable** (you can read every translation before importing)
+- **Resumable** (the import skips strings that already have a non-English value in the target locale, so partial passes are fine)
+- **ICU-safe** (placeholders are wrapped as `<xN>name</xN>` before translation, then unwrapped to `{name}` on import — so DeepL doesn't try to translate the variable names)
+
+### Option C: Incremental update (for already-partially-translated locales)
+
+```bash
+# If a locale already has some translations (e.g. id.json has 66
+# LibreTranslate strings from a previous pass), use --mode=missing
+# to export only the strings still equal to English. Smaller files,
+# faster to translate, no risk of overwriting good translations.
+
+pnpm i18n:export:missing
+#   id  130 exported,  66 already translated (skipped)  (of 196 total)
+#   ... (same for the other locales)
+
+# ... translate the .txt files ...
+
+pnpm i18n:import
 ```
 
 ## Provider reference
