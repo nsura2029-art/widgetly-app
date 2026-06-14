@@ -20,7 +20,7 @@ import { cn } from "@/lib/utils";
 type SubmitState =
   | { kind: "idle" }
   | { kind: "submitting" }
-  | { kind: "success"; slug: string }
+  | { kind: "success"; slug: string; submittedKnownIdea: boolean }
   | { kind: "error"; message: string; fieldErrors?: Record<string, string> };
 
 const MAX_DESCRIPTION_LENGTH = 2000;
@@ -51,27 +51,96 @@ const HOW_IT_WORKS = [
  * moment a public board exists this component reads from it without
  * a visual change.
  */
-function TopRequestsHook() {
+function TopRequestsHook({
+  top,
+}: {
+  top: ReadonlyArray<{
+    slug: string;
+    name: string;
+    voteCount: number;
+    pitch: string;
+    statusLabel: string;
+  }>;
+}) {
+  if (top.length === 0) {
+    return (
+      <div className="border-border/60 bg-muted/5 mt-4 rounded-xl border p-3.5">
+        <div className="flex items-center justify-between">
+          <p className="text-foreground text-xs font-semibold">What we&apos;re building next</p>
+          <span className="text-muted text-[10px] tracking-wide uppercase">Pre-launch</span>
+        </div>
+        <p className="text-muted mt-2.5 text-[11px] leading-snug">
+          The public suggestion board opens with launch. Hit{" "}
+          <span className="text-foreground font-medium">{SUGGESTION_THRESHOLD} votes</span> and your
+          idea jumps to the top of our build queue.
+        </p>
+        <p className="text-muted mt-2 text-[11px] leading-snug">
+          For now, every submission goes straight to the team. We read all of them and reply
+          personally to anything that needs a follow-up.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="border-border/60 bg-muted/5 mt-4 rounded-xl border p-3.5">
       <div className="flex items-center justify-between">
-        <p className="text-foreground text-xs font-semibold">What we&apos;re building next</p>
-        <span className="text-muted text-[10px] tracking-wide uppercase">Pre-launch</span>
+        <p className="text-foreground text-xs font-semibold">Top requests from the community</p>
+        <span className="text-muted text-[10px] tracking-wide uppercase">Live</span>
       </div>
+      <ul className="mt-2.5 space-y-1.5">
+        {top.map((t, i) => {
+          const max = top[0]?.voteCount ?? 1;
+          const pct = Math.max(8, Math.round((t.voteCount / max) * 100));
+          return (
+            <li key={t.slug}>
+              <Link
+                href={`/suggest/${t.slug}`}
+                className="group block rounded-md transition-colors hover:bg-white/60"
+              >
+                <div className="relative overflow-hidden rounded-md">
+                  <div
+                    className="absolute inset-y-0 left-0 rounded-md bg-gradient-to-r from-primary/15 to-secondary/15 transition-all group-hover:from-primary/25 group-hover:to-secondary/25"
+                    style={{ width: `${pct}%` }}
+                    aria-hidden="true"
+                  />
+                  <div className="relative z-10 flex items-center gap-2 px-2 py-1.5 text-xs">
+                    <span className="text-muted-foreground/70 w-3 shrink-0 text-right tabular-nums">
+                      {i + 1}
+                    </span>
+                    <span className="text-foreground flex-1 truncate font-medium">
+                      {t.name}
+                    </span>
+                    <span className="text-muted shrink-0 tabular-nums">
+                      {t.voteCount.toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
       <p className="text-muted mt-2.5 text-[11px] leading-snug">
-        The public suggestion board opens with launch. Hit{" "}
+        Hit{" "}
         <span className="text-foreground font-medium">{SUGGESTION_THRESHOLD} votes</span> and your
         idea jumps to the top of our build queue.
-      </p>
-      <p className="text-muted mt-2 text-[11px] leading-snug">
-        For now, every submission goes straight to the team. We read all of them and reply
-        personally to anything that needs a follow-up.
       </p>
     </div>
   );
 }
 
-export function SuggestClient() {
+export function SuggestClient({
+  topSuggestions,
+}: {
+  topSuggestions: ReadonlyArray<{
+    slug: string;
+    name: string;
+    voteCount: number;
+    pitch: string;
+    statusLabel: string;
+  }>;
+}) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("");
@@ -108,7 +177,11 @@ export function SuggestClient() {
         });
         return;
       }
-      setState({ kind: "success", slug: body.slug });
+      setState({
+        kind: "success",
+        slug: body.slug,
+        submittedKnownIdea: topSuggestions.some((t) => t.slug === body.slug),
+      });
     } catch {
       setState({
         kind: "error",
@@ -130,15 +203,35 @@ export function SuggestClient() {
             {email ? <span className="text-foreground font-medium">{email}</span> : "your email"} if
             we need more detail.
           </p>
-          {state.slug && (
+          {state.submittedKnownIdea ? (
             <p className="text-muted mt-2 text-xs">
-              Tracked as <span className="text-foreground font-mono">/suggest/{state.slug}</span>
+              That idea is already in our build queue — take a look:
             </p>
+          ) : (
+            state.slug && (
+              <p className="text-muted mt-2 text-xs">
+                Internal reference:{" "}
+                <span className="text-foreground font-mono">/suggest/{state.slug}</span>
+                <br />
+                <span className="text-muted">
+                  We&apos;ll publish a public page for it once we accept it into the queue.
+                </span>
+              </p>
+            )
           )}
           <div className="mt-6 flex flex-wrap justify-center gap-3">
-            <Button asChild>
-              <Link href="/">Back to Home</Link>
-            </Button>
+            {state.submittedKnownIdea && state.slug ? (
+              <Button asChild>
+                <Link href={`/suggest/${state.slug}`}>
+                  See the suggestion page
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </Button>
+            ) : (
+              <Button asChild>
+                <Link href="/">Back to Home</Link>
+              </Button>
+            )}
             <Button asChild variant="outline">
               <Link href="/blog">Read the blog</Link>
             </Button>
@@ -206,7 +299,7 @@ export function SuggestClient() {
             Tell us the name, what it does, and why it&apos;d be useful.
           </p>
 
-          <TopRequestsHook />
+          <TopRequestsHook top={topSuggestions} />
 
           <form onSubmit={handleSubmit} className="mt-6 space-y-5">
             <div>

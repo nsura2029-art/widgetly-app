@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import { SITE_CONFIG } from "@/lib/constants";
 import { BLOG_POSTS } from "@/lib/blog";
 import { TOOLS_CATEGORIES } from "@/lib/tools-categories";
+import { SUGGESTIONS } from "@/lib/suggestions-seed";
 
 // Force static export for sitemap when using `output: export`.
 export const dynamic = "force-static";
@@ -130,6 +131,23 @@ export default function sitemap(): MetadataRoute.Sitemap {
       url: `${base}/blog/post/${post.slug}`,
       lastModified: new Date(post.updatedAt ?? post.publishedAt),
       changeFrequency: "monthly" as const,
+      priority: 0.7,
+    })),
+    // Programmatic SEO surfaces — one URL per accepted suggestion.
+    // Each page emits a Product/SoftwareApplication JSON-LD with
+    // the appropriate ProductStatus (PreOrder while building,
+    // InStock when shipped), so Google can serve rich results
+    // when these rank for long-tail queries.
+    ...SUGGESTIONS.map((s) => ({
+      url: `${base}/suggest/${s.slug}`,
+      lastModified: s.shippedAt
+        ? new Date(s.shippedAt)
+        : s.developmentStartedAt
+          ? new Date(s.developmentStartedAt)
+          : s.acceptedAt
+            ? new Date(s.acceptedAt)
+            : new Date(s.submittedAt),
+      changeFrequency: s.status === "shipped" ? ("monthly" as const) : ("weekly" as const),
       priority: 0.7,
     })),
   ];

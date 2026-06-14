@@ -25,7 +25,14 @@ type SeoOptions = {
   title?: string;
   description?: string;
   path?: string;
-  image?: string;
+  /**
+   * Either:
+   * - `true` to build a dynamic OG image URL with `path` as a query param
+   * - a full URL string to use as the OG image directly (e.g. for a
+   *   co-located `opengraph-image.tsx` route)
+   * - omitted / `false` to use the site default
+   */
+  image?: boolean | string;
   keywords?: readonly string[];
   type?: "website" | "article";
   publishedTime?: string;
@@ -51,7 +58,15 @@ export function buildMetadata({
     : `${SITE_CONFIG.name} — ${SITE_CONFIG.tagline}`;
   const desc = description ?? SITE_CONFIG.description;
   const canonical = getCanonicalUrl(path);
-  const ogImage = image ? getOgImageUrl({ path }) : getOgImageUrl();
+  // `image` may be a full URL (use as-is for dynamic co-located OG routes),
+  // a truthy non-string (build a dynamic URL from `path`), or omitted
+  // (use the site default static OG image).
+  const ogImage =
+    typeof image === "string"
+      ? image
+      : image
+        ? getOgImageUrl({ path })
+        : getOgImageUrl();
   const allKeywords = [...(keywords ?? []), ...SITE_CONFIG.keywords].join(", ");
 
   return {
