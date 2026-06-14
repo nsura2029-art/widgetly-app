@@ -1,10 +1,10 @@
 /**
- * Edge middleware: locale path-prefix routing + cookie persistence.
+ * Edge proxy: locale path-prefix routing + cookie persistence.
  *
  * Runs in the Cloudflare Worker (via @opennextjs/cloudflare), before the
  * request reaches the Next.js renderer. Responsibilities:
  *
- *   1. Run the next-intl middleware, which:
+ *   1. Run the next-intl middleware (preserved from the prior middleware.ts convention) -- next-intl still uses the term "middleware" internally, which:
  *      - 308-redirects unprefixed URLs (`/blog/...`) to the resolved
  *        locale prefix (`/en/blog/...`).
  *      - Validates the locale segment on prefixed URLs.
@@ -73,7 +73,7 @@ function resolveLocaleFromRequest(req: NextRequest): LocaleCode {
   return DEFAULT_LOCALE;
 }
 
-export function middleware(req: NextRequest) {
+export function proxy(req: NextRequest) {
   // Run the next-intl middleware first. It may issue a 308 redirect
   // (we capture and return that as-is) or a pass-through NextResponse
   // for already-prefixed URLs.

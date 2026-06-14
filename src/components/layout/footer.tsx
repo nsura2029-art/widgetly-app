@@ -34,7 +34,10 @@ export function Footer() {
         <div className="grid gap-12 md:grid-cols-12">
           <div className="md:col-span-5">
             <div className="text-white">
-              <Logo className="text-white [&_span]:!text-white" />
+              <Logo
+                className="text-white [&_span]:!text-white"
+                showWordmark={false}
+              />
             </div>
             <p className="mt-4 max-w-sm text-sm leading-relaxed text-white/60">
               {tSite("description")}

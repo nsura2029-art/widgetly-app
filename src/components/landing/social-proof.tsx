@@ -39,6 +39,7 @@ export function SocialProof() {
 
         <Stagger className="mt-10 grid grid-cols-2 gap-6 sm:grid-cols-4" stagger={0.1}>
           <Stat
+            key="tools"
             icon={<Wrench className="h-4 w-4" />}
             value={500}
             suffix="+"
@@ -46,6 +47,7 @@ export function SocialProof() {
             accent="text-primary"
           />
           <Stat
+            key="categories"
             icon={<Layers className="h-4 w-4" />}
             value={50}
             suffix="+"
@@ -53,6 +55,7 @@ export function SocialProof() {
             accent="text-secondary"
           />
           <Stat
+            key="stars"
             icon={<Star className="h-4 w-4" />}
             value={2400}
             suffix="+"
@@ -60,6 +63,7 @@ export function SocialProof() {
             accent="text-accent"
           />
           <Stat
+            key="waitlist"
             icon={<Users className="h-4 w-4" />}
             value={8500}
             suffix="+"
