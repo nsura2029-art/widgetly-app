@@ -1,0 +1,124 @@
+{
+  "site": {
+    "name": "Widgetly",
+    "tagline": "Everything You Need. Nothing You Don't."
+  },
+  "header": {
+    "nav": {
+      "tools": "Tools",
+      "features": "Features",
+      "categories": "Categories",
+      "blog": "Blog",
+      "about": "About",
+      "contact": "Contact"
+    },
+    "actions": {
+      "star": "Star",
+      "joinWaitlist": "Join Waitlist"
+    },
+    "aria": {
+      "mainNav": "Main navigation",
+      "openMenu": "Open menu",
+      "closeMenu": "Close menu",
+      "homeLink": "{siteName} home"
+    },
+    "localePicker": {
+      "label": "Select language",
+      "currentLanguage": "Current language: {nativeName}"
+    }
+  },
+  "footer": {
+    "columns": {
+      "product": "Product",
+      "resources": "Resources",
+      "company": "Company",
+      "legal": "Legal"
+    },
+    "links": {
+      "allTools": "All Tools",
+      "pdfTools": "PDF Tools",
+      "imageTools": "Image Tools",
+      "aiTools": "AI Tools",
+      "developerTools": "Developer Tools",
+      "suggest": "Suggest a Tool",
+      "joinWaitlist": "Join Waitlist",
+      "blog": "Blog",
+      "help": "Help Center",
+      "changelog": "Changelog",
+      "status": "Status",
+      "about": "About",
+      "contact": "Contact",
+      "privacy": "Privacy Policy",
+      "terms": "Terms & Conditions",
+      "cookies": "Cookies Policy",
+      "security": "Security"
+    },
+    "copyright": "© {year} {siteName}. All rights reserved.",
+    "builtWith": "Built with care. Deployed on {platform}."
+  },
+  "home": {
+    "hero": {
+      "title": "Every tool you need in one place",
+      "subtitle": "At your fingertips. Fast, simple, and 100% free.",
+      "askPrompt": "Can\u2019t find a tool you need?",
+      "askCta": "Tell us what you want \u2014 we\u2019ll build it for you.",
+      "audiences": {
+        "students": "Students",
+        "teachers": "Teachers",
+        "professionals": "Professionals",
+        "creators": "Creators",
+        "developers": "Developers",
+        "marketers": "Marketers",
+        "businesses": "Businesses"
+      },
+      "suggestTool": "Suggest a Tool",
+      "joinWaitlist": "Join Waitlist"
+    },
+    "features": {
+      "title": "Everything You Need. Nothing You Don't.",
+      "subtitle": "Powerful tools, lightning-fast results, and a seamless experience from start to finish."
+    },
+    "categories": {
+      "pill": "50+ Categories",
+      "title": "Every tool you need, all in one place.",
+      "subtitle": "From PDF editors to AI writers, calculators to converters \u2014 all under one roof.",
+      "count": "tools"
+    },
+    "socialProof": {
+      "title": "Trusted by builders around the world",
+      "stats": {
+        "tools": "Tools Planned",
+        "categories": "Categories",
+        "stars": "GitHub Stars",
+        "waitlist": "Waitlist Signups"
+      },
+      "footer": "{freeTools} free tools \u00b7 {uptimeTarget} uptime target \u00b7 zero ads"
+    },
+    "waitlist": {
+      "pill": "Be the first",
+      "title": "Get early access to Widgetly.",
+      "subtitle": "Join the waitlist for launch updates, sneak peeks, and a founders' discount when we go live.",
+      "countdown": {
+        "label": "Launching in"
+      },
+      "founderQuote": "\u201cWe're building the utility platform we always wished existed \u2014 one search bar away from anything you need.\u201d",
+      "founderAttribution": "\u2014 The Widgetly team"
+    },
+    "seo": {
+      "exploreTitle": "Explore Widgetly by category",
+      "exploreSubtitle": "Each category is a curated set of free online tools, hand-picked and built for speed. Click through to preview the roadmap.",
+      "count": "{count}+ tools",
+      "browse": "Browse {name} \u2192"
+    },
+    "faq": {
+      "pill": "FAQ",
+      "title": "Frequently asked questions",
+      "subtitle": "Everything you need to know about Widgetly, the platform, and the launch."
+    }
+  },
+  "common": {
+    "comingSoon": "Coming soon",
+    "learnMore": "Learn more",
+    "readMore": "Read more"
+  }
+}

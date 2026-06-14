@@ -10,6 +10,7 @@ import {
   type MotionValue,
 } from "framer-motion";
 import { Star, Users, Wrench, Layers } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { STATS } from "@/lib/constants";
 import { FadeIn } from "@/components/shared/fade-in";
 import { Stagger, StaggerItem } from "@/components/shared/stagger";
@@ -17,9 +18,10 @@ import { Stagger, StaggerItem } from "@/components/shared/stagger";
 /**
  * Social proof band. Stars on GitHub, waitlist signups, planned tools,
  * and category count. Numbers animate from 0 to their target when the
- * section enters the viewport.
+ * section enters the viewport. Section title + stat labels are translated.
  */
 export function SocialProof() {
+  const t = useTranslations("home.socialProof");
   return (
     <section
       aria-labelledby="social-proof-title"
@@ -31,7 +33,7 @@ export function SocialProof() {
             id="social-proof-title"
             className="text-muted text-center text-xs font-medium tracking-wider uppercase"
           >
-            Trusted by builders around the world
+            {t("title")}
           </h2>
         </FadeIn>
 
@@ -40,37 +42,42 @@ export function SocialProof() {
             icon={<Wrench className="h-4 w-4" />}
             value={500}
             suffix="+"
-            label="Tools Planned"
+            label={t("stats.tools")}
             accent="text-primary"
           />
           <Stat
             icon={<Layers className="h-4 w-4" />}
             value={50}
             suffix="+"
-            label="Categories"
+            label={t("stats.categories")}
             accent="text-secondary"
           />
           <Stat
             icon={<Star className="h-4 w-4" />}
             value={2400}
             suffix="+"
-            label="GitHub Stars"
+            label={t("stats.stars")}
             accent="text-accent"
           />
           <Stat
             icon={<Users className="h-4 w-4" />}
             value={8500}
             suffix="+"
-            label="Waitlist Signups"
+            label={t("stats.waitlist")}
             accent="text-primary"
           />
         </Stagger>
 
         <FadeIn delay={0.3} className="mt-12 text-center">
           <p className="text-muted text-sm">
-            <span className="text-foreground font-semibold">{STATS.freeTools}</span> free tools ·{" "}
-            <span className="text-foreground font-semibold">{STATS.uptimeTarget}</span> uptime
-            target · zero ads
+            {t.rich("footer", {
+              freeTools: () => (
+                <span className="text-foreground font-semibold">{STATS.freeTools}</span>
+              ),
+              uptimeTarget: () => (
+                <span className="text-foreground font-semibold">{STATS.uptimeTarget}</span>
+              ),
+            })}
           </p>
         </FadeIn>
       </div>

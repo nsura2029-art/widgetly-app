@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { useTranslations } from "next-intl";
 import { getIcon } from "@/lib/icons";
 import { FEATURES } from "@/lib/constants";
 import { ACCENT_STYLES } from "@/components/shared/accent";
@@ -10,10 +11,11 @@ import { cn } from "@/lib/utils";
 
 /**
  * Features preview — six core value props in a responsive grid.
- * Hover effect: card lifts, border picks up the accent colour, and the
- * icon chip glows with the matching gradient.
+ * Translated via next-intl; the FEATURES constant itself isn't
+ * translated yet (Phase 2) so the cards fall back to English for now.
  */
 export function Features() {
+  const t = useTranslations("home.features");
   return (
     <section
       id="features"
@@ -26,11 +28,10 @@ export function Features() {
             id="features-title"
             className="text-display-sm font-semibold tracking-tight text-foreground sm:text-display-md"
           >
-            Everything You Need. Nothing You Don't.
+            {t("title")}
           </h2>
           <p className="mt-4 text-base text-muted sm:text-lg">
-            Powerful tools, lightning-fast results, and a seamless experience
-            from start to finish.
+            {t("subtitle")}
           </p>
         </FadeIn>
 
@@ -51,7 +52,6 @@ export function Features() {
                     "hover:shadow-soft-lg"
                   )}
                 >
-                  {/* Hover gradient border glow */}
                   <div
                     aria-hidden="true"
                     className={cn(
@@ -78,7 +78,6 @@ export function Features() {
                     {feature.description}
                   </p>
 
-                  {/* Bottom-right corner accent on hover */}
                   <div
                     aria-hidden="true"
                     className={cn(

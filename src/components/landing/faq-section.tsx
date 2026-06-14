@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server";
 import { FAQS } from "@/lib/constants";
 import { FadeIn } from "@/components/shared/fade-in";
 
@@ -7,8 +8,11 @@ import { FadeIn } from "@/components/shared/fade-in";
  *   2. Pair with FAQPage JSON-LD (emitted in the layout) for rich results.
  *
  * Using <details>/<summary> means zero JS, perfect for SEO and Core Web Vitals.
+ * Section header is translated; the Q&A pairs themselves come from the
+ * FAQS constant and fall back to English for now (Phase 2 translation pass).
  */
-export function FaqSection() {
+export async function FaqSection() {
+  const t = await getTranslations("home.faq");
   return (
     <section
       id="faq"
@@ -18,17 +22,16 @@ export function FaqSection() {
       <div className="container">
         <FadeIn className="mx-auto max-w-2xl text-center">
           <span className="inline-flex items-center rounded-full border border-border/80 bg-white px-3 py-1 text-xs font-medium text-muted shadow-soft">
-            FAQ
+            {t("pill")}
           </span>
           <h2
             id="faq-title"
             className="mt-4 text-display-sm font-semibold tracking-tight text-foreground sm:text-display-md"
           >
-            Frequently asked questions
+            {t("title")}
           </h2>
           <p className="mt-4 text-base text-muted sm:text-lg">
-            Everything you need to know about Widgetly, the platform, and the
-            launch.
+            {t("subtitle")}
           </p>
         </FadeIn>
 

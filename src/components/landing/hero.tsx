@@ -4,32 +4,34 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { ArrowRight } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { ComingSoonBadge } from "@/components/landing/coming-soon-badge";
 import { SearchMockup } from "@/components/landing/search-mockup";
 import { AnimatedBackground } from "@/components/shared/animated-background";
 
 /**
- * Hero section — the very first thing visitors see.
- * Designed to feel Linear / Vercel / Stripe: tight typography,
- * generous whitespace, single focused message, one big search mockup.
+ * Hero section — the very first thing visitors see. Translated via
+ * next-intl; the audience-rotation words (Students / Teachers / …)
+ * are pulled from the `home.hero.audiences` namespace and cycled
+ * by the typewriter effect.
  */
 export function Hero() {
-  const AUDIENCES = [
-    "Students",
-    "Teachers",
-    "Professionals",
-    "Creators",
-    "Developers",
-    "Marketers",
-    "Businesses",
+  const t = useTranslations("home.hero");
+  const audiences = [
+    t("audiences.students"),
+    t("audiences.teachers"),
+    t("audiences.professionals"),
+    t("audiences.creators"),
+    t("audiences.developers"),
+    t("audiences.marketers"),
+    t("audiences.businesses"),
   ];
 
   const [audienceIndex, setAudienceIndex] = useState(0);
   const [displayText, setDisplayText] = useState("");
   const [phase, setPhase] = useState<"typing" | "pausing" | "deleting">("typing");
 
-  // play a subtle keystroke sound using WebAudio
   function playKeystroke() {
     try {
       const Ctor =
@@ -51,13 +53,13 @@ export function Hero() {
         ctx.close();
       }, 80);
     } catch {
-      // ignore if audio not available
+      // ignore
     }
   }
 
   useEffect(() => {
     let t: ReturnType<typeof setTimeout> | undefined;
-    const current = AUDIENCES[audienceIndex] ?? "";
+    const current = audiences[audienceIndex] ?? "";
 
     if (phase === "typing") {
       const next = current.slice(0, displayText.length + 1);
@@ -81,7 +83,7 @@ export function Hero() {
       t = setTimeout(() => {
         setDisplayText(next);
         if (next === "") {
-          setAudienceIndex((i) => (i + 1) % AUDIENCES.length);
+          setAudienceIndex((i) => (i + 1) % audiences.length);
           setPhase("typing");
         }
       }, 40);
@@ -105,7 +107,7 @@ export function Hero() {
             transition={{ delay: 0.1, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
             className="text-display-md text-foreground sm:text-display-lg lg:text-display-xl mt-8 font-semibold tracking-tight whitespace-nowrap"
           >
-            Every tool you need in one place
+            {t("title")}
           </motion.h1>
 
           <motion.p
@@ -114,7 +116,8 @@ export function Hero() {
             transition={{ delay: 0.25, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
             className="text-muted mt-4 max-w-2xl text-base leading-relaxed sm:text-lg"
           >
-            At your fingertips. Fast, simple, and 100% free.
+            <span>{t("subtitle")}</span>{" "}
+            <span className="text-foreground font-medium">{displayText}</span>
           </motion.p>
 
           <motion.p
@@ -123,7 +126,7 @@ export function Hero() {
             transition={{ delay: 0.35, duration: 0.6 }}
             className="text-foreground mt-6 text-base font-medium"
           >
-            Can’t find a tool you need?
+            {t("askPrompt")}
           </motion.p>
 
           <motion.p
@@ -132,7 +135,7 @@ export function Hero() {
             transition={{ delay: 0.45, duration: 0.6 }}
             className="text-muted mt-2 max-w-xl text-sm"
           >
-            Tell us what you want — we’ll build it for you.
+            {t("askCta")}
           </motion.p>
 
           <motion.div
@@ -143,13 +146,13 @@ export function Hero() {
           >
             <Button asChild size="lg" className="w-full">
               <Link href="/suggest">
-                👉 Suggest a Tool
+                👉 {t("suggestTool")}
                 <ArrowRight className="ml-2" />
               </Link>
             </Button>
             <Button asChild size="lg" className="w-full">
               <Link href="#waitlist">
-                👉 Join Waitlist
+                👉 {t("joinWaitlist")}
                 <ArrowRight className="ml-2" />
               </Link>
             </Button>

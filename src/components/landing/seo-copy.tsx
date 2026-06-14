@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { CATEGORIES } from "@/lib/constants";
 
 /**
@@ -10,7 +11,8 @@ import { CATEGORIES } from "@/lib/constants";
  * long-tail keywords. This is the single biggest on-page SEO win for
  * early ranking — word count, semantic coverage, and internal links.
  */
-export function SeoCopy() {
+export async function SeoCopy() {
+  const t = await getTranslations("home.seo");
   return (
     <section
       id="about-widgetly"
@@ -52,11 +54,10 @@ export function SeoCopy() {
             id="seo-explore-title"
             className="text-foreground mt-12 text-xl font-semibold tracking-tight"
           >
-            Explore Widgetly by category
+            {t("exploreTitle")}
           </h3>
           <p className="text-muted mt-2 text-sm">
-            Each category is a curated set of free online tools, hand-picked and built for speed.
-            Click through to preview the roadmap.
+            {t("exploreSubtitle")}
           </p>
 
           <div className="mt-8 grid gap-6 sm:grid-cols-2">
@@ -68,7 +69,7 @@ export function SeoCopy() {
               >
                 <h4 className="text-foreground text-base font-semibold tracking-tight">
                   {cat.name}{" "}
-                  <span className="text-muted text-xs font-medium">({cat.count}+ tools)</span>
+                  <span className="text-muted text-xs font-medium">({t("count", { count: cat.count })})</span>
                 </h4>
                 <p className="text-muted mt-2 text-sm leading-relaxed">{cat.longDescription}</p>
                 <Link
@@ -76,7 +77,7 @@ export function SeoCopy() {
                   className="text-primary mt-3 inline-flex items-center gap-1 text-xs font-semibold hover:underline"
                   aria-label={`Browse all ${cat.name} on Widgetly`}
                 >
-                  Browse {cat.name} →
+                  {t("browse", { name: cat.name })}
                 </Link>
               </article>
             ))}

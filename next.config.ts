@@ -1,11 +1,14 @@
 import type { NextConfig } from "next";
+import createNextIntlPlugin from "next-intl/plugin";
 import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare";
 
 initOpenNextCloudflareForDev();
 
+// next-intl plugin: wires the request config so server components can
+// call getTranslations()/getLocale() with the right messages bundle.
+const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
+
 const nextConfig: NextConfig = {
-  // `output: "export"` was removed in Next 16. OpenNext handles the
-  // Workers output via its own adapter (see wrangler.toml).
   images: {
     unoptimized: true,
   },
@@ -35,8 +38,6 @@ const nextConfig: NextConfig = {
     ];
   },
   // Security headers are applied via public/_headers (Cloudflare convention).
-  // For Workers, `headers()` here is no longer the right place since static
-  // export is gone and the response is produced by the worker at request time.
 };
 
-export default nextConfig;
+export default withNextIntl(nextConfig);

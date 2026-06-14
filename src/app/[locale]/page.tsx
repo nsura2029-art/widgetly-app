@@ -1,3 +1,4 @@
+import { setRequestLocale } from "next-intl/server";
 import { Hero } from "@/components/landing/hero";
 import { Features } from "@/components/landing/features";
 import { Categories } from "@/components/landing/categories";
@@ -14,31 +15,28 @@ import { SeoCopy } from "@/components/landing/seo-copy";
  * Hero → Features → Categories → SocialProof → Waitlist → SEO copy → FAQ.
  * The SEO copy and FAQ are below the fold but are server-rendered, fully
  * indexable, and load instantly because they ship with the initial HTML.
- * CtaStrip and AdZone are commented out pre-launch; the global Footer is
- * rendered by the root layout.
+ *
+ * `setRequestLocale` is required by next-intl for static rendering —
+ * it scopes the in-request locale so server components can resolve
+ * `getTranslations()` without re-deriving it.
  */
-export default function HomePage() {
+export default async function HomePage({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+  setRequestLocale(locale);
+
   return (
     <>
       <Hero />
-      {/* Sponsored ad zones are disabled pre-launch. Re-enable when ads ship.
-      <AdZone slot="header" />
-      */}
       <Features />
       <Categories />
       <SocialProof />
       <Waitlist />
-      {/*
-      <AdZone slot="in-content" />
-      */}
-      {/*
-      <CtaStrip />
-      */}
       <SeoCopy />
       <FaqSection />
-      {/*
-      <AdZone slot="footer" />
-      */}
     </>
   );
 }

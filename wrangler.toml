@@ -25,8 +25,23 @@ enabled = true
 # preview_id = "REPLACE_WITH_PREVIEW_KV_NAMESPACE_ID"
 
 # ---------------------------------------------------------------------------
+# KV: user locale preference (set by POST /api/locale, read by the middleware
+# via the wly_locale cookie). Anonymous identity is the key.
+#
+# Created via:
+#   pnpm wrangler kv:namespace create LOCALE_KV
+#   pnpm wrangler kv:namespace create LOCALE_KV --preview
+# Paste the printed IDs into `id` / `preview_id` below.
+# ---------------------------------------------------------------------------
+# [[kv_namespaces]]
+# binding = "LOCALE_KV"
+# id = "REPLACE_WITH_KV_NAMESPACE_ID"
+# preview_id = "REPLACE_WITH_PREVIEW_KV_NAMESPACE_ID"
+
+# ---------------------------------------------------------------------------
 # Environment variables (set in Cloudflare dashboard, not here)
 # ---------------------------------------------------------------------------
 # WAITLIST_KV      — KV binding (if KV enabled)
+# LOCALE_KV        — KV binding (locale preference persistence)
 # ANALYTICS_TOKEN  — Cloudflare Web Analytics token (set in dashboard)
 # ---------------------------------------------------------------------------

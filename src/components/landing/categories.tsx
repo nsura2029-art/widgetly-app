@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { getIcon } from "@/lib/icons";
 import { CATEGORIES } from "@/lib/constants";
 import { ACCENT_STYLES } from "@/components/shared/accent";
@@ -12,9 +13,12 @@ import { cn } from "@/lib/utils";
 
 /**
  * Tool categories preview. Each card shows a future tool count so visitors
- * get a sense of the breadth we're shipping.
+ * get a sense of the breadth we're shipping. The pill / title / subtitle
+ * are translated; the category names themselves come from the CATEGORIES
+ * constant and fall back to English for now (Phase 2 translation pass).
  */
 export function Categories() {
+  const t = useTranslations("home.categories");
   return (
     <section
       id="categories"
@@ -24,17 +28,16 @@ export function Categories() {
       <div className="container">
         <FadeIn className="mx-auto max-w-2xl text-center">
           <span className="inline-flex items-center rounded-full border border-border/80 bg-white px-3 py-1 text-xs font-medium text-muted shadow-soft">
-            50+ Categories
+            {t("pill")}
           </span>
           <h2
             id="categories-title"
             className="mt-4 text-display-sm font-semibold tracking-tight text-foreground sm:text-display-md"
           >
-            Every tool you need, all in one place.
+            {t("title")}
           </h2>
           <p className="mt-4 text-base text-muted sm:text-lg">
-            From PDF editors to AI writers, calculators to converters — all
-            under one roof.
+            {t("subtitle")}
           </p>
         </FadeIn>
 
@@ -102,7 +105,7 @@ export function Categories() {
                       >
                         {category.count}
                       </span>
-                      <span className="text-muted">tools</span>
+                      <span className="text-muted">{t("count")}</span>
                     </div>
                   </motion.div>
                 </Link>
