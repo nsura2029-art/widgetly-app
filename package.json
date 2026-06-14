@@ -18,7 +18,13 @@
     "prebuild": "node scripts/sync-swagger-assets.mjs",
     "sync:swagger": "node scripts/sync-swagger-assets.mjs",
     "i18n:translate": "node scripts/translate-messages.mjs",
-    "i18n:translate:eu": "node scripts/translate-messages.mjs --locales=es,fr,de,pt,it,nl --delay=600"
+    "i18n:translate:eu": "node scripts/translate-messages.mjs --locales=es,fr,de,pt,it,nl --delay=600",
+    "i18n:translate:libre": "node scripts/translate-messages.mjs --provider=libretranslate",
+    "i18n:translate:deepl": "node scripts/translate-messages.mjs --provider=deepl",
+    "i18n:translate:google": "node scripts/translate-messages.mjs --provider=google",
+    "i18n:translate:auto": "DEEPL_API_KEY=$DEEPL_API_KEY GOOGLE_TRANSLATE_API_KEY=$GOOGLE_TRANSLATE_API_KEY node scripts/translate-messages.mjs --provider=auto",
+    "i18n:translate:mock": "node scripts/translate-messages.mjs --provider=mock --delay=0",
+    "i18n:translate:dry": "node scripts/translate-messages.mjs --provider=libretranslate --dry-run --delay=0"
   },
   "remotion": {
     "webpackOverride": "./remotion/webpack.override.js"
