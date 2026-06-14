@@ -22,7 +22,9 @@
     "i18n:translate:libre": "node scripts/translate-messages.mjs --provider=libretranslate",
     "i18n:translate:deepl": "node scripts/translate-messages.mjs --provider=deepl",
     "i18n:translate:google": "node scripts/translate-messages.mjs --provider=google",
-    "i18n:translate:auto": "DEEPL_API_KEY=$DEEPL_API_KEY GOOGLE_TRANSLATE_API_KEY=$GOOGLE_TRANSLATE_API_KEY node scripts/translate-messages.mjs --provider=auto",
+    "i18n:translate:gemini": "node scripts/translate-messages.mjs --provider=gemini",
+    "i18n:translate:gemini:vertex": "GEMINI_VERTEX_TOKEN=${GEMINI_VERTEX_TOKEN:-$(gcloud auth print-access-token 2>/dev/null)} GEMINI_PROJECT_ID=${GEMINI_PROJECT_ID} node scripts/translate-messages.mjs --provider=gemini",
+    "i18n:translate:auto": "DEEPL_API_KEY=$DEEPL_API_KEY GOOGLE_TRANSLATE_API_KEY=$GOOGLE_TRANSLATE_API_KEY GEMINI_API_KEY=$GEMINI_API_KEY GEMINI_VERTEX_TOKEN=$GEMINI_VERTEX_TOKEN node scripts/translate-messages.mjs --provider=auto",
     "i18n:translate:mock": "node scripts/translate-messages.mjs --provider=mock --delay=0",
     "i18n:translate:dry": "node scripts/translate-messages.mjs --provider=libretranslate --dry-run --delay=0"
   },

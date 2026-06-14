@@ -13,9 +13,16 @@
  *                       Covers all 22 locales including CJK (ja, ko,
  *                       zh-CN, zh-TW, th, vi). Requires
  *                       GOOGLE_TRANSLATE_API_KEY.
+ *   - gemini          : Google Gemini (generative model, used for
+ *                       translation via a structured prompt). Two auth
+ *                       modes, auto-detected from the credential:
+ *                         GEMINI_API_KEY  (AIzaSy...): public Gemini API
+ *                         GEMINI_VERTEX_TOKEN (ya29./AQ.): Vertex AI
+ *                           (also needs GEMINI_PROJECT_ID for Vertex)
+ *                       Optional: GEMINI_MODEL (default gemini-2.0-flash).
  *   - auto            : picks per-locale -- deepl for European languages,
- *                       google for everything else. This is the
- *                       recommended mode for a full paid-API pass.
+ *                       google if a Google key is set, gemini if a
+ *                       Gemini credential is set, else libretranslate.
  *   - mock            : no real translation, just prefixes the value
  *                       with "[<locale>] ". Useful for verifying the
  *                       pipeline (write paths, JSON shape, resumability)
@@ -45,8 +52,17 @@
  *   # Google Cloud Translation (all, needs GOOGLE_TRANSLATE_API_KEY)
  *   node scripts/translate-messages.mjs --provider=google --locales=ja,ko,zh-CN,zh-TW
  *
+ *   # Gemini (public API)
+ *   GEMINI_API_KEY=AIzaSy... \
+ *     node scripts/translate-messages.mjs --provider=gemini
+ *
+ *   # Gemini (Vertex AI via gcloud OAuth token)
+ *   GEMINI_VERTEX_TOKEN=$(gcloud auth print-access-token) \
+ *   GEMINI_PROJECT_ID=556752020957 \
+ *     node scripts/translate-messages.mjs --provider=gemini
+ *
  *   # Auto (recommended for a full paid pass)
- *   DEEPL_API_KEY=xxx GOOGLE_TRANSLATE_API_KEY=yyy \
+ *   DEEPL_API_KEY=xxx GEMINI_API_KEY=yyy \
  *     node scripts/translate-messages.mjs --provider=auto
  *
  *   # Mock (verify the pipeline without API cost)
@@ -264,6 +280,98 @@ const providers = {
     },
   },
 
+  // Google Gemini. Two auth modes, auto-detected from the credential:
+  //   - GEMINI_API_KEY  (AIzaSy...): public Gemini API, ?key=<KEY> in URL
+  //   - GEMINI_VERTEX_TOKEN (ya29./AQ.): Vertex AI on GCP, Bearer header
+  // The provider picks the right endpoint based on the key prefix.
+  // Uses gemini-2.0-flash by default (fast, cheap, good translation).
+  // Override the model with --gemini-model=gemini-2.0-flash-lite etc.
+  gemini: {
+    name: "Gemini",
+    envKey: "GEMINI_API_KEY",          // primary env var
+    envKeyAlt: "GEMINI_VERTEX_TOKEN",  // alt env var (OAuth token)
+    projectId: process.env.GEMINI_PROJECT_ID ?? null,
+    location: "us-central1",
+    model: process.env.GEMINI_MODEL ?? "gemini-2.0-flash",
+    // Detect auth mode from credential prefix. AIza -> public API.
+    // ya29./AQ./1// -> OAuth Bearer (Vertex AI).
+    detectAuth(cred) {
+      if (!cred) return null;
+      if (cred.startsWith("AIza")) return "public";
+      if (cred.startsWith("ya29.") || cred.startsWith("AQ.") ||
+          cred.startsWith("1//")) return "vertex";
+      // Default to Vertex for unknown prefixes; safer for GCP users.
+      return "vertex";
+    },
+    buildPrompt(text, targetLocale) {
+      return [
+        `Translate the following English text to ${targetLocale}.`,
+        "",
+        "Strict rules:",
+        "  1. Preserve all {placeholder} tokens (e.g. {year}, {siteName}, {count}) exactly as they appear. Do NOT translate, modify, reorder, or remove them.",
+        "  2. Do NOT translate brand names, product names, or proper nouns (Widgetly, GitHub, Twitter, Discord, etc.).",
+        "  3. Do NOT translate URLs, email addresses, or code-like tokens.",
+        "  4. Return ONLY the translated text, with no quotes, explanations, or preamble.",
+        "  5. If the text is already in the target language, return it unchanged.",
+        "",
+        `Text to translate:`,
+        `"${text}"`,
+        "",
+        "Translation:",
+      ].join("\n");
+    },
+    async translate(text, targetLocale) {
+      const cred = process.env.GEMINI_API_KEY ?? process.env.GEMINI_VERTEX_TOKEN;
+      if (!cred) {
+        throw new Error("GEMINI_API_KEY or GEMINI_VERTEX_TOKEN must be set");
+      }
+      const auth = this.detectAuth(cred);
+
+      const prompt = this.buildPrompt(text, targetLocale);
+      const body = {
+        contents: [{ role: "user", parts: [{ text: prompt }] }],
+        generationConfig: { temperature: 0.2, maxOutputTokens: 1024 },
+      };
+
+      let url, headers;
+      if (auth === "public") {
+        url = `https://generativelanguage.googleapis.com/v1beta/models/${this.model}:generateContent?key=${encodeURIComponent(cred)}`;
+        headers = { "Content-Type": "application/json" };
+      } else {
+        // Vertex AI: needs the GCP project ID.
+        const project = this.projectId ?? process.env.GEMINI_PROJECT_ID;
+        if (!project) {
+          throw new Error(
+            "Vertex AI auth detected (non-AIza credential) but GEMINI_PROJECT_ID " +
+            "is not set. Set it to your GCP project number (e.g. 556752020957) or " +
+            "project ID."
+          );
+        }
+        url = `https://${this.location}-aiplatform.googleapis.com/v1/projects/${project}/locations/${this.location}/publishers/google/models/${this.model}:generateContent`;
+        headers = {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${cred}`,
+        };
+      }
+
+      const res = await fetch(url, { method: "POST", headers, body: JSON.stringify(body) });
+      if (!res.ok) {
+        const errBody = await res.text().catch(() => "");
+        throw new Error(`Gemini ${res.status}: ${errBody.slice(0, 400)}`);
+      }
+      const json = await res.json();
+      const candidate = json.candidates?.[0];
+      const translated = candidate?.content?.parts?.[0]?.text;
+      if (!translated) {
+        // Common cause: safety block, or empty generation.
+        const reason = candidate?.finishReason ?? "no text returned";
+        throw new Error(`Gemini returned no translation (finishReason=${reason})`);
+      }
+      // Gemini sometimes wraps the translation in quotes; strip them.
+      return translated.replace(/^["'`]+|["'`]+$/g, "").trim();
+    },
+  },
+
   // Mock: no real translation, just prefix to verify pipeline.
   mock: {
     name: "Mock",
@@ -273,12 +381,15 @@ const providers = {
   },
 };
 
-// `auto` is a meta-provider: picks deepl/google/libretranslate per locale.
+// `auto` is a meta-provider: picks deepl/google/gemini/libretranslate per locale.
 function pickProviderForLocale(locale) {
   if (DEEPL_SUPPORTED.has(locale)) {
     if (process.env.DEEPL_API_KEY) return providers.deepl;
   }
   if (process.env.GOOGLE_TRANSLATE_API_KEY) return providers.google;
+  if (process.env.GEMINI_API_KEY || process.env.GEMINI_VERTEX_TOKEN) {
+    return providers.gemini;
+  }
   return providers.libretranslate;
 }
 
@@ -412,6 +523,11 @@ async function main() {
       console.error("GOOGLE_TRANSLATE_API_KEY is not set. Get one at https://console.cloud.google.com/apis/credentials");
       process.exit(1);
     }
+  }
+  if (providerArg === "gemini" && !process.env.GEMINI_API_KEY && !process.env.GEMINI_VERTEX_TOKEN) {
+    console.error("Gemini provider needs either GEMINI_API_KEY (https://aistudio.google.com/apikey)");
+    console.error("or GEMINI_VERTEX_TOKEN + GEMINI_PROJECT_ID (gcloud auth print-access-token)");
+    process.exit(1);
   }
   console.log(`Delay: ${baseDelayMs}ms per call; ${concurrency} concurrent; ${dryRun ? "DRY RUN" : "writing files"}`);
 
