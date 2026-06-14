@@ -85,7 +85,8 @@ export default async function BlogPostPage({ params }: { params: Promise<RoutePa
     .map((r) => r.post);
 
   return (
-    <>
+    <PageShell width="wide">
+      <BreadcrumbConfig customLabels={{ [post.slug]: post.title }} suppressSchema />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(ldArticle) }}
@@ -94,8 +95,6 @@ export default async function BlogPostPage({ params }: { params: Promise<RoutePa
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(ldBreadcrumb) }}
       />
-      <BreadcrumbConfig customLabels={{ [post.slug]: post.title }} suppressSchema />
-      <PageShell width="wide">
         <Link
           href="/blog"
           className="text-muted hover:text-foreground inline-flex items-center gap-1 text-sm"
@@ -171,7 +170,6 @@ export default async function BlogPostPage({ params }: { params: Promise<RoutePa
             </ul>
           </aside>
         )}
-      </PageShell>
-    </>
+    </PageShell>
   );
 }

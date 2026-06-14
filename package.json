@@ -16,7 +16,9 @@
     "format:check": "prettier --check \"**/*.{ts,tsx,md,json,css}\"",
     "prepare": "husky",
     "prebuild": "node scripts/sync-swagger-assets.mjs",
-    "sync:swagger": "node scripts/sync-swagger-assets.mjs"
+    "sync:swagger": "node scripts/sync-swagger-assets.mjs",
+    "i18n:translate": "node scripts/translate-messages.mjs",
+    "i18n:translate:eu": "node scripts/translate-messages.mjs --locales=es,fr,de,pt,it,nl --delay=600"
   },
   "remotion": {
     "webpackOverride": "./remotion/webpack.override.js"
