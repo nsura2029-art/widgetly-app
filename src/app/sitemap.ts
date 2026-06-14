@@ -128,7 +128,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.6,
     })),
     ...BLOG_POSTS.map((post) => ({
-      url: `${base}/blog/post/${post.slug}`,
+      url: `${base}/blog/${post.slug}`,
       lastModified: new Date(post.updatedAt ?? post.publishedAt),
       changeFrequency: "monthly" as const,
       priority: 0.7,

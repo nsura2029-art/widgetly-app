@@ -19,16 +19,13 @@ const nextConfig: NextConfig = {
   // Permanent (308) URL redirects. Runs at the request layer before
   // the page resolves, so it's safe to chain — the destination is the
   // canonical and the source is the historical/short URL.
+  //
+  // Note: the previous /blog/:slug → /blog/post/:slug redirect was the
+  // band-aid for the URL mismatch (the blog index + SEO schema already
+  // pointed at /blog/[slug]). After moving the route to /blog/[slug],
+  // the redirect is no longer needed and would create a self-loop.
   async redirects() {
     return [
-      // Blog post URL restructure (2026-Q3): /blog/[slug] → /blog/post/[slug].
-      // Old post URLs keep working for external links and search
-      // engines until the new structure is fully indexed.
-      {
-        source: "/blog/:slug",
-        destination: "/blog/post/:slug",
-        permanent: true,
-      },
       // Shorter alias for the legal terms page.
       {
         source: "/terms",

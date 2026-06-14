@@ -13,7 +13,7 @@ export function Waitlist() {
   return (
     <section
       id="waitlist"
-      className="relative overflow-hidden border-t border-border/60 py-20 sm:py-28 lg:py-32"
+      className="relative overflow-hidden border-t border-border/60 py-12 sm:py-16 lg:py-20"
       aria-labelledby="waitlist-title"
     >
       {/* Background gradient */}

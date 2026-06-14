@@ -73,7 +73,7 @@ export default async function BlogCategoryPage({ params }: { params: Promise<Par
         "@type": "ListItem",
         position: i + 1,
         name: p.title,
-        url: `${SITE_CONFIG.url}/blog/post/${p.slug}`,
+        url: `${SITE_CONFIG.url}/blog/${p.slug}`,
       })),
     },
   };
@@ -108,7 +108,7 @@ export default async function BlogCategoryPage({ params }: { params: Promise<Par
             key={p.slug}
             className="border-border/60 hover:border-primary/40 group shadow-soft hover:shadow-soft-lg rounded-2xl border bg-white p-6 transition-all hover:-translate-y-0.5"
           >
-            <Link href={`/blog/post/${p.slug}`} className="block">
+            <Link href={`/blog/${p.slug}`} className="block">
               <div className="text-muted flex items-center gap-3 text-xs">
                 <span className="inline-flex items-center gap-1">
                   <Calendar className="h-3 w-3" aria-hidden="true" />

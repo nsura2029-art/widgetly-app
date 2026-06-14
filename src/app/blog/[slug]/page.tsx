@@ -10,7 +10,14 @@ import { BreadcrumbConfig } from "@/components/layout/breadcrumb-nav";
 
 /**
  * Static-export friendly: enumerate every blog slug at build time.
- * `dynamicParams = false` means unknown slugs 404.
+ * `dynamicParams = false` means unknown slugs 404 (handled by
+ * the co-located `not-found.tsx` in this segment).
+ *
+ * Canonical URL: /blog/[slug]. The breadcrumb reads Home > Blog > [Post Title].
+ *
+ * Next 16: `params` is a Promise — both `generateMetadata` and the page
+ * component must `await` it. The previous non-promise version OOM-prerendered
+ * on 404 attempts because the framework couldn't resolve params in time.
  */
 export function generateStaticParams() {
   return ALL_POSTS.map((p) => ({ slug: p.slug }));
@@ -18,10 +25,17 @@ export function generateStaticParams() {
 
 export const dynamic = "force-static";
 
-export function generateMetadata({ params }: { params: { slug: string } }): Metadata {
-  const post = getBlogPost(params.slug);
+type RouteParams = { slug: string };
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<RouteParams>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const post = getBlogPost(slug);
   if (!post) return { title: "Not Found" };
-  const canonical = `${SITE_CONFIG.url}/blog/post/${post.slug}`;
+  const canonical = `${SITE_CONFIG.url}/blog/${post.slug}`;
   return {
     title: `${post.title}`,
     description: post.description,
@@ -46,15 +60,16 @@ export function generateMetadata({ params }: { params: { slug: string } }): Meta
   };
 }
 
-export default function BlogPostPage({ params }: { params: { slug: string } }) {
-  const post = getBlogPost(params.slug);
+export default async function BlogPostPage({ params }: { params: Promise<RouteParams> }) {
+  const { slug } = await params;
+  const post = getBlogPost(slug);
   if (!post) notFound();
 
   const ldArticle = articleJsonLd(post);
   const ldBreadcrumb = breadcrumbJsonLd([
     { name: "Home", url: SITE_CONFIG.url },
     { name: "Blog", url: `${SITE_CONFIG.url}/blog` },
-    { name: post.title, url: `${SITE_CONFIG.url}/blog/post/${post.slug}` },
+    { name: post.title, url: `${SITE_CONFIG.url}/blog/${post.slug}` },
   ]);
 
   // Related posts: same category, then by tag overlap, then most recent.
@@ -143,7 +158,7 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
               {related.map((p) => (
                 <li key={p.slug}>
                   <Link
-                    href={`/blog/post/${p.slug}`}
+                    href={`/blog/${p.slug}`}
                     className="border-border/60 shadow-soft hover:border-primary/40 block rounded-xl border bg-white p-4 transition-colors"
                   >
                     <div className="text-primary text-xs font-medium tracking-wider uppercase">

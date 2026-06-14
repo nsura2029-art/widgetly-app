@@ -18,7 +18,7 @@ export function Categories() {
   return (
     <section
       id="categories"
-      className="relative border-t border-border/60 bg-muted/5 py-20 sm:py-28 lg:py-32"
+      className="relative border-t border-border/60 bg-muted/5 py-12 sm:py-16 lg:py-20"
       aria-labelledby="categories-title"
     >
       <div className="container">

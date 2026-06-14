@@ -92,7 +92,7 @@ export function Hero() {
   }, [displayText, phase, audienceIndex]);
 
   return (
-    <section id="home" className="relative overflow-hidden pb-20 sm:pb-28 lg:pb-36">
+    <section id="home" className="relative overflow-hidden pb-8 sm:pb-12 lg:pb-16">
       <AnimatedBackground />
 
       <div className="relative container">
