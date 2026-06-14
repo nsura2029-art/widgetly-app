@@ -14,7 +14,9 @@
     "type-check": "tsc --noEmit",
     "format": "prettier --write \"**/*.{ts,tsx,md,json,css}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,md,json,css}\"",
-    "prepare": "husky"
+    "prepare": "husky",
+    "prebuild": "node scripts/sync-swagger-assets.mjs",
+    "sync:swagger": "node scripts/sync-swagger-assets.mjs"
   },
   "remotion": {
     "webpackOverride": "./remotion/webpack.override.js"
@@ -29,7 +31,9 @@
     "next": "16.2.9",
     "react": "19.2.0",
     "react-dom": "19.2.0",
-    "tailwind-merge": "^2.5.4"
+    "swagger-ui-dist": "^5.32.6",
+    "tailwind-merge": "^2.5.4",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.0.0",
@@ -52,7 +56,7 @@
   "lint-staged": {
     "*.{ts,tsx,js,jsx}": [
       "prettier --write",
-      "eslint --fix --max-warnings=0"
+      "eslint --fix --max-warnings=0 --no-warn-ignored"
     ],
     "*.{json,md,css}": [
       "prettier --write"

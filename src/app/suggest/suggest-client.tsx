@@ -2,12 +2,26 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ListChecks, Rocket, Wrench, ArrowRight, Sparkles, ThumbsUp } from "lucide-react";
+import {
+  ListChecks,
+  Rocket,
+  Wrench,
+  ArrowRight,
+  Sparkles,
+  ThumbsUp,
+  AlertCircle,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { PageShell } from "@/components/layout/page-shell";
 import { cn } from "@/lib/utils";
+
+type SubmitState =
+  | { kind: "idle" }
+  | { kind: "submitting" }
+  | { kind: "success"; slug: string }
+  | { kind: "error"; message: string; fieldErrors?: Record<string, string> };
 
 const MAX_DESCRIPTION_LENGTH = 2000;
 const SUGGESTION_THRESHOLD = 50;
@@ -62,26 +76,48 @@ export function SuggestClient() {
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("");
   const [email, setEmail] = useState("");
-  const [submitted, setSubmitted] = useState(false);
-  const [error, setError] = useState("");
+  const [state, setState] = useState<SubmitState>({ kind: "idle" });
 
   const descCount = description.length;
   const descNearLimit = descCount > MAX_DESCRIPTION_LENGTH * 0.9;
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setError("");
-    if (!name.trim() || !description.trim()) {
-      setError("Please provide both a tool name and description.");
-      return;
+    setState({ kind: "submitting" });
+    try {
+      const res = await fetch("/api/suggest", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          name,
+          description,
+          category: category || undefined,
+          email: email || undefined,
+        }),
+      });
+      const body = await res.json();
+      if (!res.ok || !body.ok) {
+        const fieldErrors: Record<string, string> = {};
+        if (body?.error?.fields) {
+          for (const f of body.error.fields) fieldErrors[f.path] = f.message;
+        }
+        setState({
+          kind: "error",
+          message: body?.error?.message ?? `Server returned ${res.status}.`,
+          fieldErrors: Object.keys(fieldErrors).length > 0 ? fieldErrors : undefined,
+        });
+        return;
+      }
+      setState({ kind: "success", slug: body.slug });
+    } catch {
+      setState({
+        kind: "error",
+        message: "We couldn't reach the server. Check your connection and try again.",
+      });
     }
-    // TODO (post-launch): POST to /api/suggest. For now the form is
-    // intentionally a no-op success state — the form does not lie
-    // about a queue that does not exist.
-    setSubmitted(true);
   }
 
-  if (submitted) {
+  if (state.kind === "success") {
     return (
       <PageShell width="wide">
         <div className="border-border/60 shadow-soft mx-auto max-w-2xl rounded-2xl border bg-white p-8 text-center sm:p-10">
@@ -94,12 +130,30 @@ export function SuggestClient() {
             {email ? <span className="text-foreground font-medium">{email}</span> : "your email"} if
             we need more detail.
           </p>
-          <div className="mt-6 flex justify-center gap-3">
+          {state.slug && (
+            <p className="text-muted mt-2 text-xs">
+              Tracked as <span className="text-foreground font-mono">/suggest/{state.slug}</span>
+            </p>
+          )}
+          <div className="mt-6 flex flex-wrap justify-center gap-3">
             <Button asChild>
               <Link href="/">Back to Home</Link>
             </Button>
             <Button asChild variant="outline">
               <Link href="/blog">Read the blog</Link>
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setName("");
+                setDescription("");
+                setCategory("");
+                setEmail("");
+                setState({ kind: "idle" });
+              }}
+            >
+              Suggest another
             </Button>
           </div>
         </div>
@@ -233,7 +287,15 @@ export function SuggestClient() {
               </div>
             </div>
 
-            {error && <p className="text-sm text-red-600">{error}</p>}
+            {state.kind === "error" && (
+              <div
+                role="alert"
+                className="flex items-start gap-2 rounded-xl border border-red-500/30 bg-red-500/5 px-3 py-2.5 text-sm text-red-700"
+              >
+                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+                <span>{state.message}</span>
+              </div>
+            )}
 
             <div className="flex items-center justify-between gap-4 pt-1">
               <p className="text-muted text-xs">
@@ -246,8 +308,13 @@ export function SuggestClient() {
                 </Link>
                 .
               </p>
-              <Button type="submit" size="lg" className="shrink-0 px-6">
-                Submit suggestion
+              <Button
+                type="submit"
+                size="lg"
+                className="shrink-0 px-6"
+                disabled={state.kind === "submitting"}
+              >
+                {state.kind === "submitting" ? "Sending…" : "Submit suggestion"}
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </div>

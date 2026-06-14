@@ -26,6 +26,8 @@ const config = [
       "out/**",
       ".vercel/**",
       "next-env.d.ts",
+      // swagger-ui-dist assets (vendored, minified; not our code).
+      "public/api-docs/**",
     ],
   },
 ];

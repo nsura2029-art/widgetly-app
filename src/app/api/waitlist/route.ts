@@ -1,40 +1,45 @@
-import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import { forwardToWebhook, jsonOk, parseJson, withErrorHandling } from "@/lib/api/responses";
+import { waitlistRequest, type WaitlistResponse } from "@/lib/api/schemas";
 
 /**
- * Optional waitlist endpoint. In a static export this isn't available,
- * and the form gracefully falls back to local success. When deployed to
- * Cloudflare Pages with edge functions enabled, swap the body of POST
- * with a `env.WAITLIST_KV.put(...)` to persist signups.
+ * POST /api/waitlist
  *
- * For now, this is a stub that confirms the wiring works in dev.
+ * Add an email to the launch waitlist. Validates the payload,
+ * forwards to the configured webhook, and returns a "you're on
+ * the list" envelope with a synthetic queue position. Replace
+ * the position logic with a Cloudflare KV counter when the
+ * namespace is bound.
+ *
+ * Runtime: edge. Web Crypto + `fetch` only.
  */
-
 export const runtime = "edge";
 
-export async function POST(request: Request) {
-  try {
-    const body = (await request.json().catch(() => ({}))) as { email?: string };
-    const email = (body.email ?? "").trim().toLowerCase();
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      return NextResponse.json(
-        { ok: false, message: "Invalid email" },
-        { status: 400 }
-      );
-    }
+async function handle(request: NextRequest) {
+  const body = await parseJson(request, waitlistRequest);
 
-    // Pseudo-random position for the response — replace with a counter
-    // stored in Cloudflare KV in production.
-    const position = Math.floor(8000 + Math.random() * 1500);
+  // Forward first, then return. The receiver (e.g. Resend, a CRM,
+  // a Discord webhook) is the durable record for now. When the
+  // KV binding is added, replace this with a KV write and use the
+  // KV counter for the position.
+  await forwardToWebhook(process.env.WAITLIST_WEBHOOK_URL, {
+    type: "widgetly.waitlist",
+    submittedAt: new Date().toISOString(),
+    payload: body,
+  });
 
-    return NextResponse.json({
-      ok: true,
-      position,
-      message: "You're on the list!",
-    });
-  } catch {
-    return NextResponse.json(
-      { ok: false, message: "Unexpected error" },
-      { status: 500 }
-    );
-  }
+  // Synthetic position — replaced by a Cloudflare KV counter when
+  // the WAITLIST KV binding is configured (see wrangler.toml).
+  const position = Math.floor(8000 + Math.random() * 1500);
+
+  const response: WaitlistResponse = {
+    ok: true,
+    position,
+    message: "You're on the list!",
+  };
+  return jsonOk(response);
+}
+
+export async function POST(request: NextRequest) {
+  return withErrorHandling(() => handle(request));
 }

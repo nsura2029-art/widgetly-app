@@ -2,13 +2,19 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Mail, MapPin, Clock, ArrowRight, Sparkles } from "lucide-react";
+import { Mail, MapPin, Clock, ArrowRight, Sparkles, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { PageShell } from "@/components/layout/page-shell";
 import { SITE_CONFIG } from "@/lib/constants";
 import { cn } from "@/lib/utils";
+
+type SubmitState =
+  | { kind: "idle" }
+  | { kind: "submitting" }
+  | { kind: "success"; ticket: string }
+  | { kind: "error"; message: string; fieldErrors?: Record<string, string> };
 
 const MAX_MESSAGE_LENGTH = 2000;
 
@@ -86,30 +92,47 @@ export function ContactClient() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
-  const [submitted, setSubmitted] = useState(false);
-  const [error, setError] = useState("");
+  const [state, setState] = useState<SubmitState>({ kind: "idle" });
 
   const messageCount = message.length;
   const messageNearLimit = messageCount > MAX_MESSAGE_LENGTH * 0.9;
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setError("");
-    if (!name.trim() || !message.trim()) {
-      setError("Please add your name and a message before sending.");
-      return;
+    setState({ kind: "submitting" });
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ name, email, message }),
+      });
+      const body = await res.json();
+      if (!res.ok || !body.ok) {
+        // Map server-side field errors back to a per-field map the
+        // form can display under each input. Other errors fall
+        // back to the server-supplied message.
+        const fieldErrors: Record<string, string> = {};
+        if (body?.error?.fields) {
+          for (const f of body.error.fields) fieldErrors[f.path] = f.message;
+        }
+        setState({
+          kind: "error",
+          message: body?.error?.message ?? `Server returned ${res.status}.`,
+          fieldErrors: Object.keys(fieldErrors).length > 0 ? fieldErrors : undefined,
+        });
+        return;
+      }
+      setState({ kind: "success", ticket: body.ticket });
+    } catch {
+      // Network failure — keep the form filled, let the user retry.
+      setState({
+        kind: "error",
+        message: "We couldn't reach the server. Check your connection and try again.",
+      });
     }
-    if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
-      setError("Please add a valid email so we can reply.");
-      return;
-    }
-    // TODO (post-launch): POST to /api/contact. For now the form is a
-    // no-op success state — we don't lie about a queue that doesn't
-    // exist, but we also don't have a backend to forward to yet.
-    setSubmitted(true);
   }
 
-  if (submitted) {
+  if (state.kind === "success") {
     return (
       <PageShell width="wide">
         <div className="border-border/60 shadow-soft mx-auto max-w-2xl rounded-2xl border bg-white p-8 text-center sm:p-10">
@@ -121,9 +144,26 @@ export function ContactClient() {
             We&apos;ll get back to you at{" "}
             <span className="text-foreground font-medium">{email}</span> within one business day.
           </p>
-          <div className="mt-6 flex justify-center">
+          {state.ticket && (
+            <p className="text-muted mt-2 text-xs">
+              Your reference: <span className="text-foreground font-mono">{state.ticket}</span>
+            </p>
+          )}
+          <div className="mt-6 flex flex-wrap justify-center gap-3">
             <Button asChild>
               <Link href="/">Back to Home</Link>
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setName("");
+                setEmail("");
+                setMessage("");
+                setState({ kind: "idle" });
+              }}
+            >
+              Send another
             </Button>
           </div>
         </div>
@@ -251,7 +291,15 @@ export function ContactClient() {
               </p>
             </div>
 
-            {error && <p className="text-sm text-red-600">{error}</p>}
+            {state.kind === "error" && (
+              <div
+                role="alert"
+                className="flex items-start gap-2 rounded-xl border border-red-500/30 bg-red-500/5 px-3 py-2.5 text-sm text-red-700"
+              >
+                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+                <span>{state.message}</span>
+              </div>
+            )}
 
             <div className="flex items-center justify-between gap-4 pt-1">
               <p className="text-muted text-xs">
@@ -264,8 +312,13 @@ export function ContactClient() {
                 </Link>
                 .
               </p>
-              <Button type="submit" size="lg" className="shrink-0 px-6">
-                Send message
+              <Button
+                type="submit"
+                size="lg"
+                className="shrink-0 px-6"
+                disabled={state.kind === "submitting"}
+              >
+                {state.kind === "submitting" ? "Sending…" : "Send message"}
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </div>
