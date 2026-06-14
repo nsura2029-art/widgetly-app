@@ -15,7 +15,17 @@ export const SITE_CONFIG = {
   ogImage: "/og-image.svg",
   locale: "en_US",
   twitterHandle: "@widgetlyapp",
+  /**
+   * Social profile handles — used by `Organization.sameAs` in
+   * `seo.ts`. Only the `github` URL is a hard default (it doubles
+   * as the source-of-truth for the project). Twitter and Discord
+   * are opt-in via env so the schema graph never lies about a
+   * profile that doesn't exist yet. Set `NEXT_PUBLIC_TWITTER_HANDLE`
+   * and `NEXT_PUBLIC_DISCORD_INVITE` at deploy time to enable them.
+   */
   github: "https://github.com/widgetly/widgetly",
+  twitter: (typeof process !== "undefined" && process.env?.NEXT_PUBLIC_TWITTER_HANDLE) || undefined,
+  discord: (typeof process !== "undefined" && process.env?.NEXT_PUBLIC_DISCORD_INVITE) || undefined,
   email: "hello@widgetly.app",
   keywords: [
     "AI tools",
@@ -43,6 +53,7 @@ export const SITE_CONFIG = {
 } as const;
 
 export const NAV_LINKS = [
+  { label: "Tools", href: "/tools" },
   { label: "Features", href: "/#features" },
   { label: "Categories", href: "/#categories" },
   { label: "Blog", href: "/blog" },
@@ -52,14 +63,17 @@ export const NAV_LINKS = [
 
 export const FOOTER_LINKS = {
   product: [
-    { label: "Features", href: "/#features" },
-    { label: "Categories", href: "/#categories" },
+    { label: "All Tools", href: "/tools" },
+    { label: "PDF Tools", href: "/tools/pdf" },
+    { label: "Image Tools", href: "/tools/image" },
+    { label: "AI Tools", href: "/tools/ai" },
+    { label: "Developer Tools", href: "/tools/developer" },
     { label: "Suggest a Tool", href: "/suggest" },
     { label: "Join Waitlist", href: "/#waitlist" },
   ],
   resources: [
     { label: "Blog", href: "/blog" },
-    { label: "Help Center", href: "#" },
+    { label: "Help Center", href: "/help" },
     { label: "Changelog", href: "#" },
     { label: "Status", href: "#" },
   ],
@@ -94,9 +108,7 @@ export const HERO_SEARCH_PLACEHOLDERS = [
 /**
  * Launch countdown — set to ~6 weeks out. Update this when launch shifts.
  */
-export const LAUNCH_DATE = new Date(
-  Date.now() + 1000 * 60 * 60 * 24 * 42
-).toISOString();
+export const LAUNCH_DATE = new Date(Date.now() + 1000 * 60 * 60 * 24 * 42).toISOString();
 
 export type Feature = {
   icon: string;
@@ -144,8 +156,7 @@ export const FEATURES: readonly Feature[] = [
   {
     icon: "ShieldCheck",
     title: "Privacy First",
-    description:
-      "End-to-end encryption for sensitive data. We never sell your information. Ever.",
+    description: "End-to-end encryption for sensitive data. We never sell your information. Ever.",
     accent: "accent",
   },
 ] as const;

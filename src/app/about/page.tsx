@@ -1,13 +1,17 @@
-import React from "react";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { SITE_CONFIG } from "@/lib/constants";
 import { LandmarksCollage, LANDMARKS } from "@/components/about/landmarks-collage";
 import { PageShell } from "@/components/layout/page-shell";
+import { buildMetadata } from "@/lib/seo";
 
-export const metadata = {
-  title: "About Us | Widgetly",
-  description: "Simple, secure, and reliable tools to help you work better and faster.",
-};
+export const metadata: Metadata = buildMetadata({
+  title: "About Us",
+  description:
+    "Widgetly is built by a small remote-first team in Brooklyn, NY. Our mission is to bring together every online tool you actually use in one fast, private, mobile-first platform.",
+  path: "/about",
+  keywords: ["about widgetly", "widgetly team", "free online tools platform", "company"],
+});
 
 // Build team cards directly from the landmarks roster so the imagery on the
 // page stays in sync with the collage above (one landmark per team member).

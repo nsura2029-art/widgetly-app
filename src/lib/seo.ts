@@ -164,8 +164,29 @@ export function websiteJsonLd() {
   };
 }
 
-/** Organization + sameAs (social profiles). */
+/**
+ * Organization + sameAs (social profiles).
+ *
+ * `sameAs` is the strongest entity-verification signal in the schema
+ * graph — Google uses it to confirm the Organization entity matches
+ * the real brand. Emitting URLs that 404 actively *weakens* the
+ * graph. We only emit `sameAs` entries that resolve: pull the
+ * non-empty ones from SITE_CONFIG, and skip the hardcoded fallbacks
+ * until the team confirms the real handle / invite.
+ */
 export function organizationJsonLd() {
+  // Collect every URL the team has actually stood up. Anything still
+  // empty or pointing at a placeholder is filtered out so we never
+  // emit a broken sameAs.
+  const candidateSameAs: Array<string | undefined> = [
+    SITE_CONFIG.github,
+    SITE_CONFIG.twitter
+      ? `https://twitter.com/${SITE_CONFIG.twitter.replace(/^@/, "")}`
+      : undefined,
+    SITE_CONFIG.discord ?? undefined,
+  ];
+  const sameAs = candidateSameAs.filter((u): u is string => Boolean(u));
+
   return {
     "@context": SCHEMA_BASE,
     "@type": "Organization",
@@ -180,11 +201,7 @@ export function organizationJsonLd() {
     },
     description: SITE_CONFIG.description,
     foundingDate: "2025",
-    sameAs: [
-      SITE_CONFIG.github,
-      "https://twitter.com/widgetly",
-      "https://discord.gg/widgetly",
-    ].filter(Boolean),
+    sameAs: sameAs.length > 0 ? sameAs : undefined,
     contactPoint: [
       {
         "@type": "ContactPoint",
@@ -233,9 +250,7 @@ export function softwareApplicationJsonLd() {
 }
 
 /** FAQ schema — paired with a visible FAQ section on the page. */
-export function faqJsonLd(
-  faqs: ReadonlyArray<{ question: string; answer: string }>,
-) {
+export function faqJsonLd(faqs: ReadonlyArray<{ question: string; answer: string }>) {
   return {
     "@context": SCHEMA_BASE,
     "@type": "FAQPage",
@@ -251,9 +266,7 @@ export function faqJsonLd(
 }
 
 /** BreadcrumbList schema for hierarchical pages. */
-export function breadcrumbJsonLd(
-  items: ReadonlyArray<{ name: string; url: string }>,
-) {
+export function breadcrumbJsonLd(items: ReadonlyArray<{ name: string; url: string }>) {
   return {
     "@context": SCHEMA_BASE,
     "@type": "BreadcrumbList",
@@ -269,7 +282,7 @@ export function breadcrumbJsonLd(
 /** ItemList schema for category/feature collections. */
 export function itemListJsonLd(
   name: string,
-  items: ReadonlyArray<{ name: string; url: string; description?: string }>,
+  items: ReadonlyArray<{ name: string; url: string; description?: string }>
 ) {
   return {
     "@context": SCHEMA_BASE,

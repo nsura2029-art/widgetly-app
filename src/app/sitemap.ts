@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { SITE_CONFIG } from "@/lib/constants";
 import { BLOG_POSTS } from "@/lib/blog";
+import { TOOLS_CATEGORIES } from "@/lib/tools-categories";
 
 // Force static export for sitemap when using `output: export`.
 export const dynamic = "force-static";
@@ -8,8 +9,9 @@ export const dynamic = "force-static";
 /**
  * Dynamic sitemap. Includes:
  *   - The marketing landing page and its in-page anchors
- *   - Static pages (about, contact, suggest, legal)
- *   - The blog index and every published blog post
+ *   - The tools index and every tools category page
+ *   - Static pages (about, contact, suggest, help, legal)
+ *   - The blog index, every blog category, and every blog post
  *   - Category deep-link anchors (top of the SEO copy block)
  *
  * As we add tool pages later, append them to the relevant section.
@@ -17,6 +19,9 @@ export const dynamic = "force-static";
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();
   const base = SITE_CONFIG.url;
+
+  // Unique blog categories derived from the post registry.
+  const blogCategories = Array.from(new Set(BLOG_POSTS.map((p) => p.category)));
 
   return [
     {
@@ -48,6 +53,24 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: now,
       changeFrequency: "monthly",
       priority: 0.7,
+    },
+    {
+      url: `${base}/tools`,
+      lastModified: now,
+      changeFrequency: "weekly",
+      priority: 0.9,
+    },
+    ...TOOLS_CATEGORIES.map((c) => ({
+      url: `${base}/tools/${c.slug}`,
+      lastModified: now,
+      changeFrequency: "monthly" as const,
+      priority: 0.8,
+    })),
+    {
+      url: `${base}/help`,
+      lastModified: now,
+      changeFrequency: "monthly",
+      priority: 0.6,
     },
     {
       url: `${base}/about`,
@@ -97,8 +120,14 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "daily",
       priority: 0.8,
     },
+    ...blogCategories.map((cat) => ({
+      url: `${base}/blog/category/${cat.toLowerCase().replace(/\s+/g, "-")}`,
+      lastModified: now,
+      changeFrequency: "weekly" as const,
+      priority: 0.6,
+    })),
     ...BLOG_POSTS.map((post) => ({
-      url: `${base}/blog/${post.slug}`,
+      url: `${base}/blog/post/${post.slug}`,
       lastModified: new Date(post.updatedAt ?? post.publishedAt),
       changeFrequency: "monthly" as const,
       priority: 0.7,

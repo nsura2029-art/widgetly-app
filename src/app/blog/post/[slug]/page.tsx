@@ -21,7 +21,7 @@ export const dynamic = "force-static";
 export function generateMetadata({ params }: { params: { slug: string } }): Metadata {
   const post = getBlogPost(params.slug);
   if (!post) return { title: "Not Found" };
-  const canonical = `${SITE_CONFIG.url}/blog/${post.slug}`;
+  const canonical = `${SITE_CONFIG.url}/blog/post/${post.slug}`;
   return {
     title: `${post.title}`,
     description: post.description,
@@ -54,7 +54,7 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
   const ldBreadcrumb = breadcrumbJsonLd([
     { name: "Home", url: SITE_CONFIG.url },
     { name: "Blog", url: `${SITE_CONFIG.url}/blog` },
-    { name: post.title, url: `${SITE_CONFIG.url}/blog/${post.slug}` },
+    { name: post.title, url: `${SITE_CONFIG.url}/blog/post/${post.slug}` },
   ]);
 
   // Related posts: same category, then by tag overlap, then most recent.
@@ -75,16 +75,10 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(ldArticle) }}
       />
-      {/* Page-level breadcrumb schema with the real post title. The global
-          <BreadcrumbNav /> in the layout also emits a BreadcrumbList; both
-          are valid per schema.org and Google picks the more specific one
-          (this one). */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(ldBreadcrumb) }}
       />
-      {/* Override the auto-generated label for the slug segment with the
-          real post title (the URL slug alone is opaque). */}
       <BreadcrumbConfig customLabels={{ [post.slug]: post.title }} suppressSchema />
       <PageShell width="wide">
         <Link
@@ -97,7 +91,12 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
         <article className="mt-8">
           <header>
             <div className="text-primary text-xs font-medium tracking-wider uppercase">
-              {post.category}
+              <Link
+                href={`/blog/category/${post.category.toLowerCase().replace(/\s+/g, "-")}`}
+                className="hover:underline"
+              >
+                {post.category}
+              </Link>
             </div>
             <h1 className="text-foreground mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">
               {post.title}
@@ -128,7 +127,7 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
               tools and categories across the site.
             </p>
             <p>{post.description}</p>
-            <h2>What you'll learn</h2>
+            <h2>What you&apos;ll learn</h2>
             <ul>
               {post.tags.map((t) => (
                 <li key={t}>{t}</li>
@@ -144,7 +143,7 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
               {related.map((p) => (
                 <li key={p.slug}>
                   <Link
-                    href={`/blog/${p.slug}`}
+                    href={`/blog/post/${p.slug}`}
                     className="border-border/60 shadow-soft hover:border-primary/40 block rounded-xl border bg-white p-4 transition-colors"
                   >
                     <div className="text-primary text-xs font-medium tracking-wider uppercase">

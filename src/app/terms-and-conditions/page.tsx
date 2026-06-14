@@ -1,10 +1,13 @@
+import type { Metadata } from "next";
 import LegalLayout from "@/components/legal/LegalLayout";
 import TermsContent, { lastUpdated } from "@/content/legal/terms-and-conditions";
+import { buildMetadata } from "@/lib/seo";
 
-export const metadata = {
-  title: "Terms & Conditions | Widgetly",
+export const metadata: Metadata = buildMetadata({
+  title: "Terms & Conditions",
   description: "Review the terms governing your use of Widgetly.",
-};
+  path: "/terms-and-conditions",
+});
 
 const TOC = [
   { id: "acceptance", label: "Acceptance of Terms" },
@@ -19,7 +22,12 @@ const TOC = [
 
 export default function TermsPage() {
   return (
-    <LegalLayout title="Terms & Conditions" subtitle="Review the terms governing your use of Widgetly." toc={TOC} lastUpdated={lastUpdated}>
+    <LegalLayout
+      title="Terms & Conditions"
+      subtitle="Review the terms governing your use of Widgetly."
+      toc={TOC}
+      lastUpdated={lastUpdated}
+    >
       <TermsContent />
     </LegalLayout>
   );

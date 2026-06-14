@@ -81,11 +81,15 @@ export function LandmarksCollage({ variant = "collage" }: { variant?: Variant })
             className="group border-border/60 overflow-hidden rounded-md border bg-white/5"
           >
             <div className="relative aspect-square w-full">
-              {/* Local SVG in /public — next/image not needed. */}
+              {/* Local SVG in /public — next/image not needed. Width/height
+                  attrs reserve aspect-ratio box to keep CLS at 0; intrinsic
+                  size of 512 matches the asset's natural draw size. */}
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={`/images/landmarks/${l.file}`}
                 alt={`${l.name} illustration`}
+                width={512}
+                height={512}
                 loading="lazy"
                 decoding="async"
                 className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
@@ -108,11 +112,14 @@ export function LandmarksCollage({ variant = "collage" }: { variant?: Variant })
           className="group border-border/60 hover:border-primary/40 relative overflow-hidden rounded-lg border bg-white/5 transition-colors"
         >
           <div className="relative aspect-square w-full">
-            {/* Local SVG in /public — next/image not needed. */}
+            {/* Local SVG in /public — next/image not needed. Width/height
+                attrs reserve aspect-ratio box to keep CLS at 0. */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={`/images/landmarks/${l.file}`}
               alt={`${l.name} — ${l.location}`}
+              width={512}
+              height={512}
               loading="lazy"
               decoding="async"
               className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"

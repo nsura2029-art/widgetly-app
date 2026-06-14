@@ -2,16 +2,18 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, Clock } from "lucide-react";
 import { BLOG_POSTS, type BlogPostMeta } from "@/lib/blog";
-import { SITE_CONFIG } from "@/lib/constants";
 import { blogJsonLd } from "@/lib/seo-schemas";
 import { PageShell } from "@/components/layout/page-shell";
+import { buildMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Blog | Widgetly — Product Updates, Guides & Best-Of Lists",
+export const metadata: Metadata = buildMetadata({
+  title: "Blog — Product Updates, Guides & Best-Of Lists",
   description:
     "Product news, in-depth guides, and curated best-of lists from the Widgetly team. AI tools, productivity, PDF, dev utilities, and more.",
-  alternates: { canonical: `${SITE_CONFIG.url}/blog` },
-};
+  path: "/blog",
+  type: "website",
+  keywords: ["widgetly blog", "online tools blog", "productivity guides", "ai tools", "pdf tools"],
+});
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("en-US", {
