@@ -1,6 +1,9 @@
-import Link from "next/link";
+"use client";
+
+import { Link } from "@/i18n/navigation";
 import { Github, Twitter, Linkedin } from "lucide-react";
 import { Logo } from "@/components/shared/logo";
+import { useTranslations } from "next-intl";
 import { FOOTER_LINKS, SITE_CONFIG } from "@/lib/constants";
 
 const SOCIAL_ICONS = {
@@ -10,6 +13,8 @@ const SOCIAL_ICONS = {
 } as const;
 
 export function Footer() {
+  const t = useTranslations("footer");
+  const tSite = useTranslations("site");
   const year = new Date().getFullYear();
   return (
     <footer
@@ -32,7 +37,7 @@ export function Footer() {
               <Logo className="text-white [&_span]:!text-white" />
             </div>
             <p className="mt-4 max-w-sm text-sm leading-relaxed text-white/60">
-              {SITE_CONFIG.description}
+              {tSite("description")}
             </p>
             <div className="mt-6 flex items-center gap-2">
               {FOOTER_LINKS.social.map((link) => {
@@ -56,18 +61,24 @@ export function Footer() {
           </div>
 
           <div className="grid grid-cols-2 gap-8 md:col-span-7 md:grid-cols-4">
-            <FooterColumn title="Product" links={FOOTER_LINKS.product} />
-            <FooterColumn title="Resources" links={FOOTER_LINKS.resources} />
-            <FooterColumn title="Company" links={FOOTER_LINKS.company} />
-            <FooterColumn title="Legal" links={FOOTER_LINKS.legal} />
+            <FooterColumn title={t("columns.product")} links={FOOTER_LINKS.product} />
+            <FooterColumn title={t("columns.resources")} links={FOOTER_LINKS.resources} />
+            <FooterColumn title={t("columns.company")} links={FOOTER_LINKS.company} />
+            <FooterColumn title={t("columns.legal")} links={FOOTER_LINKS.legal} />
           </div>
         </div>
 
         <div className="mt-14 flex flex-col items-start justify-between gap-4 border-t border-white/10 pt-8 text-sm text-white/50 md:flex-row md:items-center">
-          <p>© {year} {SITE_CONFIG.name}. All rights reserved.</p>
           <p>
-            Built with care. Deployed on{" "}
-            <span className="text-white/80">Cloudflare</span>.
+            {t.rich("copyright", {
+              year,
+              siteName: tSite("name"),
+            })}
+          </p>
+          <p>
+            {t.rich("builtWith", {
+              platform: () => <span className="text-white/80">Cloudflare</span>,
+            })}
           </p>
         </div>
       </div>

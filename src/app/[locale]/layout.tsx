@@ -8,6 +8,7 @@ import { isSupportedLocale, getDirection } from "@/i18n/config";
 import ClientHeader from "@/components/layout/client-header";
 import { BreadcrumbNav } from "@/components/layout/breadcrumb-nav";
 import { Footer } from "@/components/layout/footer";
+
 import { websiteJsonLd, organizationJsonLd, softwareApplicationJsonLd, faqJsonLd } from "@/lib/seo";
 import { FAQS } from "@/lib/constants";
 
@@ -129,6 +130,7 @@ export default async function LocaleLayout({
             Skip to content
           </a>
           <ClientHeader />
+
           <main id="main" className="pt-16">
             <BreadcrumbNav />
             {children}

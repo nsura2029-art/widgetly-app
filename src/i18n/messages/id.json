@@ -21,7 +21,7 @@
       "mainNav": "Navigasi utama",
       "openMenu": "Buka menu",
       "closeMenu": "Tutup menu",
-      "homeLink": "[name] rumah"
+      "homeLink": "{siteName} home"
     },
     "localePicker": {
       "label": "Pilih bahasa",
@@ -57,7 +57,7 @@
       "twitter": "Twitter",
       "discord": "Discord"
     },
-    "copyright": "© {year} [siteName]. Semua hak disediakan.",
+    "copyright": "© {year} {siteName}. All rights reserved.",
     "builtWith": "Dibangun dengan hati-hati. Dikerahkan pada {platform}."
   },
   "home": {
@@ -96,7 +96,7 @@
         "stars": "GitHub Stars",
         "waitlist": "Sinyal Waitlist"
       },
-      "footer": "Perkakas bebas"
+      "footer": "{freeTools} free tools · {uptimeTarget} uptime target · zero ads"
     },
     "waitlist": {
       "pill": "Jadilah yang pertama",
@@ -111,7 +111,7 @@
     "seo": {
       "exploreTitle": "Jelajahi Widgetly berdasarkan kategori",
       "exploreSubtitle": "Setiap kategori adalah satu set kurator perangkat online gratis, dipilih sendiri dan dibangun untuk kecepatan. Klik melalui untuk melihat peta jalan.",
-      "count": "{hitungan} + alat",
+      "count": "{count}+ tools",
       "browse": "Ramban {name} beriman"
     },
     "faq": {
