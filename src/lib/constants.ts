@@ -61,36 +61,42 @@ export const NAV_LINKS = [
   { label: "Contact", href: "/contact" },
 ] as const;
 
+/**
+ * Footer link groups. `labelKey` is the key under `footer.links.*` in
+ * the messages bundle (e.g. `allTools`, `pdfTools`); the actual label
+ * text is resolved at render time via `useTranslations("footer")`.
+ * `icon` is only set for the `social` group (icon-only external links).
+ */
 export const FOOTER_LINKS = {
   product: [
-    { label: "All Tools", href: "/tools" },
-    { label: "PDF Tools", href: "/tools/pdf" },
-    { label: "Image Tools", href: "/tools/image" },
-    { label: "AI Tools", href: "/tools/ai" },
-    { label: "Developer Tools", href: "/tools/developer" },
-    { label: "Suggest a Tool", href: "/suggest" },
-    { label: "Join Waitlist", href: "/#waitlist" },
+    { labelKey: "allTools", href: "/tools" },
+    { labelKey: "pdfTools", href: "/tools/pdf" },
+    { labelKey: "imageTools", href: "/tools/image" },
+    { labelKey: "aiTools", href: "/tools/ai" },
+    { labelKey: "developerTools", href: "/tools/developer" },
+    { labelKey: "suggest", href: "/suggest" },
+    { labelKey: "joinWaitlist", href: "/#waitlist" },
   ],
   resources: [
-    { label: "Blog", href: "/blog" },
-    { label: "Help Center", href: "/help" },
-    { label: "Changelog", href: "#" },
-    { label: "Status", href: "#" },
+    { labelKey: "blog", href: "/blog" },
+    { labelKey: "help", href: "/help" },
+    { labelKey: "changelog", href: "#" },
+    { labelKey: "status", href: "#" },
   ],
   company: [
-    { label: "About", href: "/about" },
-    { label: "Contact", href: "/contact" },
+    { labelKey: "about", href: "/about" },
+    { labelKey: "contact", href: "/contact" },
   ],
   legal: [
-    { label: "Privacy Policy", href: "/privacy-policy" },
-    { label: "Terms & Conditions", href: "/terms-and-conditions" },
-    { label: "Cookies Policy", href: "/cookies-policy" },
-    { label: "Security", href: "/security" },
+    { labelKey: "privacy", href: "/privacy-policy" },
+    { labelKey: "terms", href: "/terms-and-conditions" },
+    { labelKey: "cookies", href: "/cookies-policy" },
+    { labelKey: "security", href: "/security" },
   ],
   social: [
-    { label: "GitHub", href: "https://github.com/widgetly", icon: "github" },
-    { label: "Twitter", href: "https://twitter.com/widgetly", icon: "twitter" },
-    { label: "Discord", href: "https://discord.gg/widgetly", icon: "discord" },
+    { labelKey: "github", href: "https://github.com/widgetly", icon: "github" },
+    { labelKey: "twitter", href: "https://twitter.com/widgetly", icon: "twitter" },
+    { labelKey: "discord", href: "https://discord.gg/widgetly", icon: "discord" },
   ],
 } as const;
 

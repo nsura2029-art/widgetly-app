@@ -14,6 +14,7 @@ const SOCIAL_ICONS = {
 
 export function Footer() {
   const t = useTranslations("footer");
+  const tLinks = useTranslations("footer.links");
   const tSite = useTranslations("site");
   const year = new Date().getFullYear();
   return (
@@ -49,11 +50,11 @@ export function Footer() {
                   Github;
                 return (
                   <a
-                    key={link.label}
+                    key={link.labelKey}
                     href={link.href}
                     target="_blank"
                     rel="noreferrer noopener"
-                    aria-label={link.label}
+                    aria-label={tLinks(link.labelKey)}
                     className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white/80 transition-all hover:border-white/30 hover:bg-white/10 hover:text-white"
                   >
                     <Icon className="h-4 w-4" />
@@ -96,8 +97,9 @@ function FooterColumn({
   links,
 }: {
   title: string;
-  links: ReadonlyArray<{ label: string; href: string }>;
+  links: ReadonlyArray<{ labelKey: string; href: string }>;
 }) {
+  const t = useTranslations("footer.links");
   return (
     <div>
       <h3 className="text-xs font-semibold uppercase tracking-wider text-white/50">
@@ -105,12 +107,12 @@ function FooterColumn({
       </h3>
       <ul className="mt-4 space-y-2.5">
         {links.map((link) => (
-          <li key={link.label}>
+          <li key={link.labelKey}>
             <Link
               href={link.href}
               className="text-sm text-white/70 transition-colors hover:text-white"
             >
-              {link.label}
+              {t(link.labelKey)}
             </Link>
           </li>
         ))}
