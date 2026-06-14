@@ -82,11 +82,7 @@ import { dirname, join } from "node:path";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const MSG_DIR = join(__dirname, "..", "src", "i18n", "messages");
 
-const ALL_LOCALES = [
-  "id", "ms", "da", "de", "es", "fr", "it", "nl", "no",
-  "pl", "pt", "sv", "vi", "tr", "ru", "uk", "ar", "hi",
-  "th", "ko", "ja", "zh-CN", "zh-TW",
-];
+const ALL_LOCALES = ["es", "fr"];
 
 // --- CLI parsing ---
 

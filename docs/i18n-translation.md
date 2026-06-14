@@ -1,12 +1,24 @@
 # i18n translation pipeline
 
-Bulk-translates `src/i18n/messages/en.json` into the other 23 locales
+> **MVP scope (2025-Q3 launch):** English (default), Spanish, French.
+> 21 other locales (de, it, pt, ja, ko, zh-CN, ar, etc.) are NOT
+> exposed to users at launch — the locale list in
+> `src/i18n/config.ts` only contains `en`, `es`, `fr`. Re-adding a
+> locale post-MVP is a 3-line change in that file plus a new
+> `src/i18n/messages/<code>.json` (just `cp en.json <code>.json`).
+> See "Re-enabling a locale post-MVP" at the bottom of this file.
+
+Bulk-translates `src/i18n/messages/en.json` into the other 2 MVP locales
 using a paid MT provider (DeepL / Google Cloud Translation / Gemini)
 or a free fallback (LibreTranslate). Writes the result to
 `src/i18n/messages/<locale>.json`, preserving key order and only
 translating string values (not keys).
 
 ## Quick start (local)
+
+> All `pnpm i18n:*` commands below default to the MVP locale set
+> (`es`, `fr`). Pass `--locales=...` to override. To re-enable a
+> post-MVP locale, see the bottom of this file.
 
 ### Option A: API-based (needs a key)
 
@@ -191,15 +203,45 @@ file on disk.
 To re-translate a single string (force), edit the locale file to
 match the English value, then re-run.
 
-## Cost reference (June 2025 pricing)
+## Cost reference (June 2025 pricing) — MVP scope (en + es + fr)
 
-| Provider | Cost per 196 × 22 strings | Notes |
+| Provider | Cost per 196 × 2 strings | Notes |
 |---|---|---|
 | LibreTranslate | free | unreliable, MVP quality |
 | DeepL Free | free | 500k chars/month cap |
-| DeepL Pro | ~$0.05 | best for European |
-| Google Cloud Translation | ~$0.10 | covers everything |
-| Gemini 2.0 Flash | ~$0.02 | cheapest paid, slightly lower quality |
+| DeepL Pro | <$0.01 | best for European |
+| Google Cloud Translation | <$0.01 | covers everything |
+| Gemini 2.0 Flash | <$0.01 | cheapest paid, slightly lower quality |
+
+The full MVP pass is essentially free on any of the paid tiers.
+
+## Re-enabling a locale post-MVP
+
+Three steps, in this order:
+
+1. **Add the locale to `src/i18n/config.ts`.** Append a new
+   `LocaleMeta` entry to the `LOCALES` array (nativeName,
+   englishName, dir, shortLabel), and add the code to the
+   `LocaleCode` union. If the new locale is RTL, also extend
+   `RTL_LOCALES` (which derives from `LOCALES` so it's automatic).
+   Update the `COUNTRY_TO_LOCALE` map with the country codes that
+   should detect to this locale.
+
+2. **Create the messages file.**
+   ```bash
+   cp src/i18n/messages/en.json src/i18n/messages/<code>.json
+   ```
+
+3. **Translate it.**
+   ```bash
+   pnpm i18n:export --locales=<code> --out=tmp/translate
+   # ... translate tmp/translate/<code>.txt ...
+   pnpm i18n:import --dir=tmp/translate
+   ```
+
+No other code changes are needed. The locale picker, routing,
+`generateStaticParams`, and the proxy all derive from `LOCALES` so
+they auto-update.
 
 ## Files
 

@@ -89,20 +89,14 @@ import { dirname, join } from "node:path";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const MSG_DIR = join(__dirname, "..", "src", "i18n", "messages");
 
-const ALL_LOCALES = [
-  "id", "ms", "da", "de", "es", "fr", "it", "nl", "no",
-  "pl", "pt", "sv", "vi", "tr", "ru", "uk", "ar", "hi",
-  "th", "ko", "ja", "zh-CN", "zh-TW",
-];
+const ALL_LOCALES = ["es", "fr"];
 
 // Locales that DeepL supports (as of late 2025). Used by the
 // `--provider=auto` dispatcher to route European languages through
 // DeepL (better quality) and everything else through Google.
 // Source: https://developers.deepl.com/docs/getting-started/supported-languages
 const DEEPL_SUPPORTED = new Set([
-  "bg", "cs", "da", "de", "el", "en", "es", "et", "fi", "fr",
-  "hu", "id", "it", "ja", "ko", "lt", "lv", "nb", "nl", "pl",
-  "pt", "ro", "ru", "sk", "sl", "sv", "tr", "uk", "zh",
+  "en", "es", "fr",
 ]);
 
 // Map our locale codes to the exact code DeepL expects.
