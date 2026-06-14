@@ -71,12 +71,12 @@ export function SocialProof() {
         <FadeIn delay={0.3} className="mt-12 text-center">
           <p className="text-muted text-sm">
             {t.rich("footer", {
-              freeTools: () => (
+              freeTools: (
                 <span className="text-foreground font-semibold">{STATS.freeTools}</span>
-              ),
-              uptimeTarget: () => (
+              ) as unknown as string,
+              uptimeTarget: (
                 <span className="text-foreground font-semibold">{STATS.uptimeTarget}</span>
-              ),
+              ) as unknown as string,
             })}
           </p>
         </FadeIn>
