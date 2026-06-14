@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { MapPin, Clock, Heart, Sparkles, ArrowRight, Briefcase, Users, Coffee } from "lucide-react";
 import { SITE_CONFIG } from "@/lib/constants";
 import { LandmarksCollage, LANDMARKS } from "@/components/about/landmarks-collage";

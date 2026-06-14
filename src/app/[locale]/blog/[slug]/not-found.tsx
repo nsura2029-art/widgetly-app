@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { ArrowRight, BookOpen, Sparkles } from "lucide-react";
 import { BLOG_POSTS } from "@/lib/blog";
 import { SITE_CONFIG } from "@/lib/constants";

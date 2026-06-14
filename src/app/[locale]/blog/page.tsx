@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { ArrowRight, Clock } from "lucide-react";
 import { BLOG_POSTS, type BlogPostMeta } from "@/lib/blog";
 import { blogJsonLd } from "@/lib/seo-schemas";
