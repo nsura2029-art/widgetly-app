@@ -57,6 +57,46 @@ service role slot. The anon publishable key bypasses RLS only
 on `select`; any `insert`/`update`/`delete` on behalf of the
 server needs the service role.
 
+## 🔴 opennextjs-cloudflare: Next 16 proxy.ts workaround
+
+[2026-06-15]
+
+`@opennextjs/cloudflare@1.19.11` predates Next.js 16's
+`proxy.ts` convention. The build's pre-check trips on
+`functions-config-manifest.json` because Next 16 always
+labels the proxy as `"runtime": "nodejs"` in that manifest,
+even though the file is edge-safe (Web Crypto + NextRequest
+APIs only — no Node APIs, no fs, no Buffer).
+
+The deploy is correct regardless: `open-next.config.ts`'s
+`middleware` block wraps the proxy in the `cloudflare-edge`
+worker wrapper, which is what actually matters at deploy
+time.
+
+**Workaround** in place:
+
+- `scripts/patch-opennextjs-cloudflare.sh` rewrites the
+  `useNodeMiddleware()` function in
+  `node_modules/@opennextjs/cloudflare/dist/cli/build/utils/middleware.js`
+  to always return `false`. Idempotent (checks for a marker
+  comment before re-applying).
+- `postinstall` in `package.json` runs the script after
+  every `pnpm install`, so the patch survives reinstalls.
+- `src/proxy.ts` is the standard Next 16 convention — no
+  changes needed.
+
+**When to remove:** when `@opennextjs/cloudflare` ships a
+version that recognizes the Next 16 `proxy.ts` manifest
+format natively. Check the opennextjs-cloudflare CHANGELOG
+on each minor release. The patch script's comment block
+documents the rationale, so the next maintainer knows why
+it's there.
+
+**Symptom if the patch doesn't run:** `pnpm deploy` errors
+with `Node.js middleware is not currently supported.
+Consider switching to Edge Middleware.` and exits before
+reaching `next build`.
+
 ## 🔴 Pre-commit hook: `.env.example` must not contain real
 
 values [2026-06-15]
