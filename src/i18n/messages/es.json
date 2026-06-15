@@ -14,7 +14,7 @@
       "contact": "Contact"
     },
     "actions": {
-      "star": "Star",
+      "star": "Estrella",
       "joinWaitlist": "Join Waitlist"
     },
     "aria": {
@@ -105,7 +105,7 @@
       "countdown": {
         "label": "Launching in"
       },
-      "founderQuote": "\u201cWe're building the utility platform we always wished existed — one search bar away from anything you need.\u201d",
+      "founderQuote": "“We're building the utility platform we always wished existed — one search bar away from anything you need.”",
       "founderAttribution": "— The Widgetly team"
     },
     "seo": {
@@ -158,16 +158,56 @@
   },
   "categories": {
     "items": {
-      "pdf": { "name": "PDF Tools", "shortDesc": "Merge, split, compress, convert", "longDesc": "Free online PDF tools: merge, split, compress, convert to Word/Excel/JPG, edit, sign, protect. No upload limits, no watermarks, runs in your browser." },
-      "image": { "name": "Image Tools", "shortDesc": "Resize, crop, convert, optimize", "longDesc": "Online image editor: resize, crop, compress, convert between JPG, PNG, WebP, SVG, AVIF. Background remover, watermark, filters, and batch processing." },
-      "video": { "name": "Video Tools", "shortDesc": "Compress, trim, transcribe", "longDesc": "Browser-based video tools: compress, trim, cut, merge, transcribe audio to text, generate subtitles, convert to MP4, WebM, GIF. No software to install." },
-      "ai": { "name": "AI Tools", "shortDesc": "Write, summarize, generate", "longDesc": "Free AI tools for writing, summarizing, rewriting, translating, generating images, building resumes, and answering questions. Powered by the latest LLMs." },
-      "calculators": { "name": "Calculators", "shortDesc": "Finance, math, health, more", "longDesc": "Hundreds of free online calculators: mortgage, loan, BMI, calorie, tip, percentage, age, GPA, grade, scientific, financial, health, and math calculators." },
-      "converters": { "name": "Converters", "shortDesc": "Units, currencies, formats", "longDesc": "Free unit, currency, and file format converters: length, weight, temperature, area, volume, time, speed, data, color codes, and 150+ currencies with live rates." },
-      "seo": { "name": "SEO Tools", "shortDesc": "Keywords, meta, audit", "longDesc": "Free SEO tools: meta tag generator, keyword density checker, sitemap generator, robots.txt tester, SERP preview, backlink checker, page speed insights." },
-      "education": { "name": "Education Tools", "shortDesc": "Lesson plans, quizzes, study", "longDesc": "Tools for teachers and students: lesson plan generator, quiz maker, flashcards, study timer, GPA calculator, citation generator, math solver, writing prompts." },
-      "developer": { "name": "Developer Tools", "shortDesc": "JSON, regex, encoders", "longDesc": "Free developer utilities: JSON formatter and validator, regex tester, Base64 encoder, URL encoder, JWT decoder, CSS minifier, diff checker, hash generator." },
-      "business": { "name": "Business Tools", "shortDesc": "Invoices, contracts, proposals", "longDesc": "Business productivity tools: invoice generator, contract templates, proposal builder, NDA generator, business plan templates, SWOT analysis, OKR tracker." }
+      "pdf": {
+        "name": "PDF Tools",
+        "shortDesc": "Merge, split, compress, convert",
+        "longDesc": "Free online PDF tools: merge, split, compress, convert to Word/Excel/JPG, edit, sign, protect. No upload limits, no watermarks, runs in your browser."
+      },
+      "image": {
+        "name": "Image Tools",
+        "shortDesc": "Resize, crop, convert, optimize",
+        "longDesc": "Online image editor: resize, crop, compress, convert between JPG, PNG, WebP, SVG, AVIF. Background remover, watermark, filters, and batch processing."
+      },
+      "video": {
+        "name": "Video Tools",
+        "shortDesc": "Compress, trim, transcribe",
+        "longDesc": "Browser-based video tools: compress, trim, cut, merge, transcribe audio to text, generate subtitles, convert to MP4, WebM, GIF. No software to install."
+      },
+      "ai": {
+        "name": "AI Tools",
+        "shortDesc": "Write, summarize, generate",
+        "longDesc": "Free AI tools for writing, summarizing, rewriting, translating, generating images, building resumes, and answering questions. Powered by the latest LLMs."
+      },
+      "calculators": {
+        "name": "Calculators",
+        "shortDesc": "Finance, math, health, more",
+        "longDesc": "Hundreds of free online calculators: mortgage, loan, BMI, calorie, tip, percentage, age, GPA, grade, scientific, financial, health, and math calculators."
+      },
+      "converters": {
+        "name": "Converters",
+        "shortDesc": "Units, currencies, formats",
+        "longDesc": "Convertidores gratuitos de unidades, divisas y formatos de archivo: longitud, peso, temperatura, área, volumen, tiempo, velocidad, datos, códigos de color y más de 150 divisas con tipos de cambio en tiempo real."
+      },
+      "seo": {
+        "name": "SEO Tools",
+        "shortDesc": "Keywords, meta, audit",
+        "longDesc": "Free SEO tools: meta tag generator, keyword density checker, sitemap generator, robots.txt tester, SERP preview, backlink checker, page speed insights."
+      },
+      "education": {
+        "name": "Education Tools",
+        "shortDesc": "Lesson plans, quizzes, study",
+        "longDesc": "Tools for teachers and students: lesson plan generator, quiz maker, flashcards, study timer, GPA calculator, citation generator, math solver, writing prompts."
+      },
+      "developer": {
+        "name": "Developer Tools",
+        "shortDesc": "JSON, regex, encoders",
+        "longDesc": "Free developer utilities: JSON formatter and validator, regex tester, Base64 encoder, URL encoder, JWT decoder, CSS minifier, diff checker, hash generator."
+      },
+      "business": {
+        "name": "Business Tools",
+        "shortDesc": "Invoices, contracts, proposals",
+        "longDesc": "Business productivity tools: invoice generator, contract templates, proposal builder, NDA generator, business plan templates, SWOT analysis, OKR tracker."
+      }
     }
   },
   "about": {
@@ -178,10 +218,22 @@
     "howWeWork": {
       "title": "How we work",
       "tiles": {
-        "small": { "title": "Small, senior, async", "body": "Everyone on the team has deep experience and owns their work end-to-end. We write things down so context isn't lost across time zones." },
-        "remote": { "title": "Fully remote", "body": "Work from wherever you're most productive. We overlap a few hours with US Eastern for the team that wants it; the rest is async." },
-        "hours": { "title": "Sensible hours", "body": "We protect focus time and respect evenings and weekends. Tools that \"just work\" start with a team that isn't burned out." },
-        "pay": { "title": "Pay transparency", "body": "Salary bands are public within the company and tied to role and experience, not negotiation. The same role pays the same, anywhere." }
+        "small": {
+          "title": "Small, senior, async",
+          "body": "Everyone on the team has deep experience and owns their work end-to-end. We write things down so context isn't lost across time zones."
+        },
+        "remote": {
+          "title": "Fully remote",
+          "body": "Work from wherever you're most productive. We overlap a few hours with US Eastern for the team that wants it; the rest is async."
+        },
+        "hours": {
+          "title": "Sensible hours",
+          "body": "We protect focus time and respect evenings and weekends. Tools that \"just work\" start with a team that isn't burned out."
+        },
+        "pay": {
+          "title": "Pay transparency",
+          "body": "Salary bands are public within the company and tied to role and experience, not negotiation. The same role pays the same, anywhere."
+        }
       }
     },
     "teamTitle": "Meet the team",
@@ -246,7 +298,7 @@
         "description": "A curated guide to the 50 most useful free online tools for productivity, writing, design, and development in 2025."
       },
       "ai-tools-for-students": {
-        "title": "10 AI Tools Every Student Should Use in 2025",
+        "title": "10 herramientas de IA que todo estudiante debería usar en 2025",
         "description": "From essay outlines to math solvers, here are the AI tools that will actually save you time as a student this year."
       },
       "pdf-tools-online-guide": {

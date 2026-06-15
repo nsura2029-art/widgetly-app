@@ -1,0 +1,829 @@
+{
+  "1": {
+    "path": "site.name",
+    "tags": []
+  },
+  "2": {
+    "path": "site.tagline",
+    "tags": []
+  },
+  "3": {
+    "path": "site.description",
+    "tags": []
+  },
+  "4": {
+    "path": "header.nav.tools",
+    "tags": []
+  },
+  "5": {
+    "path": "header.nav.features",
+    "tags": []
+  },
+  "6": {
+    "path": "header.nav.categories",
+    "tags": []
+  },
+  "7": {
+    "path": "header.nav.blog",
+    "tags": []
+  },
+  "8": {
+    "path": "header.nav.about",
+    "tags": []
+  },
+  "9": {
+    "path": "header.nav.contact",
+    "tags": []
+  },
+  "10": {
+    "path": "header.actions.star",
+    "tags": []
+  },
+  "11": {
+    "path": "header.actions.joinWaitlist",
+    "tags": []
+  },
+  "12": {
+    "path": "header.aria.mainNav",
+    "tags": []
+  },
+  "13": {
+    "path": "header.aria.openMenu",
+    "tags": []
+  },
+  "14": {
+    "path": "header.aria.closeMenu",
+    "tags": []
+  },
+  "15": {
+    "path": "header.aria.homeLink",
+    "tags": [
+      {
+        "tag": "x1",
+        "name": "siteName"
+      }
+    ]
+  },
+  "16": {
+    "path": "header.localePicker.label",
+    "tags": []
+  },
+  "17": {
+    "path": "header.localePicker.currentLanguage",
+    "tags": [
+      {
+        "tag": "x1",
+        "name": "nativeName"
+      }
+    ]
+  },
+  "18": {
+    "path": "footer.columns.product",
+    "tags": []
+  },
+  "19": {
+    "path": "footer.columns.resources",
+    "tags": []
+  },
+  "20": {
+    "path": "footer.columns.company",
+    "tags": []
+  },
+  "21": {
+    "path": "footer.columns.legal",
+    "tags": []
+  },
+  "22": {
+    "path": "footer.links.allTools",
+    "tags": []
+  },
+  "23": {
+    "path": "footer.links.pdfTools",
+    "tags": []
+  },
+  "24": {
+    "path": "footer.links.imageTools",
+    "tags": []
+  },
+  "25": {
+    "path": "footer.links.aiTools",
+    "tags": []
+  },
+  "26": {
+    "path": "footer.links.developerTools",
+    "tags": []
+  },
+  "27": {
+    "path": "footer.links.suggest",
+    "tags": []
+  },
+  "28": {
+    "path": "footer.links.joinWaitlist",
+    "tags": []
+  },
+  "29": {
+    "path": "footer.links.blog",
+    "tags": []
+  },
+  "30": {
+    "path": "footer.links.help",
+    "tags": []
+  },
+  "31": {
+    "path": "footer.links.changelog",
+    "tags": []
+  },
+  "32": {
+    "path": "footer.links.status",
+    "tags": []
+  },
+  "33": {
+    "path": "footer.links.about",
+    "tags": []
+  },
+  "34": {
+    "path": "footer.links.contact",
+    "tags": []
+  },
+  "35": {
+    "path": "footer.links.privacy",
+    "tags": []
+  },
+  "36": {
+    "path": "footer.links.terms",
+    "tags": []
+  },
+  "37": {
+    "path": "footer.links.cookies",
+    "tags": []
+  },
+  "38": {
+    "path": "footer.links.security",
+    "tags": []
+  },
+  "39": {
+    "path": "footer.links.github",
+    "tags": []
+  },
+  "40": {
+    "path": "footer.links.twitter",
+    "tags": []
+  },
+  "41": {
+    "path": "footer.links.discord",
+    "tags": []
+  },
+  "42": {
+    "path": "footer.copyright",
+    "tags": [
+      {
+        "tag": "x1",
+        "name": "year"
+      },
+      {
+        "tag": "x2",
+        "name": "siteName"
+      }
+    ]
+  },
+  "43": {
+    "path": "footer.builtWith",
+    "tags": [
+      {
+        "tag": "x1",
+        "name": "platform"
+      }
+    ]
+  },
+  "44": {
+    "path": "home.hero.title",
+    "tags": []
+  },
+  "45": {
+    "path": "home.hero.subtitle",
+    "tags": []
+  },
+  "46": {
+    "path": "home.hero.askPrompt",
+    "tags": []
+  },
+  "47": {
+    "path": "home.hero.askCta",
+    "tags": []
+  },
+  "48": {
+    "path": "home.hero.audiences.students",
+    "tags": []
+  },
+  "49": {
+    "path": "home.hero.audiences.teachers",
+    "tags": []
+  },
+  "50": {
+    "path": "home.hero.audiences.professionals",
+    "tags": []
+  },
+  "51": {
+    "path": "home.hero.audiences.creators",
+    "tags": []
+  },
+  "52": {
+    "path": "home.hero.audiences.developers",
+    "tags": []
+  },
+  "53": {
+    "path": "home.hero.audiences.marketers",
+    "tags": []
+  },
+  "54": {
+    "path": "home.hero.audiences.businesses",
+    "tags": []
+  },
+  "55": {
+    "path": "home.hero.suggestTool",
+    "tags": []
+  },
+  "56": {
+    "path": "home.hero.joinWaitlist",
+    "tags": []
+  },
+  "57": {
+    "path": "home.features.title",
+    "tags": []
+  },
+  "58": {
+    "path": "home.features.subtitle",
+    "tags": []
+  },
+  "59": {
+    "path": "home.categories.pill",
+    "tags": []
+  },
+  "60": {
+    "path": "home.categories.title",
+    "tags": []
+  },
+  "61": {
+    "path": "home.categories.subtitle",
+    "tags": []
+  },
+  "62": {
+    "path": "home.categories.count",
+    "tags": []
+  },
+  "63": {
+    "path": "home.socialProof.title",
+    "tags": []
+  },
+  "64": {
+    "path": "home.socialProof.stats.tools",
+    "tags": []
+  },
+  "65": {
+    "path": "home.socialProof.stats.categories",
+    "tags": []
+  },
+  "66": {
+    "path": "home.socialProof.stats.stars",
+    "tags": []
+  },
+  "67": {
+    "path": "home.socialProof.stats.waitlist",
+    "tags": []
+  },
+  "68": {
+    "path": "home.socialProof.footer",
+    "tags": [
+      {
+        "tag": "x1",
+        "name": "freeTools"
+      },
+      {
+        "tag": "x2",
+        "name": "uptimeTarget"
+      }
+    ]
+  },
+  "69": {
+    "path": "home.waitlist.pill",
+    "tags": []
+  },
+  "70": {
+    "path": "home.waitlist.title",
+    "tags": []
+  },
+  "71": {
+    "path": "home.waitlist.subtitle",
+    "tags": []
+  },
+  "72": {
+    "path": "home.waitlist.countdown.label",
+    "tags": []
+  },
+  "73": {
+    "path": "home.waitlist.founderQuote",
+    "tags": []
+  },
+  "74": {
+    "path": "home.waitlist.founderAttribution",
+    "tags": []
+  },
+  "75": {
+    "path": "home.seo.exploreTitle",
+    "tags": []
+  },
+  "76": {
+    "path": "home.seo.exploreSubtitle",
+    "tags": []
+  },
+  "77": {
+    "path": "home.seo.count",
+    "tags": [
+      {
+        "tag": "x1",
+        "name": "count"
+      }
+    ]
+  },
+  "78": {
+    "path": "home.seo.browse",
+    "tags": [
+      {
+        "tag": "x1",
+        "name": "name"
+      }
+    ]
+  },
+  "79": {
+    "path": "home.faq.pill",
+    "tags": []
+  },
+  "80": {
+    "path": "home.faq.title",
+    "tags": []
+  },
+  "81": {
+    "path": "home.faq.subtitle",
+    "tags": []
+  },
+  "82": {
+    "path": "faq.items.whatIs.question",
+    "tags": []
+  },
+  "83": {
+    "path": "faq.items.whatIs.answer",
+    "tags": []
+  },
+  "84": {
+    "path": "faq.items.isFree.question",
+    "tags": []
+  },
+  "85": {
+    "path": "faq.items.isFree.answer",
+    "tags": []
+  },
+  "86": {
+    "path": "faq.items.launch.question",
+    "tags": []
+  },
+  "87": {
+    "path": "faq.items.launch.answer",
+    "tags": []
+  },
+  "88": {
+    "path": "faq.items.account.question",
+    "tags": []
+  },
+  "89": {
+    "path": "faq.items.account.answer",
+    "tags": []
+  },
+  "90": {
+    "path": "faq.items.privacy.question",
+    "tags": []
+  },
+  "91": {
+    "path": "faq.items.privacy.answer",
+    "tags": []
+  },
+  "92": {
+    "path": "faq.items.suggest.question",
+    "tags": []
+  },
+  "93": {
+    "path": "faq.items.suggest.answer",
+    "tags": []
+  },
+  "94": {
+    "path": "faq.items.mobile.question",
+    "tags": []
+  },
+  "95": {
+    "path": "faq.items.mobile.answer",
+    "tags": []
+  },
+  "96": {
+    "path": "faq.items.different.question",
+    "tags": []
+  },
+  "97": {
+    "path": "faq.items.different.answer",
+    "tags": []
+  },
+  "98": {
+    "path": "categories.items.pdf.name",
+    "tags": []
+  },
+  "99": {
+    "path": "categories.items.pdf.shortDesc",
+    "tags": []
+  },
+  "100": {
+    "path": "categories.items.pdf.longDesc",
+    "tags": []
+  },
+  "101": {
+    "path": "categories.items.image.name",
+    "tags": []
+  },
+  "102": {
+    "path": "categories.items.image.shortDesc",
+    "tags": []
+  },
+  "103": {
+    "path": "categories.items.image.longDesc",
+    "tags": []
+  },
+  "104": {
+    "path": "categories.items.video.name",
+    "tags": []
+  },
+  "105": {
+    "path": "categories.items.video.shortDesc",
+    "tags": []
+  },
+  "106": {
+    "path": "categories.items.video.longDesc",
+    "tags": []
+  },
+  "107": {
+    "path": "categories.items.ai.name",
+    "tags": []
+  },
+  "108": {
+    "path": "categories.items.ai.shortDesc",
+    "tags": []
+  },
+  "109": {
+    "path": "categories.items.ai.longDesc",
+    "tags": []
+  },
+  "110": {
+    "path": "categories.items.calculators.name",
+    "tags": []
+  },
+  "111": {
+    "path": "categories.items.calculators.shortDesc",
+    "tags": []
+  },
+  "112": {
+    "path": "categories.items.calculators.longDesc",
+    "tags": []
+  },
+  "113": {
+    "path": "categories.items.converters.name",
+    "tags": []
+  },
+  "114": {
+    "path": "categories.items.converters.shortDesc",
+    "tags": []
+  },
+  "115": {
+    "path": "categories.items.converters.longDesc",
+    "tags": []
+  },
+  "116": {
+    "path": "categories.items.seo.name",
+    "tags": []
+  },
+  "117": {
+    "path": "categories.items.seo.shortDesc",
+    "tags": []
+  },
+  "118": {
+    "path": "categories.items.seo.longDesc",
+    "tags": []
+  },
+  "119": {
+    "path": "categories.items.education.name",
+    "tags": []
+  },
+  "120": {
+    "path": "categories.items.education.shortDesc",
+    "tags": []
+  },
+  "121": {
+    "path": "categories.items.education.longDesc",
+    "tags": []
+  },
+  "122": {
+    "path": "categories.items.developer.name",
+    "tags": []
+  },
+  "123": {
+    "path": "categories.items.developer.shortDesc",
+    "tags": []
+  },
+  "124": {
+    "path": "categories.items.developer.longDesc",
+    "tags": []
+  },
+  "125": {
+    "path": "categories.items.business.name",
+    "tags": []
+  },
+  "126": {
+    "path": "categories.items.business.shortDesc",
+    "tags": []
+  },
+  "127": {
+    "path": "categories.items.business.longDesc",
+    "tags": []
+  },
+  "128": {
+    "path": "about.title",
+    "tags": []
+  },
+  "129": {
+    "path": "about.subtitle",
+    "tags": []
+  },
+  "130": {
+    "path": "about.missionTitle",
+    "tags": []
+  },
+  "131": {
+    "path": "about.missionBody",
+    "tags": []
+  },
+  "132": {
+    "path": "about.howWeWork.title",
+    "tags": []
+  },
+  "133": {
+    "path": "about.howWeWork.tiles.small.title",
+    "tags": []
+  },
+  "134": {
+    "path": "about.howWeWork.tiles.small.body",
+    "tags": []
+  },
+  "135": {
+    "path": "about.howWeWork.tiles.remote.title",
+    "tags": []
+  },
+  "136": {
+    "path": "about.howWeWork.tiles.remote.body",
+    "tags": []
+  },
+  "137": {
+    "path": "about.howWeWork.tiles.hours.title",
+    "tags": []
+  },
+  "138": {
+    "path": "about.howWeWork.tiles.hours.body",
+    "tags": []
+  },
+  "139": {
+    "path": "about.howWeWork.tiles.pay.title",
+    "tags": []
+  },
+  "140": {
+    "path": "about.howWeWork.tiles.pay.body",
+    "tags": []
+  },
+  "141": {
+    "path": "about.teamTitle",
+    "tags": []
+  },
+  "142": {
+    "path": "about.teamSubtitle",
+    "tags": []
+  },
+  "143": {
+    "path": "about.joinTitle",
+    "tags": []
+  },
+  "144": {
+    "path": "about.joinBody",
+    "tags": []
+  },
+  "145": {
+    "path": "about.joinCta",
+    "tags": []
+  },
+  "146": {
+    "path": "contact.title",
+    "tags": []
+  },
+  "147": {
+    "path": "contact.subtitle",
+    "tags": []
+  },
+  "148": {
+    "path": "contact.form.nameLabel",
+    "tags": []
+  },
+  "149": {
+    "path": "contact.form.namePlaceholder",
+    "tags": []
+  },
+  "150": {
+    "path": "contact.form.emailLabel",
+    "tags": []
+  },
+  "151": {
+    "path": "contact.form.emailPlaceholder",
+    "tags": []
+  },
+  "152": {
+    "path": "contact.form.subjectLabel",
+    "tags": []
+  },
+  "153": {
+    "path": "contact.form.subjectPlaceholder",
+    "tags": []
+  },
+  "154": {
+    "path": "contact.form.messageLabel",
+    "tags": []
+  },
+  "155": {
+    "path": "contact.form.messagePlaceholder",
+    "tags": []
+  },
+  "156": {
+    "path": "contact.form.submit",
+    "tags": []
+  },
+  "157": {
+    "path": "contact.form.submitting",
+    "tags": []
+  },
+  "158": {
+    "path": "contact.form.success",
+    "tags": []
+  },
+  "159": {
+    "path": "contact.form.errorRequired",
+    "tags": []
+  },
+  "160": {
+    "path": "contact.form.errorInvalidEmail",
+    "tags": []
+  },
+  "161": {
+    "path": "contact.form.errorGeneric",
+    "tags": []
+  },
+  "162": {
+    "path": "contact.altTitle",
+    "tags": []
+  },
+  "163": {
+    "path": "contact.emailLabel",
+    "tags": []
+  },
+  "164": {
+    "path": "contact.githubLabel",
+    "tags": []
+  },
+  "165": {
+    "path": "contact.githubBody",
+    "tags": []
+  },
+  "166": {
+    "path": "contact.socialLabel",
+    "tags": []
+  },
+  "167": {
+    "path": "suggest.title",
+    "tags": []
+  },
+  "168": {
+    "path": "suggest.subtitle",
+    "tags": []
+  },
+  "169": {
+    "path": "suggest.form.titleLabel",
+    "tags": []
+  },
+  "170": {
+    "path": "suggest.form.titlePlaceholder",
+    "tags": []
+  },
+  "171": {
+    "path": "suggest.form.descriptionLabel",
+    "tags": []
+  },
+  "172": {
+    "path": "suggest.form.descriptionPlaceholder",
+    "tags": []
+  },
+  "173": {
+    "path": "suggest.form.emailLabel",
+    "tags": []
+  },
+  "174": {
+    "path": "suggest.form.emailPlaceholder",
+    "tags": []
+  },
+  "175": {
+    "path": "suggest.form.submit",
+    "tags": []
+  },
+  "176": {
+    "path": "suggest.form.submitting",
+    "tags": []
+  },
+  "177": {
+    "path": "suggest.form.success",
+    "tags": []
+  },
+  "178": {
+    "path": "suggest.form.errorRequired",
+    "tags": []
+  },
+  "179": {
+    "path": "suggest.form.errorGeneric",
+    "tags": []
+  },
+  "180": {
+    "path": "suggest.topTitle",
+    "tags": []
+  },
+  "181": {
+    "path": "suggest.topSubtitle",
+    "tags": []
+  },
+  "182": {
+    "path": "suggest.upvoteCta",
+    "tags": []
+  },
+  "183": {
+    "path": "blog.posts.introducing-widgetly.title",
+    "tags": []
+  },
+  "184": {
+    "path": "blog.posts.introducing-widgetly.description",
+    "tags": []
+  },
+  "185": {
+    "path": "blog.posts.best-free-online-tools-2025.title",
+    "tags": []
+  },
+  "186": {
+    "path": "blog.posts.best-free-online-tools-2025.description",
+    "tags": []
+  },
+  "187": {
+    "path": "blog.posts.ai-tools-for-students.title",
+    "tags": []
+  },
+  "188": {
+    "path": "blog.posts.ai-tools-for-students.description",
+    "tags": []
+  },
+  "189": {
+    "path": "blog.posts.pdf-tools-online-guide.title",
+    "tags": []
+  },
+  "190": {
+    "path": "blog.posts.pdf-tools-online-guide.description",
+    "tags": []
+  },
+  "191": {
+    "path": "blog.index.title",
+    "tags": []
+  },
+  "192": {
+    "path": "blog.index.subtitle",
+    "tags": []
+  },
+  "193": {
+    "path": "blog.index.allPostsCta",
+    "tags": []
+  },
+  "194": {
+    "path": "common.comingSoon",
+    "tags": []
+  },
+  "195": {
+    "path": "common.learnMore",
+    "tags": []
+  },
+  "196": {
+    "path": "common.readMore",
+    "tags": []
+  }
+}

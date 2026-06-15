@@ -14,7 +14,7 @@
       "contact": "Contact"
     },
     "actions": {
-      "star": "Étoile",
+      "star": "Star",
       "joinWaitlist": "Join Waitlist"
     },
     "aria": {
@@ -105,7 +105,7 @@
       "countdown": {
         "label": "Launching in"
       },
-      "founderQuote": "“We're building the utility platform we always wished existed — one search bar away from anything you need.”",
+      "founderQuote": "\u201cWe're building the utility platform we always wished existed — one search bar away from anything you need.\u201d",
       "founderAttribution": "— The Widgetly team"
     },
     "seo": {
@@ -186,7 +186,7 @@
       "converters": {
         "name": "Converters",
         "shortDesc": "Units, currencies, formats",
-        "longDesc": "Convertisseurs gratuits d'unités, de devises et de formats de fichiers : longueur, poids, température, surface, volume, temps, vitesse, données, codes couleur et plus de 150 devises avec des taux en temps réel."
+        "longDesc": "Free unit, currency, and file format converters: length, weight, temperature, area, volume, time, speed, data, color codes, and 150+ currencies with live rates."
       },
       "seo": {
         "name": "SEO Tools",
@@ -298,7 +298,7 @@
         "description": "A curated guide to the 50 most useful free online tools for productivity, writing, design, and development in 2025."
       },
       "ai-tools-for-students": {
-        "title": "10 outils IA que chaque étudiant devrait utiliser en 2025",
+        "title": "10 AI Tools Every Student Should Use in 2025",
         "description": "From essay outlines to math solvers, here are the AI tools that will actually save you time as a student this year."
       },
       "pdf-tools-online-guide": {
