@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations, setRequestLocale } from "next-intl/server";
@@ -8,6 +9,9 @@ import { isSupportedLocale, getDirection } from "@/i18n/config";
 import ClientHeader from "@/components/layout/client-header";
 import { BreadcrumbNav } from "@/components/layout/breadcrumb-nav";
 import { Footer } from "@/components/layout/footer";
+import { ConsentProvider } from "@/lib/consent/useConsent";
+import { ConsentBanner } from "@/components/consent/ConsentBanner";
+import { regionFromCountry, regionFromLocale } from "@/lib/consent/region";
 
 import { websiteJsonLd, organizationJsonLd, softwareApplicationJsonLd, faqJsonLd } from "@/lib/seo";
 import { FAQS } from "@/lib/constants";
@@ -69,6 +73,13 @@ export async function generateMetadata({
  * The [locale] layout — sets <html lang/dir>, wraps in
  * NextIntlClientProvider, and renders the shared chrome (header, footer,
  * breadcrumb). Per-request locale resolution via next-intl's helpers.
+ *
+ * Also reads Cloudflare's `cf-ipcountry` header to compute the
+ * visitor's consent region. The header is free, populated by the
+ * edge for every request, and is the standard server-side signal
+ * for GDPR/CCPA region detection. We fall back to a locale-based
+ * heuristic when the header is absent (local dev, non-Cloudflare
+ * proxies).
  */
 export default async function LocaleLayout({
   children,
@@ -90,6 +101,23 @@ export default async function LocaleLayout({
   const messages = await getMessages();
   const dir = getDirection(locale);
 
+  // Server-side consent region: cf-ipcountry first, then locale
+  // fallback. The result is passed into <ConsentProvider> so the
+  // banner can pick the right default toggles (and so the audit
+  // record captures where the user was when they made the choice).
+  let consentRegion = regionFromLocale(locale);
+  try {
+    const h = await headers();
+    const country = h.get("cf-ipcountry");
+    const fromCountry = regionFromCountry(country);
+    // Country code is more reliable than locale; only fall back to
+    // locale-based if the country is unknown.
+    if (fromCountry !== "other") consentRegion = fromCountry;
+  } catch {
+    // headers() can throw outside of a request context (very rare in
+    // App Router; defensive). Stick with the locale-based guess.
+  }
+
   // JSON-LD entities (these are locale-agnostic for now, but could
   // be parameterized in the future)
   const jsonLdWebSite = websiteJsonLd();
@@ -102,6 +130,10 @@ export default async function LocaleLayout({
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        {/* DNS prefetch is a low-cost resolution hint, not a script
+            load — but if we later add a real Google Analytics tag, it
+            should be moved into <ConsentGate category="analytics"> so
+            it doesn't fire before the user opts in. */}
         <link rel="dns-prefetch" href="//www.google-analytics.com" />
         <link rel="dns-prefetch" href="//cdn.jsdelivr.net" />
         <script
@@ -123,19 +155,22 @@ export default async function LocaleLayout({
       </head>
       <body className="bg-background min-h-screen font-sans antialiased">
         <NextIntlClientProvider locale={locale} messages={messages}>
-          <a
-            href="#main"
-            className="focus:bg-foreground focus:text-background sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[100] focus:rounded-md focus:px-3 focus:py-2 focus:text-sm"
-          >
-            Skip to content
-          </a>
-          <ClientHeader />
+          <ConsentProvider region={consentRegion}>
+            <a
+              href="#main"
+              className="focus:bg-foreground focus:text-background sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[100] focus:rounded-md focus:px-3 focus:py-2 focus:text-sm"
+            >
+              Skip to content
+            </a>
+            <ClientHeader />
 
-          <main id="main" className="pt-16">
-            <BreadcrumbNav />
-            {children}
-          </main>
-          <Footer />
+            <main id="main" className="pt-16">
+              <BreadcrumbNav />
+              {children}
+            </main>
+            <Footer />
+            <ConsentBanner />
+          </ConsentProvider>
         </NextIntlClientProvider>
       </body>
     </html>

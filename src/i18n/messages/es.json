@@ -344,5 +344,38 @@
     "comingSoon": "Próximamente",
     "learnMore": "Más información",
     "readMore": "Leer más"
+  },
+  "consent": {
+    "banner": {
+      "title": "Valoramos tu privacidad",
+      "body": "Usamos cookies para que el sitio funcione y, con tu permiso, para entender cómo lo usa la gente. Puedes elegir qué permitir.",
+      "learnMore": "Lee la política completa",
+      "acceptAll": "Aceptar todo",
+      "rejectAll": "Rechazar todo",
+      "customize": "Personalizar",
+      "dismiss": "Cerrar"
+    },
+    "modal": {
+      "title": "Preferencias de cookies",
+      "body": "Elige qué categorías de cookies quieres permitir. Puedes cambiar de opinión en cualquier momento desde el pie de página.",
+      "acceptAll": "Aceptar todo",
+      "save": "Guardar preferencias"
+    },
+    "categories": {
+      "essential": {
+        "label": "Esenciales",
+        "description": "Necesarias para que el sitio funcione — te mantienen conectado y protegen contra abusos. Siempre activas."
+      },
+      "analytics": {
+        "label": "Analítica",
+        "description": "Nos ayuda a entender qué herramientas usa la gente para priorizar qué construir. Sin publicidad, sin seguimiento entre sitios."
+      },
+      "advertising": {
+        "label": "Publicidad",
+        "description": "Las usan las redes publicitarias para personalizar anuncios y medir su rendimiento. Hoy no las usamos; esto queda aquí para que mantengas el control si las añadimos después."
+      }
+    },
+    "footerLink": "Preferencias de cookies",
+    "footerReset": "Restablecer elecciones"
   }
 }

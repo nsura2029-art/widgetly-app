@@ -344,5 +344,38 @@
     "comingSoon": "Coming soon",
     "learnMore": "Learn more",
     "readMore": "Read more"
+  },
+  "consent": {
+    "banner": {
+      "title": "We value your privacy",
+      "body": "We use cookies to keep the site working and, with your permission, to understand how people use it. You can choose what to allow.",
+      "learnMore": "Read the full policy",
+      "acceptAll": "Accept all",
+      "rejectAll": "Reject all",
+      "customize": "Customize",
+      "dismiss": "Close"
+    },
+    "modal": {
+      "title": "Cookie preferences",
+      "body": "Choose which categories of cookies you want to allow. You can change your mind at any time from the footer of every page.",
+      "acceptAll": "Accept all",
+      "save": "Save preferences"
+    },
+    "categories": {
+      "essential": {
+        "label": "Essential",
+        "description": "Required for the site to work — keeps you signed in and protects against abuse. Always on."
+      },
+      "analytics": {
+        "label": "Analytics",
+        "description": "Helps us understand which tools people use, so we can prioritize what to build next. No advertising, no cross-site tracking."
+      },
+      "advertising": {
+        "label": "Advertising",
+        "description": "Used by ad networks to personalize ads and measure their performance. We don't use these today; this is here so you stay in control if we add them later."
+      }
+    },
+    "footerLink": "Cookie preferences",
+    "footerReset": "Reset choices"
   }
 }

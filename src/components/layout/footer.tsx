@@ -4,7 +4,8 @@ import { Link } from "@/i18n/navigation";
 import { Github, Twitter, Linkedin } from "lucide-react";
 import { Logo } from "@/components/shared/logo";
 import { useTranslations } from "next-intl";
-import { FOOTER_LINKS, SITE_CONFIG } from "@/lib/constants";
+import { FOOTER_LINKS } from "@/lib/constants";
+import { CookiePreferencesLink } from "@/components/consent/CookiePreferencesLink";
 
 const SOCIAL_ICONS = {
   github: Github,
@@ -20,34 +21,28 @@ export function Footer() {
   return (
     <footer
       id="contact"
-      className="relative overflow-hidden border-t border-border/60 bg-dark text-white"
+      className="border-border/60 bg-dark relative overflow-hidden border-t text-white"
     >
       {/* Soft brand glow */}
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 -z-0 opacity-40"
         style={{
-          background:
-            "radial-gradient(60% 50% at 50% 0%, rgba(91,108,255,0.25), transparent 60%)",
+          background: "radial-gradient(60% 50% at 50% 0%, rgba(91,108,255,0.25), transparent 60%)",
         }}
       />
-      <div className="container relative z-10 py-16">
+      <div className="relative z-10 container py-16">
         <div className="grid gap-12 md:grid-cols-12">
           <div className="md:col-span-5">
             <div className="text-white">
-              <Logo
-                className="text-white [&_span]:!text-white"
-                showWordmark={false}
-              />
+              <Logo className="text-white [&_span]:!text-white" showWordmark={false} />
             </div>
             <p className="mt-4 max-w-sm text-sm leading-relaxed text-white/60">
               {tSite("description")}
             </p>
             <div className="mt-6 flex items-center gap-2">
               {FOOTER_LINKS.social.map((link) => {
-                const Icon =
-                  SOCIAL_ICONS[link.icon as keyof typeof SOCIAL_ICONS] ??
-                  Github;
+                const Icon = SOCIAL_ICONS[link.icon as keyof typeof SOCIAL_ICONS] ?? Github;
                 return (
                   <a
                     key={link.labelKey}
@@ -73,17 +68,18 @@ export function Footer() {
         </div>
 
         <div className="mt-14 flex flex-col items-start justify-between gap-4 border-t border-white/10 pt-8 text-sm text-white/50 md:flex-row md:items-center">
-          <p>
-            {t.rich("copyright", {
-              year,
-              siteName: tSite("name"),
-            })}
-          </p>
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+            <p>
+              {t.rich("copyright", {
+                year,
+                siteName: tSite("name"),
+              })}
+            </p>
+            <CookiePreferencesLink />
+          </div>
           <p>
             {t.rich("builtWith", {
-              platform: (
-                <span className="text-white/80">Cloudflare</span>
-              ) as unknown as string,
+              platform: (<span className="text-white/80">Cloudflare</span>) as unknown as string,
             })}
           </p>
         </div>
@@ -102,9 +98,7 @@ function FooterColumn({
   const t = useTranslations("footer.links");
   return (
     <div>
-      <h3 className="text-xs font-semibold uppercase tracking-wider text-white/50">
-        {title}
-      </h3>
+      <h3 className="text-xs font-semibold tracking-wider text-white/50 uppercase">{title}</h3>
       <ul className="mt-4 space-y-2.5">
         {links.map((link) => (
           <li key={link.labelKey}>

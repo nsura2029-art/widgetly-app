@@ -1,6 +1,7 @@
 import React from "react";
+import Link from "next/link";
 
-export const lastUpdated = "2026-06-13";
+export const lastUpdated = "2026-06-15";
 
 export const PLAIN_ENGLISH =
   "We collect the minimum data we need to run Widgetly — mostly the things you give us, like an email if you join the waitlist. We don't sell your data. We don't run third-party trackers on pages that handle your files. You can ask for everything we have on you, and you can ask us to delete it.";
@@ -120,18 +121,32 @@ export default function PrivacyPolicyContent() {
           <a href="https://www.cloudflare.com/privacypolicy/">cloudflare.com/privacypolicy</a>.
         </li>
         <li>
+          <strong>Supabase</strong> — managed Postgres database for the waitlist, the tool
+          suggestions board, and (eventually) user accounts. Supabase stores the data in encrypted
+          form; access is gated by row-level security. Privacy policy:{" "}
+          <a href="https://supabase.com/privacy">supabase.com/privacy</a>.
+        </li>
+        <li>
           <strong>PostHog (or similar product analytics)</strong> — privacy-respecting product
           analytics. IP addresses are truncated before storage; we don&apos;t track you across other
-          sites.
+          sites. PostHog only loads after you grant analytics consent in our cookie banner.
         </li>
         <li>
           <strong>Email provider</strong> — to send waitlist confirmations and replies to your
           messages. We never share your email with third parties for marketing.
         </li>
+        <li>
+          <strong>Future advertising and analytics partners</strong> — if we add third-party
+          advertising (for example, Google AdSense, Carbon Ads, or a sponsorship network) or switch
+          analytics providers, we will update this list before any such script loads. None of these
+          will run until you grant the relevant consent category in our cookie banner.
+        </li>
       </ul>
       <p>
         We don&apos;t use third-party advertising trackers on Widgetly. Pages that handle your files
-        load zero third-party scripts by default.
+        load zero third-party scripts by default, and any future analytics or advertising
+        integrations are gated behind the cookie consent system described in our{" "}
+        <Link href="/cookies-policy">Cookies Policy</Link>.
       </p>
 
       <h2 id="your-rights">6. Your Rights &amp; Choices</h2>
@@ -166,6 +181,50 @@ export default function PrivacyPolicyContent() {
         To exercise any of these rights, email{" "}
         <a href="mailto:privacy@widgetly.app">privacy@widgetly.app</a>. We respond within 30 days,
         usually much faster.
+      </p>
+
+      <h3 id="ccpa">California residents (CCPA / CPRA)</h3>
+      <p>
+        If you&apos;re a California resident, the California Consumer Privacy Act (CCPA) and the
+        California Privacy Rights Act (CPRA) give you the following additional rights:
+      </p>
+      <ul>
+        <li>
+          <strong>Right to Know</strong> — request a copy of the specific pieces of personal
+          information we&apos;ve collected about you in the past 12 months, the categories of
+          sources, the business purpose, and the categories of third parties with whom we share it.
+        </li>
+        <li>
+          <strong>Right to Delete</strong> — ask us to delete your personal information, subject to
+          the same exceptions as the GDPR &ldquo;Right to Erasure&rdquo; above.
+        </li>
+        <li>
+          <strong>Right to Correct</strong> — ask us to correct inaccurate personal information we
+          hold about you.
+        </li>
+        <li>
+          <strong>Right to Opt Out of Sale or Sharing</strong> — we do not sell your personal
+          information, and we do not share it with third parties for cross-context behavioral
+          advertising. If that ever changes, we will surface a{" "}
+          <strong>&ldquo;Do Not Sell or Share My Personal Information&rdquo;</strong> link in the
+          site footer so you can opt out, as required by §1798.135 of the CCPA.
+        </li>
+        <li>
+          <strong>Right to Limit Use of Sensitive Personal Information</strong> — if we ever collect
+          sensitive PI (geolocation, race, religion, health, etc.), you can limit its use to what is
+          necessary to provide the Service. We do not currently collect any of it.
+        </li>
+        <li>
+          <strong>Right to Non-Discrimination</strong> — we will not deny service, charge a
+          different price, or provide a different level of quality for exercising any of these
+          rights.
+        </li>
+      </ul>
+      <p>
+        To exercise any of these rights, email{" "}
+        <a href="mailto:privacy@widgetly.app">privacy@widgetly.app</a> from the email address tied
+        to your account, or use our contact form. We respond within 45 days as required by
+        §1798.130.
       </p>
 
       <h2 id="international-transfers">7. International Data Transfers</h2>
