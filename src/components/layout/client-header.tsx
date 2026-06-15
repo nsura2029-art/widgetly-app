@@ -2,14 +2,13 @@
 
 import * as React from "react";
 import { motion, useScroll, useMotionValueEvent } from "framer-motion";
-import { Github, Menu, X } from "lucide-react";
+import { Github, Lightbulb, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/shared/logo";
 import { LocalePicker } from "@/components/layout/locale-picker";
 import { Link, usePathname } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
-import { useLocale } from "next-intl";
 
 /**
  * Sticky, glassmorphic site header. Collapses the nav into a sheet on
@@ -28,7 +27,6 @@ export default function ClientHeader() {
   const { scrollY } = useScroll();
   const pathname = usePathname();
   const t = useTranslations();
-  const locale = useLocale();
 
   useMotionValueEvent(scrollY, "change", (latest) => {
     setScrolled(latest > 8);
@@ -53,6 +51,11 @@ export default function ClientHeader() {
 
   // Close mobile sheet on route change
   React.useEffect(() => {
+    // Intentional: this is a one-shot side effect on navigation, not a
+    // state-sync-with-external-system pattern. The lint rule is right
+    // to flag it in general, but here it's the cleanest way to close
+    // the sheet exactly once when the pathname changes.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setOpen(false);
   }, [pathname]);
 
@@ -73,7 +76,7 @@ export default function ClientHeader() {
       className={cn(
         "sticky top-0 z-50 w-full transition-all duration-300",
         scrolled
-          ? "border-b border-border/60 bg-white/70 backdrop-blur-xl backdrop-saturate-150 supports-[backdrop-filter]:bg-white/60"
+          ? "border-border/60 border-b bg-white/70 backdrop-blur-xl backdrop-saturate-150 supports-[backdrop-filter]:bg-white/60"
           : "border-b border-transparent bg-transparent"
       )}
     >
@@ -87,12 +90,15 @@ export default function ClientHeader() {
           <span className="text-lg font-semibold tracking-tight">{t("site.name")}</span>
         </Link>
 
-        <nav className="hidden md:flex md:items-center md:gap-1" aria-label={t("header.aria.mainNav")}>
+        <nav
+          className="hidden md:flex md:items-center md:gap-1"
+          aria-label={t("header.aria.mainNav")}
+        >
           {navLinks.map((link) => (
             <Link
               key={link.href}
               href={link.href}
-              className="text-muted hover:text-foreground rounded-lg px-3.5 py-2 text-sm font-medium transition-colors hover:bg-muted/5"
+              className="text-muted hover:text-foreground hover:bg-muted/5 rounded-lg px-3.5 py-2 text-sm font-medium transition-colors"
             >
               {link.label}
             </Link>
@@ -111,6 +117,12 @@ export default function ClientHeader() {
             <Github className="h-3.5 w-3.5" aria-hidden="true" />
             <span>{t("header.actions.star")}</span>
           </a>
+          <Button asChild variant="outline" size="sm" className="h-9 gap-2 rounded-lg">
+            <Link href="/suggest" aria-label={t("header.aria.suggestTool")}>
+              <Lightbulb className="h-3.5 w-3.5" aria-hidden="true" />
+              <span>{t("header.actions.suggestTool")}</span>
+            </Link>
+          </Button>
           <Button asChild size="sm" className="h-9 rounded-lg">
             <a href="#waitlist">{t("header.actions.joinWaitlist")}</a>
           </Button>
@@ -140,7 +152,7 @@ export default function ClientHeader() {
       <div
         id="mobile-nav"
         className={cn(
-          "overflow-hidden border-t border-border/60 bg-white/95 backdrop-blur-xl transition-all md:hidden",
+          "border-border/60 overflow-hidden border-t bg-white/95 backdrop-blur-xl transition-all md:hidden",
           open ? "max-h-[80vh] opacity-100" : "max-h-0 opacity-0"
         )}
       >
@@ -154,7 +166,7 @@ export default function ClientHeader() {
               {link.label}
             </Link>
           ))}
-          <div className="mt-3 flex flex-col gap-2 border-t border-border/60 pt-3">
+          <div className="border-border/60 mt-3 flex flex-col gap-2 border-t pt-3">
             <a
               href="https://github.com/widgetly/widgetly"
               target="_blank"
@@ -164,9 +176,17 @@ export default function ClientHeader() {
               <Github className="h-4 w-4" aria-hidden="true" />
               Widgetly on GitHub
             </a>
+            <Link
+              href="/suggest"
+              onClick={() => setOpen(false)}
+              className="border-border text-foreground hover:bg-muted/5 inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border px-5 text-sm font-medium transition-colors"
+            >
+              <Lightbulb className="h-4 w-4" aria-hidden="true" />
+              {t("header.actions.suggestTool")}
+            </Link>
             <a
               href="#waitlist"
-              className="bg-brand-gradient text-white shadow-glow-sm hover:shadow-glow hover:brightness-110 inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl px-5 text-sm font-medium transition-all"
+              className="bg-brand-gradient shadow-glow-sm hover:shadow-glow inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl px-5 text-sm font-medium text-white transition-all hover:brightness-110"
             >
               {t("header.actions.joinWaitlist")}
             </a>
