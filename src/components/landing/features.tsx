@@ -11,8 +11,11 @@ import { cn } from "@/lib/utils";
 
 /**
  * Features preview — six core value props in a responsive grid.
- * Translated via next-intl; the FEATURES constant itself isn't
- * translated yet (Phase 2) so the cards fall back to English for now.
+ * Each card renders its title/description from the
+ * `home.features.items.*` namespace in the messages bundle, keyed by
+ * `feature.id` (e.g. "aiSearch" → `home.features.items.aiSearch.title`).
+ * The FEATURES constant carries only data (icon + accent + id) so the
+ * copy stays translatable per locale without a code change.
  */
 export function Features() {
   const t = useTranslations("home.features");
@@ -43,7 +46,7 @@ export function Features() {
             const Icon = getIcon(feature.icon);
             const accent = ACCENT_STYLES[feature.accent];
             return (
-              <StaggerItem key={feature.title}>
+              <StaggerItem key={feature.id}>
                 <motion.div
                   whileHover={{ y: -4 }}
                   transition={{ duration: 0.25, ease: "easeOut" }}
@@ -72,10 +75,10 @@ export function Features() {
                   </div>
 
                   <h3 className="mt-5 text-base font-semibold tracking-tight text-foreground">
-                    {feature.title}
+                    {t(`items.${feature.id}.title`)}
                   </h3>
                   <p className="mt-2 text-sm leading-relaxed text-muted">
-                    {feature.description}
+                    {t(`items.${feature.id}.description`)}
                   </p>
 
                   <div

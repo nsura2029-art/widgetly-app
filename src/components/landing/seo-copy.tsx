@@ -13,6 +13,7 @@ import { CATEGORIES } from "@/lib/constants";
  */
 export async function SeoCopy() {
   const t = await getTranslations("home.seo");
+  const tCat = await getTranslations("categories");
   return (
     <section
       id="about-widgetly"
@@ -61,26 +62,29 @@ export async function SeoCopy() {
           </p>
 
           <div className="mt-8 grid gap-6 sm:grid-cols-2">
-            {CATEGORIES.map((cat) => (
-              <article
-                key={cat.slug}
-                id={cat.slug}
-                className="border-border/60 shadow-soft rounded-2xl border bg-white p-5"
-              >
-                <h4 className="text-foreground text-base font-semibold tracking-tight">
-                  {cat.name}{" "}
-                  <span className="text-muted text-xs font-medium">({t("count", { count: cat.count })})</span>
-                </h4>
-                <p className="text-muted mt-2 text-sm leading-relaxed">{cat.longDescription}</p>
-                <Link
-                  href={cat.href}
-                  className="text-primary mt-3 inline-flex items-center gap-1 text-xs font-semibold hover:underline"
-                  aria-label={`Browse all ${cat.name} on Widgetly`}
+            {CATEGORIES.map((cat) => {
+              const catName = tCat(`items.${cat.slug}.name`);
+              return (
+                <article
+                  key={cat.slug}
+                  id={cat.slug}
+                  className="border-border/60 shadow-soft rounded-2xl border bg-white p-5"
                 >
-                  {t("browse", { name: cat.name })}
-                </Link>
-              </article>
-            ))}
+                  <h4 className="text-foreground text-base font-semibold tracking-tight">
+                    {catName}{" "}
+                    <span className="text-muted text-xs font-medium">({t("count", { count: cat.count })})</span>
+                  </h4>
+                  <p className="text-muted mt-2 text-sm leading-relaxed">{cat.longDescription}</p>
+                  <Link
+                    href={cat.href}
+                    className="text-primary mt-3 inline-flex items-center gap-1 text-xs font-semibold hover:underline"
+                    aria-label={t("browse", { name: catName })}
+                  >
+                    {t("browse", { name: catName })}
+                  </Link>
+                </article>
+              );
+            })}
           </div>
 
           {/*

@@ -14,11 +14,14 @@ import { cn } from "@/lib/utils";
 /**
  * Tool categories preview. Each card shows a future tool count so visitors
  * get a sense of the breadth we're shipping. The pill / title / subtitle
- * are translated; the category names themselves come from the CATEGORIES
- * constant and fall back to English for now (Phase 2 translation pass).
+ * come from `home.categories.*`; the per-card name + short description
+ * come from `categories.items.<slug>.name` and `.shortDesc`. The
+ * CATEGORIES constant carries only data (slug, count, icon, href,
+ * accent) so the copy stays translatable per locale.
  */
 export function Categories() {
   const t = useTranslations("home.categories");
+  const tCat = useTranslations("categories");
   return (
     <section
       id="categories"
@@ -48,12 +51,14 @@ export function Categories() {
           {CATEGORIES.map((category) => {
             const Icon = getIcon(category.icon);
             const accent = ACCENT_STYLES[category.accent];
+            const name = tCat(`items.${category.slug}.name`);
+            const shortDesc = tCat(`items.${category.slug}.shortDesc`);
             return (
-              <StaggerItem key={category.name}>
+              <StaggerItem key={category.slug}>
                 <Link
                   href={category.href}
                   className="group block focus:outline-none"
-                  aria-label={`Explore ${category.name} — ${category.count} tools planned`}
+                  aria-label={`${name} \u2014 ${category.count}`}
                 >
                   <motion.div
                     whileHover={{ y: -3 }}
@@ -90,10 +95,10 @@ export function Categories() {
                     </div>
 
                     <h3 className="mt-4 text-sm font-semibold tracking-tight text-foreground">
-                      {category.name}
+                      {name}
                     </h3>
                     <p className="mt-1 text-xs text-muted">
-                      {category.description}
+                      {shortDesc}
                     </p>
 
                     <div className="mt-4 flex items-center gap-1.5 text-xs">

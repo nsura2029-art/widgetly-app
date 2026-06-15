@@ -80,7 +80,33 @@
     },
     "features": {
       "title": "Todo lo que necesitas. Nada que no necesites.",
-      "subtitle": "Herramientas potentes, resultados ultrarrápidos y una experiencia fluida de principio a fin."
+      "subtitle": "Herramientas potentes, resultados ultrarrápidos y una experiencia fluida de principio a fin.",
+      "items": {
+        "aiSearch": {
+          "title": "Búsqueda con IA",
+          "description": "Consultas en lenguaje natural que entienden lo que realmente necesitas. No más buscar en menús."
+        },
+        "toolsCount": {
+          "title": "Más de 500 herramientas",
+          "description": "Calculadoras, conversores, generadores, herramientas de PDF, asistentes de IA: todo en una sola plataforma."
+        },
+        "fast": {
+          "title": "Velocidad del rayo",
+          "description": "Implementado en el edge de la red global de Cloudflare. Tiempos de respuesta inferiores a 100 ms en cualquier parte del mundo."
+        },
+        "cloud": {
+          "title": "En la nube",
+          "description": "Tus herramientas, ajustes e historial te acompañan. Inicia sesión una vez y continúa exactamente donde lo dejaste."
+        },
+        "mobile": {
+          "title": "Optimizado para móviles",
+          "description": "Diseñado pensando primero en los móviles. Cada herramienta funciona perfectamente en teléfonos, tablets y ordenadores."
+        },
+        "privacy": {
+          "title": "Privacidad ante todo",
+          "description": "Cifrado de extremo a extremo para datos sensibles. Nunca vendemos tu información. Jamás."
+        }
+      }
     },
     "categories": {
       "pill": "Más de 50 categorías",

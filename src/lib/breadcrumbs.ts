@@ -69,7 +69,7 @@ const KNOWN_LABELS: Record<string, string> = {
   home: "Home",
   // Categories (auto-derived from CATEGORIES below for type safety)
   ...Object.fromEntries(
-    CATEGORIES.map((c) => [c.slug, c.name] as const),
+    CATEGORIES.map((c) => [c.slug, c.slug] as const)  // category names resolved at render time via t(),
   ),
   // Top-level sections
   blog: "Blog",

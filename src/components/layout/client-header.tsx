@@ -83,7 +83,7 @@ export default function ClientHeader() {
           className="flex items-center gap-2 transition-opacity hover:opacity-80"
           aria-label={t("header.aria.homeLink", { siteName: t("site.name") })}
         >
-          <Logo />
+          <Logo showWordmark={false} />
           <span className="text-lg font-semibold tracking-tight">{t("site.name")}</span>
         </Link>
 
