@@ -1,7 +1,7 @@
 allowBuilds:
-  '@parcel/watcher': set this to true or false
-  '@scarf/scarf': set this to true or false
-  '@swc/core': set this to true or false
+  "@parcel/watcher": set this to true or false
+  "@scarf/scarf": set this to true or false
+  "@swc/core": set this to true or false
   esbuild: false
   sharp: false
   unrs-resolver: false
@@ -12,4 +12,5 @@ onlyBuiltDependencies:
   - unrs-resolver
   - workerd
 patchedDependencies:
-  '@opennextjs/aws@4.0.2': patches/@opennextjs__aws@4.0.2.patch
+  "@opennextjs/aws@4.0.2": patches/@opennextjs__aws@4.0.2.patch
+  "@opennextjs/cloudflare@1.19.11": patches/@opennextjs__cloudflare@1.19.11.patch

@@ -32,7 +32,6 @@
     "i18n:import": "node scripts/translate-file.mjs import --dir=tmp/translate",
     "i18n:translate:mvp": "node scripts/translate-messages.mjs --locales=es,fr"
   },
-  "postinstall": "bash scripts/patch-opennextjs-cloudflare.sh",
   "remotion": {
     "webpackOverride": "./remotion/webpack.override.js"
   },
