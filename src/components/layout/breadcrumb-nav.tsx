@@ -4,6 +4,12 @@ import * as React from "react";
 import { usePathname } from "next/navigation";
 import { Breadcrumb } from "./breadcrumb";
 import type { Crumb } from "@/lib/breadcrumbs";
+import { SUPPORTED_LOCALES } from "@/i18n/config";
+
+// Pre-compiled: matches /en, /en/, /es, /es/, /fr, /fr/ — the home
+// page of any supported locale. We use a path-only check (no $)
+// because we want the trailing-slash variant to also count as home.
+const HOME_PATH_RE = new RegExp(`^/(${SUPPORTED_LOCALES.join("|")})/?$`);
 
 /**
  * Page-level breadcrumb config. Pages can push overrides into a module-level
@@ -86,8 +92,10 @@ export function BreadcrumbNav() {
     return subscribe(force);
   }, []);
 
-  // Homepage → no breadcrumb.
-  if (pathname === "/") return null;
+  // Homepage → no breadcrumb. next-intl with `localePrefix: "always"`
+  // means the home is /en, /fr, /es (not "/"). A bare "/" check would
+  // incorrectly render the breadcrumb on every locale's home page.
+  if (HOME_PATH_RE.test(pathname)) return null;
 
   const config = getEntry(pathname);
   if (config?.hidden) return null;
