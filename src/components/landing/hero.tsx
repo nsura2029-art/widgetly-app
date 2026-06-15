@@ -7,6 +7,7 @@ import { ArrowRight } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { ComingSoonBadge } from "@/components/landing/coming-soon-badge";
+import { RandomMascot } from "@/components/landing/mascots";
 import { SearchMockup } from "@/components/landing/search-mockup";
 import { AnimatedBackground } from "@/components/shared/animated-background";
 
@@ -158,7 +159,11 @@ export function Hero() {
             </Button>
           </motion.div>
 
-          <div className="mt-12 w-full">
+          <div className="mt-10 w-full">
+            <RandomMascot />
+          </div>
+
+          <div className="mt-2 w-full">
             <SearchMockup />
           </div>
         </div>
