@@ -75,7 +75,7 @@
  *                  --mode=missing to export only the 130 that are
  *                  still English).
  */
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
+import { readFileSync, writeFileSync, existsSync, mkdirSync, statSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
@@ -93,6 +93,7 @@ function arg(name, fallback) {
 function flag(name) {
   return process.argv.includes(`--${name}`);
 }
+const verbose = flag("verbose") || flag("v");
 function getMode() {
   const m = arg("mode", "full");
   if (m !== "full" && m !== "missing") {
@@ -307,10 +308,16 @@ function importLocale(targetLocale, dir, dryRun) {
   }
 
   if (!dryRun) {
-    writeFileSync(
-      join(MSG_DIR, `${targetLocale}.json`),
-      JSON.stringify(existing, null, 2) + "\n"
-    );
+    const outPath = join(MSG_DIR, `${targetLocale}.json`);
+    const outContent = JSON.stringify(existing, null, 2) + "\n";
+    writeFileSync(outPath, outContent);
+    if (verbose) {
+      const s = statSync(outPath);
+      console.error(
+        `        [verbose] wrote ${outContent.length} bytes to ${outPath} ` +
+        `(mtime=${s.mtime.toISOString()})`
+      );
+    }
   }
   return { ok: true, translated, skipped, corrupted, placeholdersMissing };
 }
