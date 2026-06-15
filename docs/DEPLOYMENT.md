@@ -85,6 +85,45 @@ wrangler login
 Webhooks are optional — the API still works without them, submissions just get logged
 to the worker's `console` instead of being forwarded.
 
+### Persisting to Supabase (recommended over webhooks)
+
+Webhook-only is fine for prototyping but lossy — there's no admin UI,
+no dedupe, no per-row history, no easy export. The supported production
+persistence target is **Supabase Postgres** (free tier is fine for
+waitlist volume). Setup:
+
+```bash
+# 1. Create a project at https://supabase.com/dashboard
+#    Note the project URL and the service_role key (Settings → API).
+
+# 2. Apply the schema once. Three options:
+#    a) Supabase dashboard → SQL editor → paste supabase/migrations/0001_init.sql → Run
+#    b) Local: supabase link --project-ref <ref> && supabase db push
+#    c) psql "$DATABASE_URL" -f supabase/migrations/0001_init.sql
+#
+# The migration is idempotent. Re-running it is safe.
+
+# 3. Bind the secrets to your Cloudflare Worker (one per environment).
+wrangler secret put SUPABASE_URL              # https://xxxxx.supabase.co
+wrangler secret put SUPABASE_SERVICE_ROLE_KEY # the service_role JWT from step 1
+
+# 4. (Optional) Keep the webhooks as a notification channel — Slack/Discord
+#    pings still fire from the route. The DB is the source of truth.
+wrangler secret put WAITLIST_WEBHOOK_URL
+wrangler secret put SUGGEST_WEBHOOK_URL
+```
+
+When both Supabase secrets are bound, `/api/waitlist` and `/api/suggest`
+write to Postgres first and return a real, durable position/id. If
+either secret is missing, the routes transparently fall back to the
+webhook-only path so a half-configured environment doesn't 500.
+
+**Security note.** The `service_role` key bypasses RLS. It is a
+server-side secret only. Do not put it in any file that gets committed,
+do not paste it into chat, and do not use it in any browser-bundled
+code. The anon key (not used by the current API) is the only one safe
+to ship to the client.
+
 ### Binding KV / D1 (optional persistence)
 
 Edit `wrangler.toml` and uncomment the relevant block. Example
