@@ -15,13 +15,15 @@
     },
     "actions": {
       "star": "Star",
+      "suggestTool": "Suggest a Tool",
       "joinWaitlist": "Join Waitlist"
     },
     "aria": {
       "mainNav": "Main navigation",
       "openMenu": "Open menu",
       "closeMenu": "Close menu",
-      "homeLink": "{siteName} home"
+      "homeLink": "{siteName} home",
+      "suggestTool": "Suggest a tool"
     },
     "localePicker": {
       "label": "Select language",

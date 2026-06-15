@@ -15,13 +15,15 @@
     },
     "actions": {
       "star": "Estrella",
+      "suggestTool": "Sugerir una herramienta",
       "joinWaitlist": "Únete a la lista de espera"
     },
     "aria": {
       "mainNav": "Navegación principal",
       "openMenu": "Abrir menú",
       "closeMenu": "Cerrar menú",
-      "homeLink": "Inicio de {siteName}"
+      "homeLink": "Inicio de {siteName}",
+      "suggestTool": "Sugerir una herramienta"
     },
     "localePicker": {
       "label": "Seleccionar idioma",

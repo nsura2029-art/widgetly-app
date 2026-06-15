@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Reference SVG: PDF mascot. See src/components/landing/mascots/pdf.tsx for source. -->
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" width="200" height="200">
+  <defs>
+    <linearGradient id="p-body" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FB7185" />
+      <stop offset="50%" stop-color="#F43F5E" />
+      <stop offset="100%" stop-color="#A855F7" />
+    </linearGradient>
+    <linearGradient id="p-glow" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FB7185" stop-opacity="0.35" />
+      <stop offset="100%" stop-color="#A855F7" stop-opacity="0" />
+    </linearGradient>
+    <style>
+      <![CDATA[
+        .mascot-float  { animation: mascot-float 3.6s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+        .mascot-jump   { animation: mascot-jump 4.8s cubic-bezier(0.28,0.84,0.42,1) infinite; transform-box: fill-box; transform-origin: center; }
+        .mascot-tilt   { animation: mascot-tilt 5.2s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+        .mascot-shadow { animation: mascot-shadow 4.8s cubic-bezier(0.28,0.84,0.42,1) infinite; transform-box: fill-box; transform-origin: center; }
+        .mascot-eyes   { animation: mascot-blink 5s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+        .mascot-mag    { animation: mascot-mag 4s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+        .sparkle       { transform-box: fill-box; transform-origin: center; }
+        .sparkle-a     { animation: mascot-twinkle 2.4s ease-in-out infinite; }
+        .sparkle-b     { animation: mascot-twinkle 2.4s ease-in-out 0.8s infinite; }
+        .sparkle-c     { animation: mascot-twinkle 2.4s ease-in-out 1.6s infinite; }
+        @keyframes mascot-float   { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+        @keyframes mascot-jump    { 0%,78%,100%{transform:translateY(0) scaleY(1)} 84%{transform:translateY(-14px) scaleY(1.04)} 92%{transform:translateY(0) scaleY(0.94)} 96%{transform:translateY(-3px) scaleY(1.02)} }
+        @keyframes mascot-tilt    { 0%,100%{transform:rotate(-3deg)} 50%{transform:rotate(3deg)} }
+        @keyframes mascot-shadow  { 0%,78%,100%{transform:scaleX(1);opacity:0.55} 84%{transform:scaleX(0.7);opacity:0.35} 92%{transform:scaleX(1.1);opacity:0.65} }
+        @keyframes mascot-blink   { 0%,92%,100%{transform:scaleY(1)} 95%{transform:scaleY(0.1)} 97%{transform:scaleY(1)} }
+        @keyframes mascot-mag     { 0%,100%{transform:rotate(-6deg) translate(0,0)} 50%{transform:rotate(6deg) translate(2px,-2px)} }
+        @keyframes mascot-twinkle { 0%,100%{transform:scale(0.6);opacity:0.2} 50%{transform:scale(1.2);opacity:1} }
+      ]]>
+    </style>
+  </defs>
+
+  <g class="mascot-float"><g class="mascot-jump"><g class="mascot-tilt">
+    <circle cx="100" cy="105" r="70" fill="url(#p-glow)" />
+    <ellipse class="mascot-shadow" cx="100" cy="178" rx="38" ry="5" fill="rgba(17,24,39,0.18)" />
+    <path d="M 60 45 L 130 45 L 150 65 L 150 155 L 60 155 Z" fill="url(#p-body)" />
+    <path d="M 130 45 L 130 65 L 150 65 Z" fill="rgba(255,255,255,0.18)" />
+    <path d="M 130 45 L 130 65 L 150 65" stroke="rgba(255,255,255,0.35)" stroke-width="1.2" fill="none" />
+    <g class="mascot-mag">
+      <rect x="80" y="72" width="50" height="28" rx="6" fill="white" />
+      <text x="105" y="92" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" font-weight="800" fill="#F43F5E" letter-spacing="0.5">PDF</text>
+    </g>
+    <rect class="sparkle sparkle-a" x="72" y="112" width="66" height="3" rx="1.5" fill="rgba(255,255,255,0.85)" />
+    <rect class="sparkle sparkle-b" x="72" y="122" width="48" height="3" rx="1.5" fill="rgba(255,255,255,0.7)" />
+    <rect class="sparkle sparkle-c" x="72" y="132" width="56" height="3" rx="1.5" fill="rgba(255,255,255,0.6)" />
+    <g class="mascot-eyes">
+      <ellipse cx="88" cy="92" rx="3" ry="4" fill="#111827" />
+      <ellipse cx="122" cy="92" rx="3" ry="4" fill="#111827" />
+    </g>
+    <path class="sparkle sparkle-a" d="M 30 60 L 32 64 L 36 66 L 32 68 L 30 72 L 28 68 L 24 66 L 28 64 Z" fill="#FB7185" />
+    <path class="sparkle sparkle-b" d="M 170 130 L 172 134 L 176 136 L 172 138 L 170 142 L 168 138 L 164 136 L 168 134 Z" fill="#A855F7" />
+    <circle class="sparkle sparkle-c" cx="35" cy="135" r="2.5" fill="#F43F5E" />
+  </g></g></g>
+</svg>

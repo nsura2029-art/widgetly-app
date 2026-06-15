@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Reference SVG: wrench mascot. See src/components/landing/mascots/wrench.tsx for source. -->
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" width="200" height="200">
+  <defs>
+    <linearGradient id="w-body" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#10B981" />
+      <stop offset="50%" stop-color="#14B8A6" />
+      <stop offset="100%" stop-color="#0EA5E9" />
+    </linearGradient>
+    <linearGradient id="w-handle" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#0F172A" />
+      <stop offset="100%" stop-color="#1E293B" />
+    </linearGradient>
+    <linearGradient id="w-glow" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#10B981" stop-opacity="0.35" />
+      <stop offset="100%" stop-color="#0EA5E9" stop-opacity="0" />
+    </linearGradient>
+    <style>
+      <![CDATA[
+        .mascot-float  { animation: mascot-float 3.6s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+        .mascot-jump   { animation: mascot-jump 4.8s cubic-bezier(0.28,0.84,0.42,1) infinite; transform-box: fill-box; transform-origin: center; }
+        .mascot-tilt   { animation: mascot-tilt 5.2s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+        .mascot-shadow { animation: mascot-shadow 4.8s cubic-bezier(0.28,0.84,0.42,1) infinite; transform-box: fill-box; transform-origin: center; }
+        .mascot-eyes   { animation: mascot-blink 5s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+        .mascot-mag    { animation: mascot-mag 4s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+        .sparkle       { transform-box: fill-box; transform-origin: center; }
+        .sparkle-a     { animation: mascot-twinkle 2.4s ease-in-out infinite; }
+        .sparkle-b     { animation: mascot-twinkle 2.4s ease-in-out 0.8s infinite; }
+        .sparkle-c     { animation: mascot-twinkle 2.4s ease-in-out 1.6s infinite; }
+        @keyframes mascot-float   { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+        @keyframes mascot-jump    { 0%,78%,100%{transform:translateY(0) scaleY(1)} 84%{transform:translateY(-14px) scaleY(1.04)} 92%{transform:translateY(0) scaleY(0.94)} 96%{transform:translateY(-3px) scaleY(1.02)} }
+        @keyframes mascot-tilt    { 0%,100%{transform:rotate(-3deg)} 50%{transform:rotate(3deg)} }
+        @keyframes mascot-shadow  { 0%,78%,100%{transform:scaleX(1);opacity:0.55} 84%{transform:scaleX(0.7);opacity:0.35} 92%{transform:scaleX(1.1);opacity:0.65} }
+        @keyframes mascot-blink   { 0%,92%,100%{transform:scaleY(1)} 95%{transform:scaleY(0.1)} 97%{transform:scaleY(1)} }
+        @keyframes mascot-mag     { 0%,100%{transform:rotate(-6deg) translate(0,0)} 50%{transform:rotate(6deg) translate(2px,-2px)} }
+        @keyframes mascot-twinkle { 0%,100%{transform:scale(0.6);opacity:0.2} 50%{transform:scale(1.2);opacity:1} }
+      ]]>
+    </style>
+  </defs>
+
+  <g class="mascot-float"><g class="mascot-jump"><g class="mascot-tilt">
+    <circle cx="100" cy="105" r="70" fill="url(#w-glow)" />
+    <ellipse class="mascot-shadow" cx="100" cy="178" rx="38" ry="5" fill="rgba(17,24,39,0.18)" />
+    <g transform="rotate(-22 100 110)">
+      <rect x="92" y="100" width="16" height="70" rx="6" fill="url(#w-handle)" />
+      <rect x="92" y="100" width="6" height="70" rx="3" fill="rgba(255,255,255,0.18)" />
+      <path d="M 70 100 L 70 70 A 30 30 0 0 1 130 70 L 130 100 L 116 100 L 116 84 A 12 12 0 0 0 84 84 L 84 100 Z" fill="url(#w-body)" />
+      <path d="M 84 100 L 84 84 A 12 12 0 0 1 116 84 L 116 100" fill="#0F172A" />
+      <ellipse cx="85" cy="78" rx="8" ry="5" fill="white" opacity="0.35" />
+    </g>
+    <g class="mascot-eyes">
+      <ellipse cx="92" cy="84" rx="2.5" ry="3.5" fill="#111827" transform="rotate(-22 92 84)" />
+      <ellipse cx="108" cy="84" rx="2.5" ry="3.5" fill="#111827" transform="rotate(-22 108 84)" />
+    </g>
+    <circle class="sparkle sparkle-a" cx="36" cy="65" r="3" fill="#10B981" />
+    <path class="sparkle sparkle-b" d="M 168 65 L 170 70 L 175 72 L 170 74 L 168 79 L 166 74 L 161 72 L 166 70 Z" fill="#0EA5E9" />
+    <path class="sparkle sparkle-c" d="M 35 130 L 37 134 L 41 136 L 37 138 L 35 142 L 33 138 L 29 136 L 33 134 Z" fill="#14B8A6" />
+  </g></g></g>
+</svg>
