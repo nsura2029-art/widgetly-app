@@ -1,19 +1,22 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { useTranslations } from "next-intl";
 import { WaitlistForm } from "@/components/landing/waitlist-form";
 import { FadeIn } from "@/components/shared/fade-in";
 import { CountdownBlock } from "@/components/landing/coming-soon-badge";
 
 /**
  * Waitlist call-to-action. Hosts the form, a four-cell countdown, and
- * trust signals (founder note, no-spam assurance).
+ * trust signals (founder note, no-spam assurance). The pill, title,
+ * subtitle, countdown label, and founder quote are translated.
  */
 export function Waitlist() {
+  const t = useTranslations("home.waitlist");
   return (
     <section
       id="waitlist"
-      className="relative overflow-hidden border-t border-border/60 py-20 sm:py-28 lg:py-32"
+      className="relative overflow-hidden border-t border-border/60 py-12 sm:py-16 lg:py-20"
       aria-labelledby="waitlist-title"
     >
       {/* Background gradient */}
@@ -29,17 +32,16 @@ export function Waitlist() {
       <div className="container">
         <FadeIn className="mx-auto max-w-2xl text-center">
           <span className="inline-flex items-center rounded-full border border-border/80 bg-white px-3 py-1 text-xs font-medium text-muted shadow-soft">
-            Be the first
+            {t("pill")}
           </span>
           <h2
             id="waitlist-title"
             className="mt-4 text-display-sm font-semibold tracking-tight text-foreground sm:text-display-md"
           >
-            Get early access to Widgetly.
+            {t("title")}
           </h2>
           <p className="mt-4 text-base text-muted sm:text-lg">
-            Join the waitlist for launch updates, sneak peeks, and a founders'
-            discount when we go live.
+            {t("subtitle")}
           </p>
         </FadeIn>
 
@@ -49,7 +51,7 @@ export function Waitlist() {
 
         <FadeIn delay={0.3} className="mx-auto mt-16 max-w-2xl">
           <div className="mb-6 text-center text-xs font-medium uppercase tracking-wider text-muted">
-            Launching in
+            {t("countdown.label")}
           </div>
           <CountdownBlock className="mx-auto max-w-md" />
 
@@ -61,11 +63,10 @@ export function Waitlist() {
             className="mt-12 text-center"
           >
             <p className="text-base italic text-foreground/80 sm:text-lg">
-              &ldquo;We're building the utility platform we always wished
-              existed — one search bar away from anything you need.&rdquo;
+              {t("founderQuote")}
             </p>
             <footer className="mt-4 text-sm text-muted">
-              — The Widgetly team
+              {t("founderAttribution")}
             </footer>
           </motion.blockquote>
         </FadeIn>

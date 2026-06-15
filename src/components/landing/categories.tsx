@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { getIcon } from "@/lib/icons";
 import { CATEGORIES } from "@/lib/constants";
 import { ACCENT_STYLES } from "@/components/shared/accent";
@@ -12,29 +13,34 @@ import { cn } from "@/lib/utils";
 
 /**
  * Tool categories preview. Each card shows a future tool count so visitors
- * get a sense of the breadth we're shipping.
+ * get a sense of the breadth we're shipping. The pill / title / subtitle
+ * come from `home.categories.*`; the per-card name + short description
+ * come from `categories.items.<slug>.name` and `.shortDesc`. The
+ * CATEGORIES constant carries only data (slug, count, icon, href,
+ * accent) so the copy stays translatable per locale.
  */
 export function Categories() {
+  const t = useTranslations("home.categories");
+  const tCat = useTranslations("categories");
   return (
     <section
       id="categories"
-      className="relative border-t border-border/60 bg-muted/5 py-20 sm:py-28 lg:py-32"
+      className="relative border-t border-border/60 bg-muted/5 py-12 sm:py-16 lg:py-20"
       aria-labelledby="categories-title"
     >
       <div className="container">
         <FadeIn className="mx-auto max-w-2xl text-center">
           <span className="inline-flex items-center rounded-full border border-border/80 bg-white px-3 py-1 text-xs font-medium text-muted shadow-soft">
-            50+ Categories
+            {t("pill")}
           </span>
           <h2
             id="categories-title"
             className="mt-4 text-display-sm font-semibold tracking-tight text-foreground sm:text-display-md"
           >
-            Every tool you need, all in one place.
+            {t("title")}
           </h2>
           <p className="mt-4 text-base text-muted sm:text-lg">
-            From PDF editors to AI writers, calculators to converters — all
-            under one roof.
+            {t("subtitle")}
           </p>
         </FadeIn>
 
@@ -45,12 +51,14 @@ export function Categories() {
           {CATEGORIES.map((category) => {
             const Icon = getIcon(category.icon);
             const accent = ACCENT_STYLES[category.accent];
+            const name = tCat(`items.${category.slug}.name`);
+            const shortDesc = tCat(`items.${category.slug}.shortDesc`);
             return (
-              <StaggerItem key={category.name}>
+              <StaggerItem key={category.slug}>
                 <Link
                   href={category.href}
                   className="group block focus:outline-none"
-                  aria-label={`Explore ${category.name} — ${category.count} tools planned`}
+                  aria-label={`${name} \u2014 ${category.count}`}
                 >
                   <motion.div
                     whileHover={{ y: -3 }}
@@ -87,10 +95,10 @@ export function Categories() {
                     </div>
 
                     <h3 className="mt-4 text-sm font-semibold tracking-tight text-foreground">
-                      {category.name}
+                      {name}
                     </h3>
                     <p className="mt-1 text-xs text-muted">
-                      {category.description}
+                      {shortDesc}
                     </p>
 
                     <div className="mt-4 flex items-center gap-1.5 text-xs">
@@ -102,7 +110,7 @@ export function Categories() {
                       >
                         {category.count}
                       </span>
-                      <span className="text-muted">tools</span>
+                      <span className="text-muted">{t("count")}</span>
                     </div>
                   </motion.div>
                 </Link>

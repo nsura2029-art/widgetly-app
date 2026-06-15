@@ -9,8 +9,7 @@ import type { CountdownTime } from "@/types";
  * on the server, and exposes an `isExpired` flag for end-of-countdown UI.
  */
 export function useCountdown(targetDate: string | Date): CountdownTime {
-  const target =
-    typeof targetDate === "string" ? new Date(targetDate) : targetDate;
+  const target = typeof targetDate === "string" ? new Date(targetDate) : targetDate;
   const compute = (): CountdownTime => {
     const diff = target.getTime() - Date.now();
     if (diff <= 0) {
@@ -32,6 +31,7 @@ export function useCountdown(targetDate: string | Date): CountdownTime {
   });
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setTime(compute());
     const id = window.setInterval(() => setTime(compute()), 1000);
     return () => window.clearInterval(id);

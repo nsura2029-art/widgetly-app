@@ -1,8 +1,16 @@
 "use client";
 
 import * as React from "react";
-import { motion, useInView, useMotionValue, useTransform, animate, useMotionValueEvent, type MotionValue } from "framer-motion";
+import {
+  useInView,
+  useMotionValue,
+  useTransform,
+  animate,
+  useMotionValueEvent,
+  type MotionValue,
+} from "framer-motion";
 import { Star, Users, Wrench, Layers } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { STATS } from "@/lib/constants";
 import { FadeIn } from "@/components/shared/fade-in";
 import { Stagger, StaggerItem } from "@/components/shared/stagger";
@@ -10,68 +18,70 @@ import { Stagger, StaggerItem } from "@/components/shared/stagger";
 /**
  * Social proof band. Stars on GitHub, waitlist signups, planned tools,
  * and category count. Numbers animate from 0 to their target when the
- * section enters the viewport.
+ * section enters the viewport. Section title + stat labels are translated.
  */
 export function SocialProof() {
+  const t = useTranslations("home.socialProof");
   return (
     <section
       aria-labelledby="social-proof-title"
-      className="relative border-t border-border/60 bg-muted/5 py-16 sm:py-20"
+      className="border-border/60 bg-muted/5 relative border-t py-10 sm:py-14"
     >
       <div className="container">
         <FadeIn>
           <h2
             id="social-proof-title"
-            className="text-center text-xs font-medium uppercase tracking-wider text-muted"
+            className="text-muted text-center text-xs font-medium tracking-wider uppercase"
           >
-            Trusted by builders around the world
+            {t("title")}
           </h2>
         </FadeIn>
 
-        <Stagger
-          className="mt-10 grid grid-cols-2 gap-6 sm:grid-cols-4"
-          stagger={0.1}
-        >
+        <Stagger className="mt-10 grid grid-cols-2 gap-6 sm:grid-cols-4" stagger={0.1}>
           <Stat
+            key="tools"
             icon={<Wrench className="h-4 w-4" />}
             value={500}
             suffix="+"
-            label="Tools Planned"
+            label={t("stats.tools")}
             accent="text-primary"
           />
           <Stat
+            key="categories"
             icon={<Layers className="h-4 w-4" />}
             value={50}
             suffix="+"
-            label="Categories"
+            label={t("stats.categories")}
             accent="text-secondary"
           />
           <Stat
+            key="stars"
             icon={<Star className="h-4 w-4" />}
             value={2400}
             suffix="+"
-            label="GitHub Stars"
+            label={t("stats.stars")}
             accent="text-accent"
           />
           <Stat
+            key="waitlist"
             icon={<Users className="h-4 w-4" />}
             value={8500}
             suffix="+"
-            label="Waitlist Signups"
+            label={t("stats.waitlist")}
             accent="text-primary"
           />
         </Stagger>
 
         <FadeIn delay={0.3} className="mt-12 text-center">
-          <p className="text-sm text-muted">
-            <span className="font-semibold text-foreground">
-              {STATS.freeTools}
-            </span>{" "}
-            free tools ·{" "}
-            <span className="font-semibold text-foreground">
-              {STATS.uptimeTarget}
-            </span>{" "}
-            uptime target · zero ads
+          <p className="text-muted text-sm">
+            {t.rich("footer", {
+              freeTools: (
+                <span className="text-foreground font-semibold">{STATS.freeTools}</span>
+              ) as unknown as string,
+              uptimeTarget: (
+                <span className="text-foreground font-semibold">{STATS.uptimeTarget}</span>
+              ) as unknown as string,
+            })}
           </p>
         </FadeIn>
       </div>
@@ -111,17 +121,15 @@ function Stat({
     <StaggerItem>
       <div ref={ref} className="text-center">
         <div
-          className={`mx-auto mb-3 inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border/80 bg-white shadow-soft ${accent}`}
+          className={`border-border/80 shadow-soft mx-auto mb-3 inline-flex h-9 w-9 items-center justify-center rounded-lg border bg-white ${accent}`}
         >
           {icon}
         </div>
-        <div className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+        <div className="text-foreground text-3xl font-semibold tracking-tight sm:text-4xl">
           <CountUp value={rounded} />
           {suffix && <span className="text-foreground">{suffix}</span>}
         </div>
-        <div className="mt-1 text-xs font-medium uppercase tracking-wider text-muted">
-          {label}
-        </div>
+        <div className="text-muted mt-1 text-xs font-medium tracking-wider uppercase">{label}</div>
       </div>
     </StaggerItem>
   );
