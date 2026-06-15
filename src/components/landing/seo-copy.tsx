@@ -61,7 +61,7 @@ export async function SeoCopy() {
             {t("exploreSubtitle")}
           </p>
 
-          <div className="mt-8 grid gap-6 sm:grid-cols-2">
+          <div className="mt-8 grid gap-6 sm:grid-cols-2 md:grid-cols-3">
             {CATEGORIES.map((cat) => {
               const catName = tCat(`items.${cat.slug}.name`);
               return (
