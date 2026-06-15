@@ -1,5 +1,4 @@
 name: Deploy to Cloudflare Pages
-
 on:
   push:
     branches: [main]
