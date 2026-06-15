@@ -21,7 +21,7 @@ export async function SeoCopy() {
       aria-labelledby="seo-explore-title"
     >
       <div className="container">
-        <div className="mx-auto max-w-3xl">
+        <div className="mx-auto max-w-2xl text-center">
           {/*
             Intro h2 + lead paragraphs disabled pre-launch.
             <h2
@@ -51,41 +51,42 @@ export async function SeoCopy() {
             </div>
           */}
 
-          <h3
+          <h2
             id="seo-explore-title"
-            className="text-foreground mt-12 text-xl font-semibold tracking-tight"
+            className="text-display-sm font-semibold tracking-tight text-foreground sm:text-display-md"
           >
             {t("exploreTitle")}
-          </h3>
-          <p className="text-muted mt-2 text-sm">
+          </h2>
+          <p className="text-muted mt-4 text-base sm:text-lg">
             {t("exploreSubtitle")}
           </p>
+        </div>
 
-          <div className="mt-8 grid gap-6 sm:grid-cols-2 md:grid-cols-3">
-            {CATEGORIES.map((cat) => {
-              const catName = tCat(`items.${cat.slug}.name`);
-              return (
-                <article
-                  key={cat.slug}
-                  id={cat.slug}
-                  className="border-border/60 shadow-soft rounded-2xl border bg-white p-5"
+        <div className="mt-14 grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:mt-20 lg:gap-8">
+          {CATEGORIES.map((cat) => {
+            const catName = tCat(`items.${cat.slug}.name`);
+            return (
+              <article
+                key={cat.slug}
+                id={cat.slug}
+                className="border-border/60 shadow-soft rounded-2xl border bg-white p-5"
+              >
+                <h3 className="text-foreground text-base font-semibold tracking-tight">
+                  {catName}{" "}
+                  <span className="text-muted text-xs font-medium">({t("count", { count: cat.count })})</span>
+                </h3>
+                <p className="text-muted mt-2 text-sm leading-relaxed">{cat.longDescription}</p>
+                <Link
+                  href={cat.href}
+                  className="text-primary mt-3 inline-flex items-center gap-1 text-xs font-semibold hover:underline"
+                  aria-label={t("browse", { name: catName })}
                 >
-                  <h4 className="text-foreground text-base font-semibold tracking-tight">
-                    {catName}{" "}
-                    <span className="text-muted text-xs font-medium">({t("count", { count: cat.count })})</span>
-                  </h4>
-                  <p className="text-muted mt-2 text-sm leading-relaxed">{cat.longDescription}</p>
-                  <Link
-                    href={cat.href}
-                    className="text-primary mt-3 inline-flex items-center gap-1 text-xs font-semibold hover:underline"
-                    aria-label={t("browse", { name: catName })}
-                  >
-                    {t("browse", { name: catName })}
-                  </Link>
-                </article>
-              );
-            })}
-          </div>
+                  {t("browse", { name: catName })}
+                </Link>
+              </article>
+            );
+          })}
+        </div>
 
           {/*
             "Who is Widgetly for?" audience breakdown disabled pre-launch.
@@ -139,7 +140,6 @@ export async function SeoCopy() {
               Join the waitlist to be the first to know when we ship.
             </p>
           */}
-        </div>
       </div>
     </section>
   );

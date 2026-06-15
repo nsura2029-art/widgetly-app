@@ -67,8 +67,11 @@ export function Breadcrumb({
         className={cn(
           // Stable visual band under the sticky header. Background, border,
           // and vertical rhythm are fixed so the breadcrumb does not shift
-          // shape between pages.
-          "border-border/60 border-b bg-white/70 backdrop-blur supports-[backdrop-filter]:bg-white/60",
+          // shape between pages. The top padding gives a small breathing
+          // gap between the sticky header and the breadcrumb (matches the
+          // py-4 rhythm used by adjacent content bands so the breadcrumb
+          // doesn't feel pinned to the header).
+          "border-border/60 border-b bg-white/70 pt-2 backdrop-blur supports-[backdrop-filter]:bg-white/60",
           className
         )}
       >

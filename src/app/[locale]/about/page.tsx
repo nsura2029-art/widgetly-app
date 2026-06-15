@@ -86,7 +86,7 @@ export const metadata: Metadata = buildMetadata({
 
 export default function AboutPage() {
   return (
-    <PageShell width="default">
+    <PageShell width="wide">
       {/* Hero card */}
       <header className="border-border/60 shadow-soft rounded-2xl border bg-white p-6 sm:p-8">
         <Badge variant="secondary" className="self-start">
