@@ -254,15 +254,211 @@ wrangler rollback --message "Revert bad release"
 
 The `[observability]` block in `wrangler.toml` is enabled by
 default. Logs are at [dash.cloudflare.com](https://dash.cloudflare.com)
-→ Workers & Pages → widgetly → Logs. Each request shows:
+→ Compute (Workers) → widgetly → Logs. Each request shows:
 
 - Request method, path, status, duration.
 - Any `console.log` / `console.error` from the route.
 - The worker invocation ID for cross-referencing.
 
-For application-level metrics (submission counts, success rates),
-add a small log-aggregator step or pipe `console.log` lines into
-Cloudflare Logpush → your warehouse.
+> Note: this project deploys via `@opennextjs/cloudflare`,
+> which compiles to a **Worker**, not a Pages function. The
+> "Workers & Pages" label in the dashboard covers both; pick
+> the Worker named `widgetly` (not any Pages project of the
+> same name).
+
+### Log levels (LOG_LEVEL env var)
+
+`src/lib/log.ts` reads `LOG_LEVEL` at module load. Possible
+values:
+
+| Value    | Behavior                                                |
+| -------- | ------------------------------------------------------- |
+| `debug`  | Show everything, including verbose init/cache messages. |
+| `info`   | Show info, warn, error. (Default if unset.)             |
+| `warn`   | Show warn, error.                                       |
+| `error`  | Show only error.                                        |
+| `silent` | Show nothing.                                           |
+
+For dev: set `LOG_LEVEL=debug` in `.env.local` to see all the
+verbose bits. For production: leave unset (defaults to `info`)
+unless you're actively diagnosing something.
+
+To set in production (per environment):
+
+```bash
+# Production
+wrangler secret put LOG_LEVEL --env production
+# > "info"
+
+# Preview
+wrangler secret put LOG_LEVEL --env preview
+# > "debug"
+```
+
+### Where to see logs in the dashboard
+
+1. **Live tail** — the most useful view for active debugging:
+   Cloudflare dashboard → Compute (Workers) → widgetly →
+   Logs → "Begin log stream". Logs stream as requests come in.
+   You can filter by `level` or by the `tag` we set in
+   `src/lib/log.ts` (`api.waitlist`, `diag.supabase`,
+   `consent.region`, etc.).
+
+2. **Historical logs** — for looking at the past few days:
+   the same page has a date-range picker. Retention is up to
+   3 days on the free tier, 7 days on Workers paid, and 30+
+   days with Logpush.
+
+3. **Errors only** — Cloudflare groups `console.error` output
+   into the Worker's "Errors" tab, with stack traces and the
+   request that caused them. Set a notification in
+   Notifications → Destinations if you want email / webhook
+   alerts on errors.
+
+### Local log viewing
+
+For the dev server, logs are simply in the terminal where
+`next dev` is running. They're single-line JSON, so pipe
+through `jq` for colour:
+
+```bash
+pnpm dev 2>&1 | tee /tmp/dev.log | jq -c 'select(.level == "info" or .level == "error")'
+```
+
+Or save everything and grep later:
+
+```bash
+pnpm dev > /tmp/dev.log 2>&1 &
+# Later:
+jq -c 'select(.tag == "api.waitlist")' /tmp/dev.log
+jq 'select(.level == "error")' /tmp/dev.log | less
+```
+
+### Tail a production deploy in real time
+
+```bash
+# Stream live logs from the production Worker
+wrangler tail --env production --format=pretty
+
+# Same, but JSON (one line per event) for piping into jq
+wrangler tail --env production --format=json | jq -c
+
+# Filter by HTTP status (5xx only)
+wrangler tail --env production --status=5xx
+
+# Save the tail to a file for the duration of a debugging session
+wrangler tail --env production > /tmp/tail.log 2>&1 &
+TAIL_PID=$!
+# ... do the thing ...
+kill $TAIL_PID
+```
+
+`wrangler tail` does **not** require `wrangler login` in CI;
+it picks up credentials from the same `CLOUDFLARE_API_TOKEN`
+env var `wrangler deploy` uses.
+
+### Logpush to a warehouse
+
+For long-term retention or alerts, enable Logpush:
+
+```bash
+# One-time, per dataset
+wrangler logpush create \
+  --destination=https://logs.example.com/widgetly \
+  --dataset=workers_trace_events \
+  --field=EventTimestampMs \
+  --field=Outcome \
+  --field=ScriptName \
+  --field=Logs
+```
+
+You'll need an HTTPS endpoint that accepts the POSTed NDJSON
+stream. Options: Datadog, Logtail, an S3 bucket via a small
+proxy, etc.
+
+## Custom domain
+
+This project is configured for **`widgetly.tech`** (and
+`www.widgetly.tech`). Setup is a one-time Cloudflare dashboard
+step plus a DNS verification.
+
+### One-time Cloudflare setup
+
+1. Add `widgetly.tech` to your Cloudflare account:
+   - Dashboard → Add a site → enter `widgetly.tech` → select
+     the Free plan (Workers + KV are paid; the DNS itself is
+     free).
+2. If your registrar isn't already Cloudflare, point the
+   nameservers at the two Cloudflare-assigned nameservers.
+   DNS propagation takes up to 24 hours but is usually under
+   30 minutes for `.tech` TLDs.
+3. Once `widgetly.tech` shows as "Active" in the dashboard,
+   add a Worker route:
+   - Compute (Workers) → widgetly → Settings → Triggers →
+     Custom Domains → "Set up a custom domain".
+   - Add `widgetly.tech` and `www.widgetly.tech`.
+   - Cloudflare automatically creates the DNS records and
+     provisions the certificate (Let's Encrypt via CF).
+
+### Per-environment domains
+
+If you want preview URLs to be a subdomain (e.g.
+`preview.widgetly.tech`), set the `routes` block in
+`wrangler.toml`:
+
+```toml
+# wrangler.toml (add this block; keep everything else as-is)
+[[env.production.routes]]
+pattern = "widgetly.tech/*"
+zone_name = "widgetly.tech"
+custom_domain = true
+
+[[env.production.routes]]
+pattern = "www.widgetly.tech/*"
+zone_name = "widgetly.tech"
+custom_domain = true
+
+[[env.preview.routes]]
+pattern = "preview.widgetly.tech/*"
+zone_name = "widgetly.tech"
+```
+
+For the MVP, the dashboard-managed Custom Domains are
+simpler and don't require re-deploying on a domain change.
+
+### DNS records you should see
+
+After setup, the dashboard → DNS → Records for `widgetly.tech`
+should show:
+
+| Type  | Name | Content                | Proxy            |
+| ----- | ---- | ---------------------- | ---------------- |
+| A     | @    | 192.0.2.1 (Cloudflare) | Proxied (orange) |
+| AAAA  | @    | 100:: (Cloudflare)     | Proxied (orange) |
+| CNAME | www  | widgetly.tech          | Proxied (orange) |
+
+The exact A / AAAA values are Cloudflare-managed IPs; you
+shouldn't need to set them manually.
+
+### Verifying
+
+```bash
+# DNS resolution
+dig widgetly.tech +short
+dig www.widgetly.tech +short
+
+# HTTPS works
+curl -I https://widgetly.tech --max-time 10
+curl -I https://www.widgetly.tech --max-time 10
+
+# The Worker is serving, not a generic Cloudflare page
+curl -sI https://widgetly.tech | grep -i "server: cloudflare"
+```
+
+If `widgetly.tech` 404s but `widgetly.tech/` 200s, you may
+need to add a `301` redirect from the apex to `/`. The
+Cleanly URL Handling section in the Worker Settings covers
+this.
 
 ## Common deploy issues
 

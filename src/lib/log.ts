@@ -19,9 +19,47 @@
 
 type Level = "debug" | "info" | "warn" | "error";
 
+/** Numeric ordering for threshold comparison. */
+const LEVEL_RANK: Record<Level, number> = {
+  debug: 10,
+  info: 20,
+  warn: 30,
+  error: 40,
+};
+
 const SERVICE = "widgetly";
 
+/**
+ * Effective log threshold. Read once at module load. Set via
+ * `LOG_LEVEL` env var (one of `debug`, `info`, `warn`, `error`,
+ * or `silent` to suppress everything). Default is `info`.
+ *
+ * In Cloudflare, set this with `wrangler secret put LOG_LEVEL`
+ * (don't put it in wrangler.toml — it's environment-specific).
+ *
+ * In dev, set it in `.env.local`:
+ *     LOG_LEVEL=debug
+ *
+ * The `debug` level is verbose; keep it off in production unless
+ * you're actively diagnosing something. `info` is the right
+ * baseline for a healthy production deployment.
+ */
+function resolveThreshold(): number {
+  // In the Workers runtime, `process.env` is only available when
+  // the `nodejs_compat` flag is enabled (which it is in
+  // wrangler.toml). In the dev server it just works.
+  const raw = (typeof process !== "undefined" ? process.env?.LOG_LEVEL : undefined)?.toLowerCase();
+  if (raw === "silent") return Infinity;
+  if (raw === "debug" || raw === "info" || raw === "warn" || raw === "error") {
+    return LEVEL_RANK[raw];
+  }
+  return LEVEL_RANK.info;
+}
+
+const THRESHOLD = resolveThreshold();
+
 function emit(level: Level, tag: string, msg: string, data?: Record<string, unknown>) {
+  if (LEVEL_RANK[level] < THRESHOLD) return;
   const entry: Record<string, unknown> = {
     t: new Date().toISOString(),
     level,
