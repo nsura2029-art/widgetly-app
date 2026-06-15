@@ -1,6 +1,6 @@
 import React from "react";
 
-export const lastUpdated = "2026-06-13";
+export const lastUpdated = "2026-06-15";
 
 export const PLAIN_ENGLISH =
   "Use Widgetly for legal stuff and don't abuse it. The tools are free, the service is provided as-is, and we're not liable for indirect damages. Your content stays yours; our branding stays ours. If we change these terms, we'll let you know.";
@@ -98,7 +98,38 @@ export default function TermsContent() {
         or their availability. Use them at your own risk and read their terms.
       </p>
 
-      <h2 id="disclaimer">8. Disclaimers</h2>
+      <h2 id="advertising">8. Advertising, Sponsorships, and Affiliates</h2>
+      <p>
+        Today, Widgetly is free of third-party advertising. We may, in the future, support the
+        Service through one or more of the following:
+      </p>
+      <ul>
+        <li>
+          <strong>Display advertising</strong> &mdash; served by ad networks (for example, Google
+          AdSense, Carbon Ads, or a comparable provider). These are loaded only after you grant the
+          &ldquo;Advertising&rdquo; category in our cookie consent system, and they can be turned
+          off at any time from the footer of any page.
+        </li>
+        <li>
+          <strong>Sponsored content and native placements</strong> &mdash; articles, tools, or
+          listings that are clearly labelled as paid for by a third party. Sponsored content is
+          editorial disclosure is mandatory; we will not pass sponsored material off as our own
+          editorial recommendation.
+        </li>
+        <li>
+          <strong>Affiliate links</strong> &mdash; if we link to a paid product or service and we
+          may receive a commission, we will mark the link with a clear disclosure attribute (for
+          example, <code>rel=&quot;sponsored noopener&quot;</code>) and, where the destination site
+          supports it, the standard <code>href</code> UTM parameters.
+        </li>
+      </ul>
+      <p>
+        We do not run any advertising or affiliate program at this time. If we add one, we will
+        update these Terms and our Privacy Policy and Cookies Policy before any ads, sponsored
+        content, or affiliate links go live.
+      </p>
+
+      <h2 id="disclaimer">9. Disclaimers</h2>
       <p>
         The Service is provided <strong>&ldquo;as is&rdquo;</strong> and{" "}
         <strong>&ldquo;as available&rdquo;</strong>, without warranties of any kind, express or
@@ -111,7 +142,7 @@ export default function TermsContent() {
         a human review. Verify anything that matters.
       </p>
 
-      <h2 id="liability">9. Limitation of Liability</h2>
+      <h2 id="liability">10. Limitation of Liability</h2>
       <p>
         To the maximum extent permitted by law, Widgetly and its team will not be liable for any
         indirect, incidental, special, consequential, or punitive damages — including lost profits,
@@ -128,21 +159,21 @@ export default function TermsContent() {
         apply to the maximum extent permitted by local law.
       </p>
 
-      <h2 id="indemnification">10. Indemnification</h2>
+      <h2 id="indemnification">11. Indemnification</h2>
       <p>
         You agree to indemnify and hold us harmless from any claims, damages, liabilities, costs,
         and expenses (including reasonable legal fees) arising from your use of the Service, your
         violation of these Terms, or your violation of any third-party right.
       </p>
 
-      <h2 id="termination">11. Termination</h2>
+      <h2 id="termination">12. Termination</h2>
       <p>
         You can stop using the Service at any time. We may suspend or terminate access if you
         violate these Terms, if we&apos;re required to by law, or if we discontinue the Service.
         Where reasonable, we&apos;ll give you advance notice and a chance to fix the problem.
       </p>
 
-      <h2 id="changes">12. Changes to These Terms</h2>
+      <h2 id="changes">13. Changes to These Terms</h2>
       <p>
         We may update these Terms from time to time. The &ldquo;Last updated&rdquo; date at the top
         of the page reflects the most recent change. For material changes, we&apos;ll give
@@ -150,7 +181,7 @@ export default function TermsContent() {
         the Service after a change means you accept the updated Terms.
       </p>
 
-      <h2 id="governing-law">13. Governing Law</h2>
+      <h2 id="governing-law">14. Governing Law</h2>
       <p>
         These Terms are governed by the laws of the State of New York, USA, without regard to
         conflict-of-laws principles. Any dispute arising from these Terms will be resolved in the
@@ -158,7 +189,7 @@ export default function TermsContent() {
         personal jurisdiction of those courts.
       </p>
 
-      <h2 id="contact">14. Contact</h2>
+      <h2 id="contact">15. Contact</h2>
       <p>
         Questions about these Terms? Write to{" "}
         <a href="mailto:legal@widgetly.app">legal@widgetly.app</a>. We read every message.

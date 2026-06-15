@@ -1,0 +1,35 @@
+--- a/dist/cli/build/utils/middleware.js
++++ b/dist/cli/build/utils/middleware.js
+@@ -6,16 +6,20 @@
+  * @param options
+  * @returns Whether the project is using a Node.js middleware
+  */
+-export function useNodeMiddleware(options) {
+-    const buildOutputDotNextDir = path.join(options.appBuildOutputPath, ".next");
+-    // Look for the edge middleware
+-    const middlewareManifest = loadMiddlewareManifest(buildOutputDotNextDir);
+-    const edgeMiddleware = middlewareManifest.middleware["/"];
+-    if (edgeMiddleware) {
+-        // The app uses an edge middleware
+-        return false;
+-    }
+-    // Look for the node middleware
+-    const functionsConfigManifest = loadFunctionsConfigManifest(buildOutputDotNextDir);
+-    return Boolean(functionsConfigManifest?.functions["/_middleware"]);
++/* PATCHED-FOR-NEXTJS-16-PROXY: always return false.
++ *
++ * Next.js 16's `proxy.ts` is always labeled "nodejs" in
++ * functions-config-manifest.json, even when the code is
++ * edge-safe (no Node APIs, no fs, no Buffer). Our
++ * `src/proxy.ts` uses only Web Crypto + NextRequest APIs.
++ *
++ * The deploy is still correct: the open-next.config.ts
++ * `middleware` block already wraps the proxy in the
++ * cloudflare-edge worker wrapper.
++ *
++ * Remove this patch once @opennextjs/cloudflare ships a
++ * version that handles the Next.js 16 manifest format. */
++export function useNodeMiddleware(_options) {
++    return false;
+ }
++

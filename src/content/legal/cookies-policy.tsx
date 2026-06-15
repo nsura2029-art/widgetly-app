@@ -1,6 +1,6 @@
 import React from "react";
 
-export const lastUpdated = "2026-06-13";
+export const lastUpdated = "2026-06-15";
 
 export const PLAIN_ENGLISH =
   "We use a small number of cookies to keep you signed in and to understand which tools people use. We don't run third-party advertising cookies. You can clear or block cookies in your browser settings at any time — most of the site will still work, you'll just be signed out.";
@@ -169,14 +169,74 @@ export default function CookiesContent() {
         signals, we do not set the analytics cookies listed above.
       </p>
 
-      <h2 id="updates">7. Updates to This Policy</h2>
+      <h2 id="consent-management">7. How We Manage Your Consent</h2>
+      <p>
+        When you first visit the Service, you see a banner at the bottom of the page with three
+        choices: <strong>Accept all</strong>, <strong>Reject all</strong>, and{" "}
+        <strong>Customize</strong>. Accept all turns on analytics and advertising. Reject all leaves
+        them off. Customize opens a preferences modal where you can switch each non-essential
+        category on or off independently. Essential cookies are always on and cannot be disabled.
+      </p>
+      <p>
+        Your choice is stored locally in your browser (under the key <code>wly_consent</code>) along
+        with the version of this policy you agreed to and a timestamp. We don&apos;t need a server
+        round-trip to record your choice and we don&apos;t send it to any third party as part of the
+        consent event.
+      </p>
+      <p>
+        You can change your mind at any time by clicking <strong>Cookie preferences</strong> in the
+        footer of any page. That re-opens the same modal with your current choices pre-selected.
+        Clicking the footer&apos;s <strong>Reset choices</strong> link clears the stored record
+        entirely, which will cause the banner to re-appear on your next page view.
+      </p>
+
+      <h2 id="consent-version">8. Consent Versioning</h2>
+      <p>
+        Our consent records carry a <code>consentVersion</code> field (currently{" "}
+        <strong>1.0</strong>). If we change the categories, the default behavior of any category, or
+        the wording of this policy in a way that affects what you&apos;re agreeing to, we increment
+        the version. When the version stored in your browser no longer matches the current version,
+        the banner re-appears and asks you to confirm or change your choices. We don&apos;t silently
+        re-enable categories that you previously rejected.
+      </p>
+      <p>
+        If you&apos;d like to see exactly what version you agreed to, open the page, open your
+        browser&apos;s dev tools, and look at{" "}
+        <code>localStorage.getItem(&quot;wly_consent&quot;)</code>. The <code>consentVersion</code>{" "}
+        field there is the version of this policy you accepted.
+      </p>
+
+      <h2 id="region">9. Region-Aware Defaults</h2>
+      <p>
+        We detect the country you&apos;re connecting from using the IP address your request comes
+        from (via the standard <code>cf-ipcountry</code> signal Cloudflare attaches to requests that
+        pass through its network). We don&apos;t store this signal; we read it once per request to
+        pick the right default toggles.
+      </p>
+      <p>
+        If you&apos;re in the European Economic Area, the United Kingdom, or a U.S. state with a
+        comprehensive privacy law (currently California, Virginia, Colorado, Connecticut, Utah,
+        Texas, and a handful of others), we apply <strong>opt-in</strong> defaults: analytics and
+        advertising start OFF, and the banner asks before turning either on. In other regions we
+        still default both OFF, but the legal basis is the same: we don&apos;t set either category
+        until you click <em>Accept all</em> or switch it on in the preferences modal.
+      </p>
+      <p>
+        This server-side signal is not always correct (VPNs, mobile carriers, satellite providers,
+        IPv6 gaps). If you believe you were misclassified, the <strong>Customize</strong> button in
+        the banner overrides it. You can also email{" "}
+        <a href="mailto:privacy@widgetly.app">privacy@widgetly.app</a> and we&apos;ll investigate.
+      </p>
+
+      <h2 id="updates">10. Updates to This Policy</h2>
       <p>
         We may update this policy from time to time. The &ldquo;Last updated&rdquo; date at the top
         of the page reflects the most recent change. For material changes — for example, adding a
-        new cookie category — we&apos;ll show a notice on the site.
+        new cookie category — we&apos;ll show a notice on the site, re-prompt for consent (see
+        section 8), and update the <code>consentVersion</code> field in your stored record.
       </p>
 
-      <h2 id="contact">8. Contact</h2>
+      <h2 id="contact">11. Contact</h2>
       <p>
         Questions about cookies? Write to{" "}
         <a href="mailto:privacy@widgetly.app">privacy@widgetly.app</a>.
