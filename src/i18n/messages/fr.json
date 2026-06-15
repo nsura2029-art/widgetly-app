@@ -1,320 +1,320 @@
 {
   "site": {
-    "name": "Widgetly",
-    "tagline": "Everything You Need. Nothing You Don't.",
-    "description": "Widgetly is the all-in-one AI tools platform: 500+ free online tools, calculators, converters, generators, PDF editors, and AI assistants — all in one fast, private, mobile-first platform."
+    "name": "[MOCK] Widgetly",
+    "tagline": "[MOCK] Everything You Need. Nothing You Don't.",
+    "description": "[MOCK] Widgetly is the all-in-one AI tools platform: 500+ free online tools, calculators, converters, generators, PDF editors, and AI assistants — all in one fast, private, mobile-first platform."
   },
   "header": {
     "nav": {
-      "tools": "Tools",
-      "features": "Features",
-      "categories": "Categories",
-      "blog": "Blog",
-      "about": "About",
-      "contact": "Contact"
+      "tools": "[MOCK] Tools",
+      "features": "[MOCK] Features",
+      "categories": "[MOCK] Categories",
+      "blog": "[MOCK] Blog",
+      "about": "[MOCK] About",
+      "contact": "[MOCK] Contact"
     },
     "actions": {
       "star": "Étoile",
-      "joinWaitlist": "Join Waitlist"
+      "joinWaitlist": "[MOCK] Join Waitlist"
     },
     "aria": {
-      "mainNav": "Main navigation",
-      "openMenu": "Open menu",
-      "closeMenu": "Close menu",
-      "homeLink": "{siteName} home"
+      "mainNav": "[MOCK] Main navigation",
+      "openMenu": "[MOCK] Open menu",
+      "closeMenu": "[MOCK] Close menu",
+      "homeLink": "[MOCK] {siteName} home"
     },
     "localePicker": {
-      "label": "Select language",
-      "currentLanguage": "Current language: {nativeName}"
+      "label": "[MOCK] Select language",
+      "currentLanguage": "[MOCK] Current language: {nativeName}"
     }
   },
   "footer": {
     "columns": {
-      "product": "Product",
-      "resources": "Resources",
-      "company": "Company",
-      "legal": "Legal"
+      "product": "[MOCK] Product",
+      "resources": "[MOCK] Resources",
+      "company": "[MOCK] Company",
+      "legal": "[MOCK] Legal"
     },
     "links": {
-      "allTools": "All Tools",
-      "pdfTools": "PDF Tools",
-      "imageTools": "Image Tools",
-      "aiTools": "AI Tools",
-      "developerTools": "Developer Tools",
-      "suggest": "Suggest a Tool",
-      "joinWaitlist": "Join Waitlist",
-      "blog": "Blog",
-      "help": "Help Center",
-      "changelog": "Changelog",
-      "status": "Status",
-      "about": "About",
-      "contact": "Contact",
-      "privacy": "Privacy Policy",
-      "terms": "Terms & Conditions",
-      "cookies": "Cookies Policy",
-      "security": "Security",
-      "github": "GitHub",
-      "twitter": "Twitter",
-      "discord": "Discord"
+      "allTools": "[MOCK] All Tools",
+      "pdfTools": "[MOCK] PDF Tools",
+      "imageTools": "[MOCK] Image Tools",
+      "aiTools": "[MOCK] AI Tools",
+      "developerTools": "[MOCK] Developer Tools",
+      "suggest": "[MOCK] Suggest a Tool",
+      "joinWaitlist": "[MOCK] Join Waitlist",
+      "blog": "[MOCK] Blog",
+      "help": "[MOCK] Help Center",
+      "changelog": "[MOCK] Changelog",
+      "status": "[MOCK] Status",
+      "about": "[MOCK] About",
+      "contact": "[MOCK] Contact",
+      "privacy": "[MOCK] Privacy Policy",
+      "terms": "[MOCK] Terms & Conditions",
+      "cookies": "[MOCK] Cookies Policy",
+      "security": "[MOCK] Security",
+      "github": "[MOCK] GitHub",
+      "twitter": "[MOCK] Twitter",
+      "discord": "[MOCK] Discord"
     },
-    "copyright": "© {year} {siteName}. All rights reserved.",
-    "builtWith": "Built with care. Deployed on {platform}."
+    "copyright": "[MOCK] © {year} {siteName}. All rights reserved.",
+    "builtWith": "[MOCK] Built with care. Deployed on {platform}."
   },
   "home": {
     "hero": {
-      "title": "Every tool you need in one place",
-      "subtitle": "At your fingertips. Fast, simple, and 100% free.",
-      "askPrompt": "Can’t find a tool you need?",
-      "askCta": "Tell us what you want — we’ll build it for you.",
+      "title": "[MOCK] Every tool you need in one place",
+      "subtitle": "[MOCK] At your fingertips. Fast, simple, and 100% free.",
+      "askPrompt": "[MOCK] Can’t find a tool you need?",
+      "askCta": "[MOCK] Tell us what you want — we’ll build it for you.",
       "audiences": {
-        "students": "Students",
-        "teachers": "Teachers",
-        "professionals": "Professionals",
-        "creators": "Creators",
-        "developers": "Developers",
-        "marketers": "Marketers",
-        "businesses": "Businesses"
+        "students": "[MOCK] Students",
+        "teachers": "[MOCK] Teachers",
+        "professionals": "[MOCK] Professionals",
+        "creators": "[MOCK] Creators",
+        "developers": "[MOCK] Developers",
+        "marketers": "[MOCK] Marketers",
+        "businesses": "[MOCK] Businesses"
       },
-      "suggestTool": "Suggest a Tool",
-      "joinWaitlist": "Join Waitlist"
+      "suggestTool": "[MOCK] Suggest a Tool",
+      "joinWaitlist": "[MOCK] Join Waitlist"
     },
     "features": {
-      "title": "Everything You Need. Nothing You Don't.",
-      "subtitle": "Powerful tools, lightning-fast results, and a seamless experience from start to finish."
+      "title": "[MOCK] Everything You Need. Nothing You Don't.",
+      "subtitle": "[MOCK] Powerful tools, lightning-fast results, and a seamless experience from start to finish."
     },
     "categories": {
-      "pill": "50+ Categories",
-      "title": "Every tool you need, all in one place.",
-      "subtitle": "From PDF editors to AI writers, calculators to converters — all under one roof.",
-      "count": "tools"
+      "pill": "[MOCK] 50+ Categories",
+      "title": "[MOCK] Every tool you need, all in one place.",
+      "subtitle": "[MOCK] From PDF editors to AI writers, calculators to converters — all under one roof.",
+      "count": "[MOCK] tools"
     },
     "socialProof": {
-      "title": "Trusted by builders around the world",
+      "title": "[MOCK] Trusted by builders around the world",
       "stats": {
-        "tools": "Tools Planned",
-        "categories": "Categories",
-        "stars": "GitHub Stars",
-        "waitlist": "Waitlist Signups"
+        "tools": "[MOCK] Tools Planned",
+        "categories": "[MOCK] Categories",
+        "stars": "[MOCK] GitHub Stars",
+        "waitlist": "[MOCK] Waitlist Signups"
       },
-      "footer": "{freeTools} free tools · {uptimeTarget} uptime target · zero ads"
+      "footer": "[MOCK] {freeTools} free tools · {uptimeTarget} uptime target · zero ads"
     },
     "waitlist": {
-      "pill": "Be the first",
-      "title": "Get early access to Widgetly.",
-      "subtitle": "Join the waitlist for launch updates, sneak peeks, and a founders' discount when we go live.",
+      "pill": "[MOCK] Be the first",
+      "title": "[MOCK] Get early access to Widgetly.",
+      "subtitle": "[MOCK] Join the waitlist for launch updates, sneak peeks, and a founders' discount when we go live.",
       "countdown": {
-        "label": "Launching in"
+        "label": "[MOCK] Launching in"
       },
-      "founderQuote": "“We're building the utility platform we always wished existed — one search bar away from anything you need.”",
-      "founderAttribution": "— The Widgetly team"
+      "founderQuote": "[MOCK] “We're building the utility platform we always wished existed — one search bar away from anything you need.”",
+      "founderAttribution": "[MOCK] — The Widgetly team"
     },
     "seo": {
-      "exploreTitle": "Explore Widgetly by category",
-      "exploreSubtitle": "Each category is a curated set of free online tools, hand-picked and built for speed. Click through to preview the roadmap.",
-      "count": "{count}+ tools",
-      "browse": "Browse {name} →"
+      "exploreTitle": "[MOCK] Explore Widgetly by category",
+      "exploreSubtitle": "[MOCK] Each category is a curated set of free online tools, hand-picked and built for speed. Click through to preview the roadmap.",
+      "count": "[MOCK] {count}+ tools",
+      "browse": "[MOCK] Browse {name} →"
     },
     "faq": {
-      "pill": "FAQ",
-      "title": "Frequently asked questions",
-      "subtitle": "Everything you need to know about Widgetly, the platform, and the launch."
+      "pill": "[MOCK] FAQ",
+      "title": "[MOCK] Frequently asked questions",
+      "subtitle": "[MOCK] Everything you need to know about Widgetly, the platform, and the launch."
     }
   },
   "faq": {
     "items": {
       "whatIs": {
-        "question": "What is Widgetly?",
-        "answer": "Widgetly is an all-in-one AI tools platform that brings together 500+ free online tools, calculators, converters, generators, PDF editors, and AI assistants in a single, fast, privacy-first interface. Built for students, teachers, professionals, creators, developers, and businesses."
+        "question": "[MOCK] What is Widgetly?",
+        "answer": "[MOCK] Widgetly is an all-in-one AI tools platform that brings together 500+ free online tools, calculators, converters, generators, PDF editors, and AI assistants in a single, fast, privacy-first interface. Built for students, teachers, professionals, creators, developers, and businesses."
       },
       "isFree": {
-        "question": "Is Widgetly free to use?",
-        "answer": "Yes. Widgetly is 100% free during launch. Every tool on the platform is free to use with no hidden fees, no watermarks, and no sign-up required for most tools. Optional premium tiers may be added later for power users and teams."
+        "question": "[MOCK] Is Widgetly free to use?",
+        "answer": "[MOCK] Yes. Widgetly is 100% free during launch. Every tool on the platform is free to use with no hidden fees, no watermarks, and no sign-up required for most tools. Optional premium tiers may be added later for power users and teams."
       },
       "launch": {
-        "question": "When does Widgetly launch?",
-        "answer": "Widgetly is launching soon. Join the waitlist to get early access, launch updates, sneak peeks, and a founders' discount when we go live."
+        "question": "[MOCK] When does Widgetly launch?",
+        "answer": "[MOCK] Widgetly is launching soon. Join the waitlist to get early access, launch updates, sneak peeks, and a founders' discount when we go live."
       },
       "account": {
-        "question": "Do I need to create an account?",
-        "answer": "Most Widgetly tools work without an account. A free optional account unlocks cloud sync, tool history, saved preferences, and cross-device access to your tools and data."
+        "question": "[MOCK] Do I need to create an account?",
+        "answer": "[MOCK] Most Widgetly tools work without an account. A free optional account unlocks cloud sync, tool history, saved preferences, and cross-device access to your tools and data."
       },
       "privacy": {
-        "question": "Is my data private and secure?",
-        "answer": "Yes. Widgetly is privacy-first by design. Files are processed in your browser whenever possible, sensitive data is end-to-end encrypted, and we never sell your information to third parties."
+        "question": "[MOCK] Is my data private and secure?",
+        "answer": "[MOCK] Yes. Widgetly is privacy-first by design. Files are processed in your browser whenever possible, sensitive data is end-to-end encrypted, and we never sell your information to third parties."
       },
       "suggest": {
-        "question": "Can I suggest a tool to be added?",
-        "answer": "Absolutely. We build tools based on user requests. Use the 'Suggest a Tool' link to tell us what you need and we will prioritize the most-requested tools for our launch roadmap."
+        "question": "[MOCK] Can I suggest a tool to be added?",
+        "answer": "[MOCK] Absolutely. We build tools based on user requests. Use the 'Suggest a Tool' link to tell us what you need and we will prioritize the most-requested tools for our launch roadmap."
       },
       "mobile": {
-        "question": "Does Widgetly work on mobile devices?",
-        "answer": "Yes. Widgetly is built mobile-first. Every tool is fully responsive and tested on phones, tablets, and desktops — with fast load times and touch-friendly interfaces on every screen size."
+        "question": "[MOCK] Does Widgetly work on mobile devices?",
+        "answer": "[MOCK] Yes. Widgetly is built mobile-first. Every tool is fully responsive and tested on phones, tablets, and desktops — with fast load times and touch-friendly interfaces on every screen size."
       },
       "different": {
-        "question": "How is Widgetly different from other tools platforms?",
-        "answer": "Widgetly combines AI search, 500+ curated tools, a privacy-first architecture, edge-deployed performance, and a single unified interface. Instead of bookmarking dozens of separate websites, you get everything in one fast, free platform."
+        "question": "[MOCK] How is Widgetly different from other tools platforms?",
+        "answer": "[MOCK] Widgetly combines AI search, 500+ curated tools, a privacy-first architecture, edge-deployed performance, and a single unified interface. Instead of bookmarking dozens of separate websites, you get everything in one fast, free platform."
       }
     }
   },
   "categories": {
     "items": {
       "pdf": {
-        "name": "PDF Tools",
-        "shortDesc": "Merge, split, compress, convert",
-        "longDesc": "Free online PDF tools: merge, split, compress, convert to Word/Excel/JPG, edit, sign, protect. No upload limits, no watermarks, runs in your browser."
+        "name": "[MOCK] PDF Tools",
+        "shortDesc": "[MOCK] Merge, split, compress, convert",
+        "longDesc": "[MOCK] Free online PDF tools: merge, split, compress, convert to Word/Excel/JPG, edit, sign, protect. No upload limits, no watermarks, runs in your browser."
       },
       "image": {
-        "name": "Image Tools",
-        "shortDesc": "Resize, crop, convert, optimize",
-        "longDesc": "Online image editor: resize, crop, compress, convert between JPG, PNG, WebP, SVG, AVIF. Background remover, watermark, filters, and batch processing."
+        "name": "[MOCK] Image Tools",
+        "shortDesc": "[MOCK] Resize, crop, convert, optimize",
+        "longDesc": "[MOCK] Online image editor: resize, crop, compress, convert between JPG, PNG, WebP, SVG, AVIF. Background remover, watermark, filters, and batch processing."
       },
       "video": {
-        "name": "Video Tools",
-        "shortDesc": "Compress, trim, transcribe",
-        "longDesc": "Browser-based video tools: compress, trim, cut, merge, transcribe audio to text, generate subtitles, convert to MP4, WebM, GIF. No software to install."
+        "name": "[MOCK] Video Tools",
+        "shortDesc": "[MOCK] Compress, trim, transcribe",
+        "longDesc": "[MOCK] Browser-based video tools: compress, trim, cut, merge, transcribe audio to text, generate subtitles, convert to MP4, WebM, GIF. No software to install."
       },
       "ai": {
-        "name": "AI Tools",
-        "shortDesc": "Write, summarize, generate",
-        "longDesc": "Free AI tools for writing, summarizing, rewriting, translating, generating images, building resumes, and answering questions. Powered by the latest LLMs."
+        "name": "[MOCK] AI Tools",
+        "shortDesc": "[MOCK] Write, summarize, generate",
+        "longDesc": "[MOCK] Free AI tools for writing, summarizing, rewriting, translating, generating images, building resumes, and answering questions. Powered by the latest LLMs."
       },
       "calculators": {
-        "name": "Calculators",
-        "shortDesc": "Finance, math, health, more",
-        "longDesc": "Hundreds of free online calculators: mortgage, loan, BMI, calorie, tip, percentage, age, GPA, grade, scientific, financial, health, and math calculators."
+        "name": "[MOCK] Calculators",
+        "shortDesc": "[MOCK] Finance, math, health, more",
+        "longDesc": "[MOCK] Hundreds of free online calculators: mortgage, loan, BMI, calorie, tip, percentage, age, GPA, grade, scientific, financial, health, and math calculators."
       },
       "converters": {
-        "name": "Converters",
-        "shortDesc": "Units, currencies, formats",
+        "name": "[MOCK] Converters",
+        "shortDesc": "[MOCK] Units, currencies, formats",
         "longDesc": "Convertisseurs gratuits d'unités, de devises et de formats de fichiers : longueur, poids, température, surface, volume, temps, vitesse, données, codes couleur et plus de 150 devises avec des taux en temps réel."
       },
       "seo": {
-        "name": "SEO Tools",
-        "shortDesc": "Keywords, meta, audit",
-        "longDesc": "Free SEO tools: meta tag generator, keyword density checker, sitemap generator, robots.txt tester, SERP preview, backlink checker, page speed insights."
+        "name": "[MOCK] SEO Tools",
+        "shortDesc": "[MOCK] Keywords, meta, audit",
+        "longDesc": "[MOCK] Free SEO tools: meta tag generator, keyword density checker, sitemap generator, robots.txt tester, SERP preview, backlink checker, page speed insights."
       },
       "education": {
-        "name": "Education Tools",
-        "shortDesc": "Lesson plans, quizzes, study",
-        "longDesc": "Tools for teachers and students: lesson plan generator, quiz maker, flashcards, study timer, GPA calculator, citation generator, math solver, writing prompts."
+        "name": "[MOCK] Education Tools",
+        "shortDesc": "[MOCK] Lesson plans, quizzes, study",
+        "longDesc": "[MOCK] Tools for teachers and students: lesson plan generator, quiz maker, flashcards, study timer, GPA calculator, citation generator, math solver, writing prompts."
       },
       "developer": {
-        "name": "Developer Tools",
-        "shortDesc": "JSON, regex, encoders",
-        "longDesc": "Free developer utilities: JSON formatter and validator, regex tester, Base64 encoder, URL encoder, JWT decoder, CSS minifier, diff checker, hash generator."
+        "name": "[MOCK] Developer Tools",
+        "shortDesc": "[MOCK] JSON, regex, encoders",
+        "longDesc": "[MOCK] Free developer utilities: JSON formatter and validator, regex tester, Base64 encoder, URL encoder, JWT decoder, CSS minifier, diff checker, hash generator."
       },
       "business": {
-        "name": "Business Tools",
-        "shortDesc": "Invoices, contracts, proposals",
-        "longDesc": "Business productivity tools: invoice generator, contract templates, proposal builder, NDA generator, business plan templates, SWOT analysis, OKR tracker."
+        "name": "[MOCK] Business Tools",
+        "shortDesc": "[MOCK] Invoices, contracts, proposals",
+        "longDesc": "[MOCK] Business productivity tools: invoice generator, contract templates, proposal builder, NDA generator, business plan templates, SWOT analysis, OKR tracker."
       }
     }
   },
   "about": {
-    "title": "About Us",
-    "subtitle": "The team building the all-in-one tools platform we always wished existed.",
-    "missionTitle": "Our mission",
-    "missionBody": "We're building Widgetly because the modern web is fragmented. You need a PDF editor here, a calculator there, an AI writer somewhere else, and a developer tool across town. We want to put all of those — and hundreds more — behind a single search bar, with the speed and polish of the best native apps.",
+    "title": "[MOCK] About Us",
+    "subtitle": "[MOCK] The team building the all-in-one tools platform we always wished existed.",
+    "missionTitle": "[MOCK] Our mission",
+    "missionBody": "[MOCK] We're building Widgetly because the modern web is fragmented. You need a PDF editor here, a calculator there, an AI writer somewhere else, and a developer tool across town. We want to put all of those — and hundreds more — behind a single search bar, with the speed and polish of the best native apps.",
     "howWeWork": {
-      "title": "How we work",
+      "title": "[MOCK] How we work",
       "tiles": {
         "small": {
-          "title": "Small, senior, async",
-          "body": "Everyone on the team has deep experience and owns their work end-to-end. We write things down so context isn't lost across time zones."
+          "title": "[MOCK] Small, senior, async",
+          "body": "[MOCK] Everyone on the team has deep experience and owns their work end-to-end. We write things down so context isn't lost across time zones."
         },
         "remote": {
-          "title": "Fully remote",
-          "body": "Work from wherever you're most productive. We overlap a few hours with US Eastern for the team that wants it; the rest is async."
+          "title": "[MOCK] Fully remote",
+          "body": "[MOCK] Work from wherever you're most productive. We overlap a few hours with US Eastern for the team that wants it; the rest is async."
         },
         "hours": {
-          "title": "Sensible hours",
-          "body": "We protect focus time and respect evenings and weekends. Tools that \"just work\" start with a team that isn't burned out."
+          "title": "[MOCK] Sensible hours",
+          "body": "[MOCK] We protect focus time and respect evenings and weekends. Tools that \"just work\" start with a team that isn't burned out."
         },
         "pay": {
-          "title": "Pay transparency",
-          "body": "Salary bands are public within the company and tied to role and experience, not negotiation. The same role pays the same, anywhere."
+          "title": "[MOCK] Pay transparency",
+          "body": "[MOCK] Salary bands are public within the company and tied to role and experience, not negotiation. The same role pays the same, anywhere."
         }
       }
     },
-    "teamTitle": "Meet the team",
-    "teamSubtitle": "Senior builders, mostly remote, working across time zones.",
-    "joinTitle": "Want to build with us?",
-    "joinBody": "We're hiring across product, engineering, AI, and design. If you ship work you're proud of, get in touch.",
-    "joinCta": "See open roles"
+    "teamTitle": "[MOCK] Meet the team",
+    "teamSubtitle": "[MOCK] Senior builders, mostly remote, working across time zones.",
+    "joinTitle": "[MOCK] Want to build with us?",
+    "joinBody": "[MOCK] We're hiring across product, engineering, AI, and design. If you ship work you're proud of, get in touch.",
+    "joinCta": "[MOCK] See open roles"
   },
   "contact": {
-    "title": "Contact",
-    "subtitle": "Got a question, partnership idea, or press inquiry? Send us a note.",
+    "title": "[MOCK] Contact",
+    "subtitle": "[MOCK] Got a question, partnership idea, or press inquiry? Send us a note.",
     "form": {
-      "nameLabel": "Your name",
-      "namePlaceholder": "Ava Martinez",
-      "emailLabel": "Email",
-      "emailPlaceholder": "you@example.com",
-      "subjectLabel": "Subject",
-      "subjectPlaceholder": "What's this about?",
-      "messageLabel": "Message",
-      "messagePlaceholder": "Tell us a bit more…",
-      "submit": "Send message",
-      "submitting": "Sending…",
-      "success": "Thanks! We'll get back to you within a couple of business days.",
-      "errorRequired": "Please fill in all fields.",
-      "errorInvalidEmail": "Please enter a valid email address.",
-      "errorGeneric": "Something went wrong. Please try again or email us directly at hello@widgetly.app."
+      "nameLabel": "[MOCK] Your name",
+      "namePlaceholder": "[MOCK] Ava Martinez",
+      "emailLabel": "[MOCK] Email",
+      "emailPlaceholder": "[MOCK] you@example.com",
+      "subjectLabel": "[MOCK] Subject",
+      "subjectPlaceholder": "[MOCK] What's this about?",
+      "messageLabel": "[MOCK] Message",
+      "messagePlaceholder": "[MOCK] Tell us a bit more…",
+      "submit": "[MOCK] Send message",
+      "submitting": "[MOCK] Sending…",
+      "success": "[MOCK] Thanks! We'll get back to you within a couple of business days.",
+      "errorRequired": "[MOCK] Please fill in all fields.",
+      "errorInvalidEmail": "[MOCK] Please enter a valid email address.",
+      "errorGeneric": "[MOCK] Something went wrong. Please try again or email us directly at hello@widgetly.app."
     },
-    "altTitle": "Other ways to reach us",
-    "emailLabel": "Email",
-    "githubLabel": "GitHub",
-    "githubBody": "File an issue, send a PR, or star the repo.",
-    "socialLabel": "Social"
+    "altTitle": "[MOCK] Other ways to reach us",
+    "emailLabel": "[MOCK] Email",
+    "githubLabel": "[MOCK] GitHub",
+    "githubBody": "[MOCK] File an issue, send a PR, or star the repo.",
+    "socialLabel": "[MOCK] Social"
   },
   "suggest": {
-    "title": "Suggest a Tool",
-    "subtitle": "Tell us what's missing. The most-requested tools get built first.",
+    "title": "[MOCK] Suggest a Tool",
+    "subtitle": "[MOCK] Tell us what's missing. The most-requested tools get built first.",
     "form": {
-      "titleLabel": "Tool idea",
-      "titlePlaceholder": "AI Flashcard Generator",
-      "descriptionLabel": "What should it do?",
-      "descriptionPlaceholder": "Generate flashcards from any text or PDF, spaced repetition, export to Anki…",
-      "emailLabel": "Email (optional, for status updates)",
-      "emailPlaceholder": "you@example.com",
-      "submit": "Submit suggestion",
-      "submitting": "Submitting…",
-      "success": "Thanks! Your idea is in the queue. We'll email if it gets picked up.",
-      "errorRequired": "Please add a title and a short description.",
-      "errorGeneric": "Something went wrong. Please try again."
+      "titleLabel": "[MOCK] Tool idea",
+      "titlePlaceholder": "[MOCK] AI Flashcard Generator",
+      "descriptionLabel": "[MOCK] What should it do?",
+      "descriptionPlaceholder": "[MOCK] Generate flashcards from any text or PDF, spaced repetition, export to Anki…",
+      "emailLabel": "[MOCK] Email (optional, for status updates)",
+      "emailPlaceholder": "[MOCK] you@example.com",
+      "submit": "[MOCK] Submit suggestion",
+      "submitting": "[MOCK] Submitting…",
+      "success": "[MOCK] Thanks! Your idea is in the queue. We'll email if it gets picked up.",
+      "errorRequired": "[MOCK] Please add a title and a short description.",
+      "errorGeneric": "[MOCK] Something went wrong. Please try again."
     },
-    "topTitle": "Top requests right now",
-    "topSubtitle": "What the community is voting on. Pick a tool to see its full page and upvote.",
-    "upvoteCta": "Upvote"
+    "topTitle": "[MOCK] Top requests right now",
+    "topSubtitle": "[MOCK] What the community is voting on. Pick a tool to see its full page and upvote.",
+    "upvoteCta": "[MOCK] Upvote"
   },
   "blog": {
     "posts": {
       "introducing-widgetly": {
-        "title": "Introducing Widgetly: One Search Bar, Endless Possibilities",
-        "description": "We're building the all-in-one AI tools platform we always wished existed. Here's why — and what's coming at launch."
+        "title": "[MOCK] Introducing Widgetly: One Search Bar, Endless Possibilities",
+        "description": "[MOCK] We're building the all-in-one AI tools platform we always wished existed. Here's why — and what's coming at launch."
       },
       "best-free-online-tools-2025": {
-        "title": "The Best Free Online Tools You Should Be Using in 2025",
-        "description": "A curated guide to the 50 most useful free online tools for productivity, writing, design, and development in 2025."
+        "title": "[MOCK] The Best Free Online Tools You Should Be Using in 2025",
+        "description": "[MOCK] A curated guide to the 50 most useful free online tools for productivity, writing, design, and development in 2025."
       },
       "ai-tools-for-students": {
         "title": "10 outils IA que chaque étudiant devrait utiliser en 2025",
-        "description": "From essay outlines to math solvers, here are the AI tools that will actually save you time as a student this year."
+        "description": "[MOCK] From essay outlines to math solvers, here are the AI tools that will actually save you time as a student this year."
       },
       "pdf-tools-online-guide": {
-        "title": "The Complete Guide to Online PDF Tools (And When to Use Each)",
-        "description": "Merge, split, compress, convert, sign, redact — which PDF tool should you reach for? A no-nonsense guide."
+        "title": "[MOCK] The Complete Guide to Online PDF Tools (And When to Use Each)",
+        "description": "[MOCK] Merge, split, compress, convert, sign, redact — which PDF tool should you reach for? A no-nonsense guide."
       }
     },
     "index": {
-      "title": "Product updates, guides, and curated best-of lists",
-      "subtitle": "Writing on AI tools, productivity, PDF, developer utilities, and everything in between. New posts weekly.",
-      "allPostsCta": "All blog posts"
+      "title": "[MOCK] Product updates, guides, and curated best-of lists",
+      "subtitle": "[MOCK] Writing on AI tools, productivity, PDF, developer utilities, and everything in between. New posts weekly.",
+      "allPostsCta": "[MOCK] All blog posts"
     }
   },
   "common": {
-    "comingSoon": "Coming soon",
-    "learnMore": "Learn more",
-    "readMore": "Read more"
+    "comingSoon": "[MOCK] Coming soon",
+    "learnMore": "[MOCK] Learn more",
+    "readMore": "[MOCK] Read more"
   }
 }
