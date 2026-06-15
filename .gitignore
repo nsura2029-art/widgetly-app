@@ -47,5 +47,10 @@ next-env.d.ts
 .wrangler/
 .dev.vars
 
+# translation workflow working files
+# (scripts/translate-file.mjs reads/writes these as scratch space;
+#  never commit them -- they have no value in the repo history)
+tmp/
+
 # os
 Thumbs.db

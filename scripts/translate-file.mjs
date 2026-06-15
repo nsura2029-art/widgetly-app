@@ -261,13 +261,21 @@ function importLocale(targetLocale, dir, dryRun) {
 
   for (const line of txt.split("\n")) {
     if (!line.trim()) continue;
-    const tabIdx = line.indexOf("\t");
-    if (tabIdx < 0) {
-      // No tab — malformed line, skip silently.
+    // Match "<id><whitespace><text>" where whitespace is one or more
+    // spaces or a tab. The ID is the first non-whitespace token; the
+    // text is everything after the first run of whitespace.
+    //
+    // Some translators (notably DeepL's file UI when "Preserve
+    // formatting" is on) convert the original tabs to multiple spaces
+    // for visual alignment. Accept both forms so the import doesn't
+    // silently drop 95% of the lines if the translator did this.
+    const m = line.match(/^(\S+)[ \t]+(.*)$/);
+    if (!m) {
+      // No separator found — malformed line, skip silently.
       continue;
     }
-    const id = line.slice(0, tabIdx);
-    let value = line.slice(tabIdx + 1);
+    const id = m[1];
+    let value = m[2];
 
     const meta = ids[id];
     if (!meta) {
