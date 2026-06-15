@@ -16,50 +16,50 @@ const MASCOTS = [SearchMascot, CalculatorMascot, ImageMascot, PdfMascot, WrenchM
 type MascotComponent = (typeof MASCOTS)[number];
 
 /**
- * Picks one mascot at random on mount and renders it with the shared
- * idle animations (float, tilt, jump, blink, sparkles) defined in
- * `globals.css` under the `.wly-mascot-*` namespace.
+ * Stable hash of a string. FNV-1a-ish, 32-bit, good enough to spread
+ * a small array of entries across the index range without a crypto
+ * dependency. We only need it to pick a mascot, not for security.
+ */
+function stableHash(input: string): number {
+  let h = 2166136261;
+  for (let i = 0; i < input.length; i++) {
+    h ^= input.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+}
+
+/**
+ * Picks one mascot per component instance and renders it with the
+ * shared idle animations (float, tilt, jump, blink, sparkles) defined
+ * in `globals.css` under the `.wly-mascot-*` namespace.
  *
  * Defensive design choices (vs. the previous framer-motion version):
  *  - Pure CSS animations from a global stylesheet — no `<style jsx>`,
  *    no per-mount class hash that could drift between SSR and CSR.
  *  - Plain `<div>` wrapper, no `motion.div` — eliminates React 19 +
  *    framer-motion 11 hydration edge cases on the i18n branch.
- *  - The random pick happens on the client only; SSR renders a sized
- *    placeholder with the same DOM shape (one child div) so hydration
- *    never sees a structural change. A `useId`-based stable key keeps
- *    the React identity of the inner node consistent across renders.
+ *  - The pick is derived from `useId()`, which is stable across SSR
+ *    and CSR. That means:
+ *      a) the SSR HTML and the client first render show the SAME
+ *         mascot (no hydration mismatch, no useState/useEffect swap),
+ *      b) different instances of `<RandomMascot>` get different
+ *         picks (each page load feels random to the visitor),
+ *      c) no placeholder element is needed, so the swap from
+ *         placeholder → component that broke React 19's reconciler
+ *         in the previous version never happens.
  *  - Respects `prefers-reduced-motion: reduce` via the CSS rules.
  */
 export function RandomMascot({ className = "h-32 w-32 sm:h-40 sm:w-40" }: { className?: string }) {
-  // useId gives us a stable identifier that matches across server and
-  // client renders, so React's reconciler doesn't see a "different
-  // element at this position" during hydration.
   const reactId = React.useId();
-  const [Picked, setPicked] = React.useState<MascotComponent | null>(null);
-
-  React.useEffect(() => {
-    // Picking on mount is intentional: random on the client only,
-    // SSR renders the placeholder. setState after mount is the
-    // documented "client-only" pattern and triggers a normal re-render.
-    const next = MASCOTS[Math.floor(Math.random() * MASCOTS.length)] ?? MASCOTS[0];
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setPicked(next);
-  }, []);
+  const Picked: MascotComponent = MASCOTS[stableHash(reactId) % MASCOTS.length] ?? MASCOTS[0];
 
   return (
     <div className={`relative mx-auto ${className}`} aria-hidden="true" data-wly-mascot={reactId}>
-      <div
-        // The wrapper class is what receives the CSS animations.
-        // On SSR: Picked is null, the inner content is the placeholder.
-        // On client first render: same.
-        // After useEffect: Picked is set, the inner content becomes the
-        // mascot SVG. Same number of children → no hydration mismatch.
-        className="wly-mascot-float h-full w-full"
-      >
+      <div className="wly-mascot-float h-full w-full">
         <div className="wly-mascot-jump h-full w-full">
           <div className="wly-mascot-tilt h-full w-full">
-            {Picked ? <Picked /> : <div className="h-full w-full" />}
+            <Picked />
           </div>
         </div>
       </div>
