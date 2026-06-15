@@ -65,13 +65,20 @@ export function Breadcrumb({
       <nav
         aria-label="Breadcrumb"
         className={cn(
-          // Stable visual band under the sticky header. Background, border,
-          // and vertical rhythm are fixed so the breadcrumb does not shift
-          // shape between pages. The top padding gives a small breathing
-          // gap between the sticky header and the breadcrumb (matches the
-          // py-4 rhythm used by adjacent content bands so the breadcrumb
-          // doesn't feel pinned to the header).
-          "border-border/60 border-b bg-white/70 pt-2 backdrop-blur supports-[backdrop-filter]:bg-white/60",
+          // Sticky under the header (which is `sticky top-0 z-50`, 4rem
+          // tall). `top-16` = 4rem, so the breadcrumb parks directly
+          // below the header on scroll. `z-30` keeps it above page
+          // content (hero / sections use z-0 to z-20) and below the
+          // header (z-50) so the locale picker / mobile sheet still
+          // overlays correctly.
+          //
+          // Stable visual band: background, border, and vertical rhythm
+          // are fixed so the breadcrumb does not shift shape between
+          // pages. `pt-2` + `py-3` give a small breathing gap between
+          // the sticky header and the crumb trail; `border-b` plus the
+          // backdrop-blur separate the band from the page content
+          // scrolling behind it.
+          "border-border/60 sticky top-16 z-30 w-full border-b bg-white/80 pt-2 backdrop-blur supports-[backdrop-filter]:bg-white/70",
           className
         )}
       >
