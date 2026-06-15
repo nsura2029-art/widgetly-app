@@ -20,6 +20,7 @@ import { buildMetadata } from "@/lib/seo";
 import { TOOLS_CATEGORIES } from "@/lib/tools-categories";
 import { SITE_CONFIG } from "@/lib/constants";
 import { cn } from "@/lib/utils";
+import { RecentlyVisited } from "@/components/shared/recently-visited";
 
 const ICONS: Record<string, LucideIcon> = {
   FileText,
@@ -77,6 +78,10 @@ export default function ToolsIndexPage() {
           tools. Pick a category below — every tool runs in your browser, no sign-up, no watermarks,
           and no surprise paywalls.
         </p>
+      </div>
+
+      <div className="mt-10">
+        <RecentlyVisited />
       </div>
 
       <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">

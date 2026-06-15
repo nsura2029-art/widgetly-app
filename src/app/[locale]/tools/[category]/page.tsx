@@ -27,6 +27,7 @@ import {
 } from "@/lib/tools-categories";
 import { SITE_CONFIG } from "@/lib/constants";
 import { cn } from "@/lib/utils";
+import { RecordCategoryVisit } from "@/lib/history";
 
 const ICONS: Record<string, LucideIcon> = {
   FileText,
@@ -124,6 +125,10 @@ export default async function ToolsCategoryPage({ params }: { params: Promise<Pa
         // Server-rendered JSON-LD; no user input, no XSS surface.
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
+
+      {/* Local-only "recently visited" recording. Mounts on the
+          client, writes to localStorage, no network call. */}
+      <RecordCategoryVisit slug={cat.slug} />
 
       <div className="grid items-start gap-10 md:gap-14 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
         {/* Left — pitch */}

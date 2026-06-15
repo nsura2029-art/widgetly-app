@@ -377,5 +377,11 @@
     },
     "footerLink": "Cookie preferences",
     "footerReset": "Reset choices"
+  },
+  "history": {
+    "sectionTitle": "Continue where you left off",
+    "sectionHint": "Tool categories you've visited on this device. Stored locally, never sent anywhere.",
+    "clearAll": "Clear",
+    "emptyHidden": "You haven't visited any tool categories yet."
   }
 }

@@ -377,5 +377,11 @@
     },
     "footerLink": "Préférences des cookies",
     "footerReset": "Réinitialiser les choix"
+  },
+  "history": {
+    "sectionTitle": "Reprenez où vous en étiez",
+    "sectionHint": "Catégories d'outils que vous avez consultées sur cet appareil. Enregistrées localement, jamais envoyées.",
+    "clearAll": "Effacer",
+    "emptyHidden": "Vous n'avez encore consulté aucune catégorie d'outils."
   }
 }
