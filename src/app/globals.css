@@ -1,19 +1,252 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
+/* -----------------------------------------------------------------------
+ * Tailwind v4 design tokens — all colors/radii/shadows/etc. previously
+ * declared in tailwind.config.ts now live here as CSS custom properties.
+ * `bg-brand-gradient`, `text-primary`, `ring-primary`, etc. resolve from
+ * the `--color-*`, `--font-*`, `--radius-*`, `--shadow-*` namespaces.
+ * --------------------------------------------------------------------- */
+@theme {
+  /* Brand palette */
+  --color-primary: #5b6cff;
+  --color-primary-foreground: #ffffff;
+  --color-primary-50: #eef0ff;
+  --color-primary-100: #dde1ff;
+  --color-primary-200: #bbc3ff;
+  --color-primary-300: #99a5ff;
+  --color-primary-400: #7787ff;
+  --color-primary-500: #5b6cff;
+  --color-primary-600: #4a5ae5;
+  --color-primary-700: #3a48cc;
+  --color-primary-800: #2936b3;
+  --color-primary-900: #192499;
+
+  --color-secondary: #7b61ff;
+  --color-secondary-foreground: #ffffff;
+
+  --color-accent: #a855f7;
+  --color-accent-foreground: #ffffff;
+
+  --color-background: #ffffff;
+  --color-foreground: #111827;
+  --color-border: #e5e7eb;
+  --color-input: #e5e7eb;
+  --color-ring: #5b6cff;
+  --color-muted: #6b7280;
+  --color-muted-foreground: #6b7280;
+  --color-popover: #ffffff;
+  --color-popover-foreground: #111827;
+  --color-card: #ffffff;
+  --color-card-foreground: #111827;
+  --color-dark: #0f172a;
+  --color-dark-foreground: #f8fafc;
+
+  /* Brand legacy (space-separated RGB triplets) */
+  --brand-primary: 91 108 255;
+  --brand-secondary: 123 97 255;
+  --brand-accent: 168 85 247;
+
+  /* Radii */
+  --radius-sm: 0.5rem;
+  --radius-md: 0.625rem;
+  --radius-lg: 0.875rem;
+  --radius-xl: 1.25rem;
+  --radius-2xl: 1.5rem;
+  --radius-3xl: 2rem;
+
+  /* Type scale */
+  --font-sans:
+    var(--font-inter), ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-display: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  --text-display-2xl: 4.5rem;
+  --text-display-2xl--line-height: 1.1;
+  --text-display-2xl--letter-spacing: -0.04em;
+  --text-display-xl: 3.75rem;
+  --text-display-xl--line-height: 1.1;
+  --text-display-xl--letter-spacing: -0.035em;
+  --text-display-lg: 3rem;
+  --text-display-lg--line-height: 1.15;
+  --text-display-lg--letter-spacing: -0.03em;
+  --text-display-md: 2.25rem;
+  --text-display-md--line-height: 1.2;
+  --text-display-md--letter-spacing: -0.025em;
+  --text-display-sm: 1.875rem;
+  --text-display-sm--line-height: 1.25;
+  --text-display-sm--letter-spacing: -0.02em;
+
+  /* Shadows */
+  --shadow-glow-sm: 0 0 20px -5px rgba(91, 108, 255, 0.3);
+  --shadow-glow: 0 0 40px -10px rgba(91, 108, 255, 0.4);
+  --shadow-glow-lg: 0 0 60px -15px rgba(91, 108, 255, 0.5);
+  --shadow-soft: 0 4px 20px -2px rgba(15, 23, 42, 0.06);
+  --shadow-soft-lg: 0 10px 40px -10px rgba(15, 23, 42, 0.1);
+
+  /* Backdrop blur */
+  --blur-xs: 2px;
+
+  /* Gradients */
+  --background-image-brand-gradient: linear-gradient(135deg, #5b6cff 0%, #7b61ff 50%, #a855f7 100%);
+  --background-image-shimmer-gradient: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.4),
+    transparent
+  );
+  --background-image-gradient-radial: radial-gradient(var(--tw-gradient-stops));
+  --background-image-gradient-conic: conic-gradient(
+    from 180deg at 50% 50%,
+    var(--tw-gradient-stops)
+  );
+
+  /* Container */
+  --container-2xl: 1280px;
+  --container-xl: 1120px;
+  --container-lg: 1024px;
+  --container-md: 768px;
+  --container-sm: 640px;
+}
+
+/* -----------------------------------------------------------------------
+ * `.container` — Tailwind v4 doesn't ship a built-in `container` utility
+ * the way v3 did. We re-declare it here so every page-level wrapper
+ * (header, footer, page-shell, hero) gets a centered, capped, padded
+ * content rail by default.
+ *
+ * Behaviour:
+ *  - 100% width with auto side margins -> always horizontally centered.
+ *  - Responsive horizontal padding (1rem on phones, 1.5rem >=sm, 2rem >=lg).
+ *  - Caps at 1280px on >=2xl viewports, scaling down at each breakpoint.
+ *  - `padding-inline` keeps content away from the viewport edges so the
+ *    hero text, header items, and page cards never hug the screen edge.
+ * --------------------------------------------------------------------- */
+@utility container {
+  width: 100%;
+  margin-inline: auto;
+  padding-inline: 1rem;
+
+  @media (min-width: 640px) {
+    padding-inline: 1.5rem;
+  }
+  @media (min-width: 1024px) {
+    padding-inline: 2rem;
+  }
+
+  @media (min-width: 480px) {
+    max-width: 480px;
+  }
+  @media (min-width: 640px) {
+    max-width: 640px;
+  }
+  @media (min-width: 768px) {
+    max-width: 768px;
+  }
+  @media (min-width: 1024px) {
+    max-width: 1024px;
+  }
+  @media (min-width: 1280px) {
+    max-width: 1280px;
+  }
+  @media (min-width: 1536px) {
+    max-width: 1280px;
+  }
+}
+
+/* -----------------------------------------------------------------------
+ * Keyframes that were previously provided by tailwindcss-animate.
+ * None of the source uses `animate-in`/`fade-in-0`/`slide-in-from-*`
+ * classes, so we only re-declare the ones we actually need.
+ * --------------------------------------------------------------------- */
+@layer utilities {
+  @keyframes fade-in {
+    0% {
+      opacity: 0;
+    }
+    100% {
+      opacity: 1;
+    }
+  }
+  @keyframes slide-up {
+    0% {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  @keyframes blob {
+    0%,
+    100% {
+      transform: translate(0, 0) scale(1);
+    }
+    33% {
+      transform: translate(30px, -50px) scale(1.1);
+    }
+    66% {
+      transform: translate(-20px, 20px) scale(0.9);
+    }
+  }
+  @keyframes shimmer {
+    0% {
+      background-position: -200% 0;
+    }
+    100% {
+      background-position: 200% 0;
+    }
+  }
+  @keyframes gradient {
+    0%,
+    100% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+  }
+  @keyframes float {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-8px);
+    }
+  }
+
+  .animate-fade-in {
+    animation: fade-in 0.6s ease-out forwards;
+  }
+  .animate-slide-up {
+    animation: slide-up 0.7s ease-out forwards;
+  }
+  .animate-blob {
+    animation: blob 20s ease-in-out infinite;
+  }
+  .animate-shimmer {
+    animation: shimmer 3s linear infinite;
+  }
+  .animate-gradient {
+    animation: gradient 8s ease infinite;
+  }
+  .animate-float {
+    animation: float 4s ease-in-out infinite;
+  }
+}
+
+/* -----------------------------------------------------------------------
+ * Base styles
+ * --------------------------------------------------------------------- */
 @layer base {
   :root {
     --font-inter: "Inter", system-ui, sans-serif;
-
-    /* Brand palette */
-    --brand-primary: 91 108 255;     /* #5B6CFF */
-    --brand-secondary: 123 97 255;   /* #7B61FF */
-    --brand-accent: 168 85 247;      /* #A855F7 */
   }
 
   * {
-    @apply border-border;
+    border-color: var(--color-border);
   }
 
   html {
@@ -25,18 +258,28 @@
   }
 
   body {
-    @apply bg-background text-foreground;
-    font-feature-settings: "rlig" 1, "calt" 1, "ss01" 1, "cv11" 1;
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    font-feature-settings:
+      "rlig" 1,
+      "calt" 1,
+      "ss01" 1,
+      "cv11" 1;
   }
 
   /* Selection styling */
   ::selection {
-    @apply bg-primary/20 text-foreground;
+    background-color: color-mix(in srgb, var(--color-primary) 20%, transparent);
+    color: var(--color-foreground);
   }
 
   /* Focus ring reset that still respects keyboard nav */
   :focus-visible {
-    @apply outline-none ring-2 ring-primary/50 ring-offset-2 ring-offset-background;
+    outline: none;
+    box-shadow:
+      0 0 0 2px var(--color-background),
+      0 0 0 4px color-mix(in srgb, var(--color-primary) 50%, transparent);
   }
 
   /* Reduced motion */
@@ -52,29 +295,47 @@
   }
 }
 
+/* -----------------------------------------------------------------------
+ * Component classes
+ * --------------------------------------------------------------------- */
 @layer components {
   /* Reusable gradient text utility */
   .text-gradient {
-    @apply bg-brand-gradient bg-clip-text text-transparent;
+    background-image: var(--background-image-brand-gradient);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
   }
 
   /* Glassmorphism card */
   .glass {
-    @apply border border-white/40 bg-white/70 backdrop-blur-xl backdrop-saturate-150;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    background-color: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(24px) saturate(150%);
+    -webkit-backdrop-filter: blur(24px) saturate(150%);
   }
 
   /* Section container with consistent vertical rhythm */
   .section {
-    @apply py-20 sm:py-28 lg:py-32;
+    padding-top: 5rem;
+    padding-bottom: 5rem;
+  }
+  @media (min-width: 640px) {
+    .section {
+      padding-top: 7rem;
+      padding-bottom: 7rem;
+    }
+  }
+  @media (min-width: 1024px) {
+    .section {
+      padding-top: 8rem;
+      padding-bottom: 8rem;
+    }
   }
 
   /* Subtle dot grid for backgrounds */
   .bg-dot-grid {
-    background-image: radial-gradient(
-      circle at 1px 1px,
-      rgba(15, 23, 42, 0.08) 1px,
-      transparent 0
-    );
+    background-image: radial-gradient(circle at 1px 1px, rgba(15, 23, 42, 0.08) 1px, transparent 0);
     background-size: 24px 24px;
   }
 
@@ -98,8 +359,11 @@
   }
 }
 
+/* -----------------------------------------------------------------------
+ * Long-form content styling for SEO copy blocks and blog posts.
+ * Avoids pulling in @tailwindcss/typography as a dep.
+ * --------------------------------------------------------------------- */
 @layer utilities {
-  /* Hide scrollbar but keep functionality */
   .scrollbar-none {
     scrollbar-width: none;
     -ms-overflow-style: none;
@@ -108,14 +372,10 @@
     display: none;
   }
 
-  /* Text balance for headlines */
   .text-balance {
     text-wrap: balance;
   }
 
-  /* Minimal long-form content styling for SEO copy blocks and blog posts.
-     Avoids pulling in @tailwindcss/typography as a dep — covers what we
-     actually use: paragraphs, headings, lists, links, strong. */
   .prose {
     color: #475569;
   }
@@ -162,5 +422,156 @@
     color: #5b6cff;
     text-decoration: underline;
     text-underline-offset: 3px;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * Animated mascot (RandomMascot) — pure CSS, no JS state, no styled-jsx.
+ * Single source of truth for the float / jump / tilt / blink / sparkle stack
+ * used by all 5 tool-themed mascots in `src/components/landing/mascots/`.
+ * Children inside a mascot SVG opt in by adding the relevant class:
+ *   .wly-mascot-eyes  — auto blink
+ *   .wly-mascot-mag   — gentle accent (used for magnifying glass, etc.)
+ *   .wly-mascot-shadow — pulses with the jump
+ *   .sparkle          + .sparkle-a/b/c — twinkling decoration
+ * ------------------------------------------------------------------------- */
+
+.wly-mascot-float {
+  animation: wly-mascot-float 3.6s ease-in-out infinite;
+  will-change: transform;
+}
+@keyframes wly-mascot-float {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-6px) rotate(0deg);
+  }
+}
+
+.wly-mascot-jump {
+  animation: wly-mascot-jump 4.8s cubic-bezier(0.28, 0.84, 0.42, 1) infinite;
+}
+@keyframes wly-mascot-jump {
+  0%,
+  78%,
+  100% {
+    transform: translateY(0) scaleY(1);
+  }
+  84% {
+    transform: translateY(-14px) scaleY(1.04);
+  }
+  92% {
+    transform: translateY(0) scaleY(0.94);
+  }
+  96% {
+    transform: translateY(-3px) scaleY(1.02);
+  }
+}
+
+.wly-mascot-tilt {
+  animation: wly-mascot-tilt 5.2s ease-in-out infinite;
+}
+@keyframes wly-mascot-tilt {
+  0%,
+  100% {
+    transform: rotate(-3deg);
+  }
+  50% {
+    transform: rotate(3deg);
+  }
+}
+
+.wly-mascot-shadow {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: wly-mascot-shadow 4.8s cubic-bezier(0.28, 0.84, 0.42, 1) infinite;
+}
+@keyframes wly-mascot-shadow {
+  0%,
+  78%,
+  100% {
+    transform: scaleX(1);
+    opacity: 0.55;
+  }
+  84% {
+    transform: scaleX(0.7);
+    opacity: 0.35;
+  }
+  92% {
+    transform: scaleX(1.1);
+    opacity: 0.65;
+  }
+}
+
+.wly-mascot-eyes {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: wly-mascot-blink 5s ease-in-out infinite;
+}
+@keyframes wly-mascot-blink {
+  0%,
+  92%,
+  100% {
+    transform: scaleY(1);
+  }
+  95% {
+    transform: scaleY(0.1);
+  }
+  97% {
+    transform: scaleY(1);
+  }
+}
+
+.wly-mascot-mag {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: wly-mascot-mag 4s ease-in-out infinite;
+}
+@keyframes wly-mascot-mag {
+  0%,
+  100% {
+    transform: rotate(-6deg) translate(0, 0);
+  }
+  50% {
+    transform: rotate(6deg) translate(2px, -2px);
+  }
+}
+
+.sparkle {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.sparkle-a {
+  animation: wly-mascot-twinkle 2.4s ease-in-out infinite;
+}
+.sparkle-b {
+  animation: wly-mascot-twinkle 2.4s ease-in-out 0.8s infinite;
+}
+.sparkle-c {
+  animation: wly-mascot-twinkle 2.4s ease-in-out 1.6s infinite;
+}
+@keyframes wly-mascot-twinkle {
+  0%,
+  100% {
+    transform: scale(0.6);
+    opacity: 0.2;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wly-mascot-float,
+  .wly-mascot-jump,
+  .wly-mascot-tilt,
+  .wly-mascot-shadow,
+  .wly-mascot-eyes,
+  .wly-mascot-mag,
+  .sparkle {
+    animation: none !important;
   }
 }

@@ -1,0 +1,348 @@
+{
+  "site": {
+    "name": "Widgetly",
+    "tagline": "Todo lo que necesitas. Nada que no necesites.",
+    "description": "Widgetly es la plataforma integral de herramientas de IA: más de 500 herramientas online gratuitas, calculadoras, conversores, generadores, editores de PDF y asistentes de IA, todo en una plataforma rápida, privada y optimizada para dispositivos móviles."
+  },
+  "header": {
+    "nav": {
+      "tools": "Herramientas",
+      "features": "Funcionalidades",
+      "categories": "Categorías",
+      "blog": "Blog",
+      "about": "Acerca de",
+      "contact": "Contacto"
+    },
+    "actions": {
+      "star": "Estrella",
+      "suggestTool": "Sugerir una herramienta",
+      "joinWaitlist": "Únete a la lista de espera"
+    },
+    "aria": {
+      "mainNav": "Navegación principal",
+      "openMenu": "Abrir menú",
+      "closeMenu": "Cerrar menú",
+      "homeLink": "Inicio de {siteName}",
+      "suggestTool": "Sugerir una herramienta"
+    },
+    "localePicker": {
+      "label": "Seleccionar idioma",
+      "currentLanguage": "Idioma actual: {nativeName}"
+    }
+  },
+  "footer": {
+    "columns": {
+      "product": "Producto",
+      "resources": "Recursos",
+      "company": "Empresa",
+      "legal": "Aviso legal"
+    },
+    "links": {
+      "allTools": "Todas las herramientas",
+      "pdfTools": "Herramientas de PDF",
+      "imageTools": "Herramientas de imagen",
+      "aiTools": "Herramientas de IA",
+      "developerTools": "Herramientas para desarrolladores",
+      "suggest": "Sugerir una herramienta",
+      "joinWaitlist": "Unirse a la lista de espera",
+      "blog": "Blog",
+      "help": "Centro de ayuda",
+      "changelog": "Registro de cambios",
+      "status": "Estado",
+      "about": "Acerca de",
+      "contact": "Contacto",
+      "privacy": "Política de privacidad",
+      "terms": "Términos y condiciones",
+      "cookies": "Política de cookies",
+      "security": "Seguridad",
+      "github": "GitHub",
+      "twitter": "Twitter",
+      "discord": "Discord"
+    },
+    "copyright": "© {year} {siteName}. Todos los derechos reservados.",
+    "builtWith": "Creado con esmero. Implementado en {platform}."
+  },
+  "home": {
+    "hero": {
+      "title": "Todas las herramientas que necesitas en un solo lugar",
+      "subtitle": "Al alcance de tu mano. Rápido, sencillo y 100 % gratuito.",
+      "askPrompt": "¿No encuentras la herramienta que necesitas?",
+      "askCta": "Dinos qué quieres y la crearemos para ti.",
+      "audiences": {
+        "students": "Estudiantes",
+        "teachers": "Profesores",
+        "professionals": "Profesionales",
+        "creators": "Creadores",
+        "developers": "Desarrolladores",
+        "marketers": "Profesionales del marketing",
+        "businesses": "Empresas"
+      },
+      "suggestTool": "Sugiere una herramienta",
+      "joinWaitlist": "Únete a la lista de espera"
+    },
+    "features": {
+      "title": "Todo lo que necesitas. Nada que no necesites.",
+      "subtitle": "Herramientas potentes, resultados ultrarrápidos y una experiencia fluida de principio a fin.",
+      "items": {
+        "aiSearch": {
+          "title": "Búsqueda con IA",
+          "description": "Consultas en lenguaje natural que entienden lo que realmente necesitas. No más buscar en menús."
+        },
+        "toolsCount": {
+          "title": "Más de 500 herramientas",
+          "description": "Calculadoras, conversores, generadores, herramientas de PDF, asistentes de IA: todo en una sola plataforma."
+        },
+        "fast": {
+          "title": "Velocidad del rayo",
+          "description": "Implementado en el edge de la red global de Cloudflare. Tiempos de respuesta inferiores a 100 ms en cualquier parte del mundo."
+        },
+        "cloud": {
+          "title": "En la nube",
+          "description": "Tus herramientas, ajustes e historial te acompañan. Inicia sesión una vez y continúa exactamente donde lo dejaste."
+        },
+        "mobile": {
+          "title": "Optimizado para móviles",
+          "description": "Diseñado pensando primero en los móviles. Cada herramienta funciona perfectamente en teléfonos, tablets y ordenadores."
+        },
+        "privacy": {
+          "title": "Privacidad ante todo",
+          "description": "Cifrado de extremo a extremo para datos sensibles. Nunca vendemos tu información. Jamás."
+        }
+      }
+    },
+    "categories": {
+      "pill": "Más de 50 categorías",
+      "title": "Todas las herramientas que necesitas, en un solo lugar.",
+      "subtitle": "Desde editores de PDF hasta escritores con IA, pasando por calculadoras y conversores: todo bajo un mismo techo.",
+      "count": "herramientas"
+    },
+    "socialProof": {
+      "title": "Cuenta con la confianza de creadores de todo el mundo",
+      "stats": {
+        "tools": "Herramientas previstas",
+        "categories": "Categorías",
+        "stars": "Estrellas de GitHub",
+        "waitlist": "Inscripciones en la lista de espera"
+      },
+      "footer": "{freeTools} herramientas gratuitas · {uptimeTarget} objetivo de tiempo de actividad · sin anuncios"
+    },
+    "waitlist": {
+      "pill": "Sé el primero",
+      "title": "Consigue acceso anticipado a Widgetly.",
+      "subtitle": "Únete a la lista de espera para recibir novedades sobre el lanzamiento, avances y un descuento para fundadores cuando estemos en línea.",
+      "countdown": {
+        "label": "Lanzamiento en"
+      },
+      "founderQuote": "«Estamos creando la plataforma de utilidades que siempre deseamos que existiera: a un solo clic de búsqueda de todo lo que necesitas».",
+      "founderAttribution": "— El equipo de Widgetly"
+    },
+    "seo": {
+      "exploreTitle": "Explora Widgetly por categoría",
+      "exploreSubtitle": "Cada categoría es un conjunto seleccionado de herramientas online gratuitas, elegidas a mano y diseñadas para ofrecer rapidez. Haz clic para ver un avance de la hoja de ruta.",
+      "count": "{count}+ herramientas",
+      "browse": "Explora {name} →"
+    },
+    "faq": {
+      "pill": "Preguntas frecuentes",
+      "title": "Preguntas frecuentes",
+      "subtitle": "Todo lo que necesitas saber sobre Widgetly, la plataforma y el lanzamiento."
+    }
+  },
+  "faq": {
+    "items": {
+      "whatIs": {
+        "question": "¿Qué es Widgetly?",
+        "answer": "Widgetly es una plataforma de herramientas de IA todo en uno que reúne más de 500 herramientas online gratuitas, calculadoras, conversores, generadores, editores de PDF y asistentes de IA en una única interfaz rápida que prioriza la privacidad. Diseñada para estudiantes, profesores, profesionales, creadores, desarrolladores y empresas."
+      },
+      "isFree": {
+        "question": "¿El uso de Widgetly es gratuito?",
+        "answer": "Sí. Widgetly es 100 % gratuito durante el lanzamiento. Todas las herramientas de la plataforma son de uso gratuito, sin cargos ocultos, sin marcas de agua y sin necesidad de registrarse para la mayoría de ellas. Más adelante se podrán añadir niveles premium opcionales para usuarios avanzados y equipos."
+      },
+      "launch": {
+        "question": "¿Cuándo se lanzará Widgetly?",
+        "answer": "Widgetly se lanzará pronto. Únete a la lista de espera para obtener acceso anticipado, actualizaciones sobre el lanzamiento, avances y un descuento para fundadores cuando estemos en línea."
+      },
+      "account": {
+        "question": "¿Tengo que crear una cuenta?",
+        "answer": "La mayoría de las herramientas de Widgetly funcionan sin necesidad de una cuenta. Una cuenta gratuita opcional te permite sincronización en la nube, historial de herramientas, preferencias guardadas y acceso desde cualquier dispositivo a tus herramientas y datos."
+      },
+      "privacy": {
+        "question": "¿Mis datos son privados y están seguros?",
+        "answer": "Sí. Widgetly está diseñado para dar prioridad a la privacidad. Los archivos se procesan en tu navegador siempre que es posible, los datos confidenciales se cifran de extremo a extremo y nunca vendemos tu información a terceros."
+      },
+      "suggest": {
+        "question": "¿Puedo sugerir que se añada una herramienta?",
+        "answer": "Por supuesto. Creamos herramientas basándonos en las solicitudes de los usuarios. Utiliza el enlace «Sugerir una herramienta» para decirnos lo que necesitas y daremos prioridad a las herramientas más solicitadas en nuestra hoja de ruta de lanzamiento."
+      },
+      "mobile": {
+        "question": "¿Funciona Widgetly en dispositivos móviles?",
+        "answer": "Sí. Widgetly está diseñado pensando primero en los dispositivos móviles. Todas las herramientas son totalmente adaptables y se han probado en teléfonos, tabletas y ordenadores de sobremesa, con tiempos de carga rápidos e interfaces táctiles en cualquier tamaño de pantalla."
+      },
+      "different": {
+        "question": "¿En qué se diferencia Widgetly de otras plataformas de herramientas?",
+        "answer": "Widgetly combina búsqueda con IA, más de 500 herramientas seleccionadas, una arquitectura que prioriza la privacidad, rendimiento optimizado y una única interfaz unificada. En lugar de guardar en favoritos docenas de sitios web distintos, lo tienes todo en una plataforma rápida y gratuita."
+      }
+    }
+  },
+  "categories": {
+    "items": {
+      "pdf": {
+        "name": "Herramientas para PDF",
+        "shortDesc": "Combinar, dividir, comprimir, convertir",
+        "longDesc": "Herramientas PDF online gratuitas: fusionar, dividir, comprimir, convertir a Word/Excel/JPG, editar, firmar, proteger. Sin límites de subida, sin marcas de agua, funciona en tu navegador."
+      },
+      "image": {
+        "name": "Herramientas de imagen",
+        "shortDesc": "Cambiar tamaño, recortar, convertir, optimizar",
+        "longDesc": "Editor de imágenes online: cambiar tamaño, recortar, comprimir, convertir entre JPG, PNG, WebP, SVG, AVIF. Eliminador de fondos, marcas de agua, filtros y procesamiento por lotes."
+      },
+      "video": {
+        "name": "Herramientas de vídeo",
+        "shortDesc": "Comprimir, recortar, transcribir",
+        "longDesc": "Herramientas de vídeo basadas en navegador: comprime, recorta, corta, fusiona, transcribe audio a texto, genera subtítulos, convierte a MP4, WebM, GIF. Sin necesidad de instalar software."
+      },
+      "ai": {
+        "name": "Herramientas de IA",
+        "shortDesc": "Escribir, resumir, generar",
+        "longDesc": "Herramientas de IA gratuitas para escribir, resumir, reescribir, traducir, generar imágenes, crear currículos y responder preguntas. Con tecnología de los últimos modelos de lenguaje grande (LLM)."
+      },
+      "calculators": {
+        "name": "Calculadoras",
+        "shortDesc": "Finanzas, matemáticas, salud y más",
+        "longDesc": "Cientos de calculadoras online gratuitas: hipotecas, préstamos, IMC, calorías, propinas, porcentajes, edad, nota media, calificaciones, científicas, financieras, de salud y matemáticas."
+      },
+      "converters": {
+        "name": "Convertidores",
+        "shortDesc": "Unidades, divisas, formatos",
+        "longDesc": "Convertidores gratuitos de unidades, divisas y formatos de archivo: longitud, peso, temperatura, área, volumen, tiempo, velocidad, datos, códigos de color y más de 150 divisas con tipos de cambio en tiempo real."
+      },
+      "seo": {
+        "name": "Herramientas SEO",
+        "shortDesc": "Palabras clave, metaetiquetas, auditoría",
+        "longDesc": "Herramientas SEO gratuitas: generador de metaetiquetas, verificador de densidad de palabras clave, generador de mapas de sitio, comprobador de robots.txt, vista previa de SERP, verificador de backlinks, análisis de velocidad de página."
+      },
+      "education": {
+        "name": "Herramientas educativas",
+        "shortDesc": "Planes de clase, cuestionarios, estudio",
+        "longDesc": "Herramientas para profesores y estudiantes: generador de planes de clase, creador de cuestionarios, fichas de estudio, temporizador de estudio, calculadora de nota media, generador de citas, solucionador de matemáticas, temas de redacción."
+      },
+      "developer": {
+        "name": "Herramientas para desarrolladores",
+        "shortDesc": "JSON, expresiones regulares, codificadores",
+        "longDesc": "Utilidades gratuitas para desarrolladores: formateador y validador de JSON, comprobador de expresiones regulares, codificador Base64, codificador de URL, decodificador JWT, minificador de CSS, comparador de diferencias, generador de hash."
+      },
+      "business": {
+        "name": "Herramientas empresariales",
+        "shortDesc": "Facturas, contratos, propuestas",
+        "longDesc": "Herramientas de productividad empresarial: generador de facturas, plantillas de contratos, creador de propuestas, generador de acuerdos de confidencialidad, plantillas de planes de negocio, análisis DAFO, gestor de OKR."
+      }
+    }
+  },
+  "about": {
+    "title": "Quiénes somos",
+    "subtitle": "El equipo que está creando la plataforma de herramientas todo en uno que siempre hemos deseado que existiera.",
+    "missionTitle": "Nuestra misión",
+    "missionBody": "Estamos creando Widgetly porque la web moderna está fragmentada. Necesitas un editor de PDF aquí, una calculadora allá, un generador de contenido con IA en otro sitio y una herramienta para desarrolladores al otro lado de la ciudad. Queremos reunir todo eso —y cientos de cosas más— en una sola barra de búsqueda, con la velocidad y el acabado de las mejores aplicaciones nativas.",
+    "howWeWork": {
+      "title": "Cómo trabajamos",
+      "tiles": {
+        "small": {
+          "title": "Pequeño, con experiencia, asíncrono",
+          "body": "Todos los miembros del equipo tienen una amplia experiencia y se responsabilizan de su trabajo de principio a fin. Anotamos todo para que el contexto no se pierda entre las diferentes zonas horarias."
+        },
+        "remote": {
+          "title": "Totalmente remoto",
+          "body": "Trabaja desde donde seas más productivo. Nos solapamos unas horas con la costa este de EE. UU. para el equipo que lo desee; el resto es asíncrono."
+        },
+        "hours": {
+          "title": "Horarios razonables",
+          "body": "Protegemos el tiempo de concentración y respetamos las tardes y los fines de semana. Las herramientas que «simplemente funcionan» comienzan con un equipo que no está agotado."
+        },
+        "pay": {
+          "title": "Transparencia salarial",
+          "body": "Los rangos salariales son públicos dentro de la empresa y están vinculados al puesto y la experiencia, no a la negociación. El mismo puesto se remunera igual, en cualquier lugar."
+        }
+      }
+    },
+    "teamTitle": "Conoce al equipo",
+    "teamSubtitle": "Desarrolladores sénior, en su mayoría a distancia, que trabajan en diferentes zonas horarias.",
+    "joinTitle": "¿Quieres crear con nosotros?",
+    "joinBody": "Estamos contratando en las áreas de producto, ingeniería, IA y diseño. Si realizas trabajos de los que te sientes orgulloso, ponte en contacto con nosotros.",
+    "joinCta": "Ver puestos vacantes"
+  },
+  "contact": {
+    "title": "Contacto",
+    "subtitle": "¿Tienes alguna pregunta, idea de colaboración o consulta de prensa? Envíanos un mensaje.",
+    "form": {
+      "nameLabel": "Tu nombre",
+      "namePlaceholder": "Ava Martinez",
+      "emailLabel": "Correo electrónico",
+      "emailPlaceholder": "you@example.com",
+      "subjectLabel": "Asunto",
+      "subjectPlaceholder": "¿De qué se trata?",
+      "messageLabel": "Mensaje",
+      "messagePlaceholder": "Cuéntanos un poco más…",
+      "submit": "Enviar mensaje",
+      "submitting": "Enviando…",
+      "success": "¡Gracias! Nos pondremos en contacto contigo en un par de días laborables.",
+      "errorRequired": "Rellena todos los campos.",
+      "errorInvalidEmail": "Introduce una dirección de correo electrónico válida.",
+      "errorGeneric": "Ha surgido un error. Inténtalo de nuevo o envíanos un correo electrónico directamente a hello@widgetly.app."
+    },
+    "altTitle": "Otras formas de contactarnos",
+    "emailLabel": "Correo electrónico",
+    "githubLabel": "GitHub",
+    "githubBody": "Crea una incidencia, envía una solicitud de incorporación de cambios o marca el repositorio como favorito.",
+    "socialLabel": "Redes sociales"
+  },
+  "suggest": {
+    "title": "Sugiere una herramienta",
+    "subtitle": "Dinos qué falta. Las herramientas más solicitadas se desarrollan primero.",
+    "form": {
+      "titleLabel": "Idea para una herramienta",
+      "titlePlaceholder": "Generador de fichas de estudio con IA",
+      "descriptionLabel": "¿Qué debería hacer?",
+      "descriptionPlaceholder": "Generar tarjetas de estudio a partir de cualquier texto o PDF, repetición espaciada, exportar a Anki…",
+      "emailLabel": "Correo electrónico (opcional, para actualizaciones de estado)",
+      "emailPlaceholder": "you@example.com",
+      "submit": "Enviar sugerencia",
+      "submitting": "Enviando…",
+      "success": "¡Gracias! Tu idea está en la cola. Te enviaremos un correo electrónico si se selecciona.",
+      "errorRequired": "Añade un título y una breve descripción.",
+      "errorGeneric": "Ha surgido un error. Inténtalo de nuevo."
+    },
+    "topTitle": "Solicitudes más populares en este momento",
+    "topSubtitle": "Lo que está votando la comunidad. Elige una herramienta para ver su página completa y votar a favor.",
+    "upvoteCta": "Votar a favor"
+  },
+  "blog": {
+    "posts": {
+      "introducing-widgetly": {
+        "title": "Presentamos Widgetly: una barra de búsqueda, infinitas posibilidades",
+        "description": "Estamos creando la plataforma de herramientas de IA todo en uno que siempre hemos deseado que existiera. Aquí te explicamos por qué, y qué habrá en el lanzamiento."
+      },
+      "best-free-online-tools-2025": {
+        "title": "Las mejores herramientas online gratuitas que deberías usar en 2025",
+        "description": "Una guía seleccionada con las 50 herramientas online gratuitas más útiles para la productividad, la redacción, el diseño y el desarrollo en 2025."
+      },
+      "ai-tools-for-students": {
+        "title": "10 herramientas de IA que todo estudiante debería usar en 2025",
+        "description": "Desde esquemas de ensayos hasta solucionadores de matemáticas, estas son las herramientas de IA que realmente te ahorrarán tiempo como estudiante este año."
+      },
+      "pdf-tools-online-guide": {
+        "title": "La guía completa de herramientas de PDF en línea (y cuándo usar cada una)",
+        "description": "Combinar, dividir, comprimir, convertir, firmar, censurar: ¿qué herramienta de PDF deberías elegir? Una guía práctica."
+      }
+    },
+    "index": {
+      "title": "Actualizaciones de productos, guías y listas de lo mejor seleccionado",
+      "subtitle": "Artículos sobre herramientas de IA, productividad, PDF, utilidades para desarrolladores y todo lo demás. Nuevas publicaciones cada semana.",
+      "allPostsCta": "Todas las entradas del blog"
+    }
+  },
+  "common": {
+    "comingSoon": "Próximamente",
+    "learnMore": "Más información",
+    "readMore": "Leer más"
+  }
+}

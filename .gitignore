@@ -16,6 +16,9 @@ dist/
 # production
 .vercel/
 
+# opennext (Cloudflare Workers)
+.open-next/
+
 # misc
 .DS_Store
 *.pem
@@ -43,6 +46,11 @@ next-env.d.ts
 # cloudflare
 .wrangler/
 .dev.vars
+
+# translation workflow working files
+# (scripts/translate-file.mjs reads/writes these as scratch space;
+#  never commit them -- they have no value in the repo history)
+tmp/
 
 # os
 Thumbs.db

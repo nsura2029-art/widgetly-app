@@ -1,0 +1,15 @@
+diff --git a/dist/build/copyTracedFiles.js b/dist/build/copyTracedFiles.js
+index 9701b0401e987ee7cd696873af9d15b751580c52..531b4fdea11cd9ab9765a10820247d2cf3ddf0f0 100644
+--- a/dist/build/copyTracedFiles.js
++++ b/dist/build/copyTracedFiles.js
+@@ -225,7 +225,9 @@ File ${serverPath} does not exist
+         }
+         if (symlink) {
+             try {
+-                symlinkSync(symlink, to);
++                // Use 'junction' on Windows to avoid EPERM for pnpm symlinks
++                const type = process.platform === "win32" ? "junction" : "dir";
++                symlinkSync(symlink, to, type);
+             }
+             catch (e) {
+                 if (e.code !== "EEXIST") {

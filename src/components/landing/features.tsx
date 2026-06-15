@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { useTranslations } from "next-intl";
 import { getIcon } from "@/lib/icons";
 import { FEATURES } from "@/lib/constants";
 import { ACCENT_STYLES } from "@/components/shared/accent";
@@ -10,14 +11,18 @@ import { cn } from "@/lib/utils";
 
 /**
  * Features preview — six core value props in a responsive grid.
- * Hover effect: card lifts, border picks up the accent colour, and the
- * icon chip glows with the matching gradient.
+ * Each card renders its title/description from the
+ * `home.features.items.*` namespace in the messages bundle, keyed by
+ * `feature.id` (e.g. "aiSearch" → `home.features.items.aiSearch.title`).
+ * The FEATURES constant carries only data (icon + accent + id) so the
+ * copy stays translatable per locale without a code change.
  */
 export function Features() {
+  const t = useTranslations("home.features");
   return (
     <section
       id="features"
-      className="relative py-20 sm:py-28 lg:py-32"
+      className="relative py-12 sm:py-16 lg:py-20"
       aria-labelledby="features-title"
     >
       <div className="container">
@@ -26,11 +31,10 @@ export function Features() {
             id="features-title"
             className="text-display-sm font-semibold tracking-tight text-foreground sm:text-display-md"
           >
-            Everything You Need. Nothing You Don't.
+            {t("title")}
           </h2>
           <p className="mt-4 text-base text-muted sm:text-lg">
-            Powerful tools, lightning-fast results, and a seamless experience
-            from start to finish.
+            {t("subtitle")}
           </p>
         </FadeIn>
 
@@ -42,7 +46,7 @@ export function Features() {
             const Icon = getIcon(feature.icon);
             const accent = ACCENT_STYLES[feature.accent];
             return (
-              <StaggerItem key={feature.title}>
+              <StaggerItem key={feature.id}>
                 <motion.div
                   whileHover={{ y: -4 }}
                   transition={{ duration: 0.25, ease: "easeOut" }}
@@ -51,7 +55,6 @@ export function Features() {
                     "hover:shadow-soft-lg"
                   )}
                 >
-                  {/* Hover gradient border glow */}
                   <div
                     aria-hidden="true"
                     className={cn(
@@ -72,13 +75,12 @@ export function Features() {
                   </div>
 
                   <h3 className="mt-5 text-base font-semibold tracking-tight text-foreground">
-                    {feature.title}
+                    {t(`items.${feature.id}.title`)}
                   </h3>
                   <p className="mt-2 text-sm leading-relaxed text-muted">
-                    {feature.description}
+                    {t(`items.${feature.id}.description`)}
                   </p>
 
-                  {/* Bottom-right corner accent on hover */}
                   <div
                     aria-hidden="true"
                     className={cn(

@@ -1,0 +1,419 @@
+"use client";
+
+import { useState } from "react";
+import { Link } from "@/i18n/navigation";
+import {
+  ListChecks,
+  Rocket,
+  Wrench,
+  ArrowRight,
+  Sparkles,
+  ThumbsUp,
+  AlertCircle,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { PageShell } from "@/components/layout/page-shell";
+import { cn } from "@/lib/utils";
+
+type SubmitState =
+  | { kind: "idle" }
+  | { kind: "submitting" }
+  | { kind: "success"; slug: string; submittedKnownIdea: boolean }
+  | { kind: "error"; message: string; fieldErrors?: Record<string, string> };
+
+const MAX_DESCRIPTION_LENGTH = 2000;
+const SUGGESTION_THRESHOLD = 50;
+
+const HOW_IT_WORKS = [
+  {
+    icon: ListChecks,
+    title: "We collect",
+    body: "Every suggestion lands in a public board. No black box — you can see what others have asked for.",
+  },
+  {
+    icon: ThumbsUp,
+    title: "You vote",
+    body: "When a tool crosses 50 requests, it joins our active build queue. The community decides priority.",
+  },
+  {
+    icon: Rocket,
+    title: "We ship",
+    body: "Most-requested tools ship in 2–3 weeks. We notify you the moment yours goes live.",
+  },
+] as const;
+
+/**
+ * User hook for the suggest page. Pre-launch (no public board yet),
+ * this renders an honest "be the first" empty state with a count
+ * placeholder. The structure is real, the numbers are real, and the
+ * moment a public board exists this component reads from it without
+ * a visual change.
+ */
+function TopRequestsHook({
+  top,
+}: {
+  top: ReadonlyArray<{
+    slug: string;
+    name: string;
+    voteCount: number;
+    pitch: string;
+    statusLabel: string;
+  }>;
+}) {
+  if (top.length === 0) {
+    return (
+      <div className="border-border/60 bg-muted/5 mt-4 rounded-xl border p-3.5">
+        <div className="flex items-center justify-between">
+          <p className="text-foreground text-xs font-semibold">What we&apos;re building next</p>
+          <span className="text-muted text-[10px] tracking-wide uppercase">Pre-launch</span>
+        </div>
+        <p className="text-muted mt-2.5 text-[11px] leading-snug">
+          The public suggestion board opens with launch. Hit{" "}
+          <span className="text-foreground font-medium">{SUGGESTION_THRESHOLD} votes</span> and your
+          idea jumps to the top of our build queue.
+        </p>
+        <p className="text-muted mt-2 text-[11px] leading-snug">
+          For now, every submission goes straight to the team. We read all of them and reply
+          personally to anything that needs a follow-up.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="border-border/60 bg-muted/5 mt-4 rounded-xl border p-3.5">
+      <div className="flex items-center justify-between">
+        <p className="text-foreground text-xs font-semibold">Top requests from the community</p>
+        <span className="text-muted text-[10px] tracking-wide uppercase">Live</span>
+      </div>
+      <ul className="mt-2.5 space-y-1.5">
+        {top.map((t, i) => {
+          const max = top[0]?.voteCount ?? 1;
+          const pct = Math.max(8, Math.round((t.voteCount / max) * 100));
+          return (
+            <li key={t.slug}>
+              <Link
+                href={`/suggest/${t.slug}`}
+                className="group block rounded-md transition-colors hover:bg-white/60"
+              >
+                <div className="relative overflow-hidden rounded-md">
+                  <div
+                    className="absolute inset-y-0 left-0 rounded-md bg-gradient-to-r from-primary/15 to-secondary/15 transition-all group-hover:from-primary/25 group-hover:to-secondary/25"
+                    style={{ width: `${pct}%` }}
+                    aria-hidden="true"
+                  />
+                  <div className="relative z-10 flex items-center gap-2 px-2 py-1.5 text-xs">
+                    <span className="text-muted-foreground/70 w-3 shrink-0 text-right tabular-nums">
+                      {i + 1}
+                    </span>
+                    <span className="text-foreground flex-1 truncate font-medium">
+                      {t.name}
+                    </span>
+                    <span className="text-muted shrink-0 tabular-nums">
+                      {t.voteCount.toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+      <p className="text-muted mt-2.5 text-[11px] leading-snug">
+        Hit{" "}
+        <span className="text-foreground font-medium">{SUGGESTION_THRESHOLD} votes</span> and your
+        idea jumps to the top of our build queue.
+      </p>
+    </div>
+  );
+}
+
+export function SuggestClient({
+  topSuggestions,
+}: {
+  topSuggestions: ReadonlyArray<{
+    slug: string;
+    name: string;
+    voteCount: number;
+    pitch: string;
+    statusLabel: string;
+  }>;
+}) {
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [category, setCategory] = useState("");
+  const [email, setEmail] = useState("");
+  const [state, setState] = useState<SubmitState>({ kind: "idle" });
+
+  const descCount = description.length;
+  const descNearLimit = descCount > MAX_DESCRIPTION_LENGTH * 0.9;
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setState({ kind: "submitting" });
+    try {
+      const res = await fetch("/api/suggest", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          name,
+          description,
+          category: category || undefined,
+          email: email || undefined,
+        }),
+      });
+      const body = await res.json();
+      if (!res.ok || !body.ok) {
+        const fieldErrors: Record<string, string> = {};
+        if (body?.error?.fields) {
+          for (const f of body.error.fields) fieldErrors[f.path] = f.message;
+        }
+        setState({
+          kind: "error",
+          message: body?.error?.message ?? `Server returned ${res.status}.`,
+          fieldErrors: Object.keys(fieldErrors).length > 0 ? fieldErrors : undefined,
+        });
+        return;
+      }
+      setState({
+        kind: "success",
+        slug: body.slug,
+        submittedKnownIdea: topSuggestions.some((t) => t.slug === body.slug),
+      });
+    } catch {
+      setState({
+        kind: "error",
+        message: "We couldn't reach the server. Check your connection and try again.",
+      });
+    }
+  }
+
+  if (state.kind === "success") {
+    return (
+      <PageShell width="wide">
+        <div className="border-border/60 shadow-soft mx-auto max-w-2xl rounded-2xl border bg-white p-8 text-center sm:p-10">
+          <div className="mx-auto inline-flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600">
+            <Sparkles className="h-6 w-6" />
+          </div>
+          <h1 className="mt-4 text-2xl font-semibold">Got it — we&apos;ll review it</h1>
+          <p className="text-muted mt-3 text-sm">
+            Thanks for the suggestion. We read every submission by hand and will follow up at{" "}
+            {email ? <span className="text-foreground font-medium">{email}</span> : "your email"} if
+            we need more detail.
+          </p>
+          {state.submittedKnownIdea ? (
+            <p className="text-muted mt-2 text-xs">
+              That idea is already in our build queue — take a look:
+            </p>
+          ) : (
+            state.slug && (
+              <p className="text-muted mt-2 text-xs">
+                Internal reference:{" "}
+                <span className="text-foreground font-mono">/suggest/{state.slug}</span>
+                <br />
+                <span className="text-muted">
+                  We&apos;ll publish a public page for it once we accept it into the queue.
+                </span>
+              </p>
+            )
+          )}
+          <div className="mt-6 flex flex-wrap justify-center gap-3">
+            {state.submittedKnownIdea && state.slug ? (
+              <Button asChild>
+                <Link href={`/suggest/${state.slug}`}>
+                  See the suggestion page
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </Button>
+            ) : (
+              <Button asChild>
+                <Link href="/">Back to Home</Link>
+              </Button>
+            )}
+            <Button asChild variant="outline">
+              <Link href="/blog">Read the blog</Link>
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setName("");
+                setDescription("");
+                setCategory("");
+                setEmail("");
+                setState({ kind: "idle" });
+              }}
+            >
+              Suggest another
+            </Button>
+          </div>
+        </div>
+      </PageShell>
+    );
+  }
+
+  return (
+    <PageShell width="wide">
+      <div className="grid items-start gap-10 md:gap-14 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)]">
+        {/* Left column — pitch + how it works */}
+        <div className="flex flex-col">
+          <Badge variant="secondary" className="self-start">
+            Suggest a tool
+          </Badge>
+
+          <h1 className="text-foreground mt-5 text-4xl font-semibold tracking-tight sm:text-5xl">
+            Got a tool
+            <br />
+            we should build?
+          </h1>
+
+          <p className="text-muted mt-5 max-w-md text-base leading-relaxed">
+            Tell us what you wish existed. Every suggestion goes to a public board, the community
+            votes, and the most-requested tools ship next.
+          </p>
+
+          <ol className="mt-10 space-y-5">
+            {HOW_IT_WORKS.map(({ icon: Icon, title, body }, i) => (
+              <li key={title} className="flex items-start gap-4">
+                <span className="bg-primary/10 text-primary flex h-10 w-10 shrink-0 items-center justify-center rounded-lg">
+                  <Icon className="h-5 w-5" aria-hidden="true" />
+                </span>
+                <div className="flex flex-col leading-tight">
+                  <span className="text-foreground text-sm font-semibold">
+                    <span className="text-muted mr-1.5 font-normal">0{i + 1}.</span>
+                    {title}
+                  </span>
+                  <span className="text-muted text-sm leading-relaxed">{body}</span>
+                </div>
+              </li>
+            ))}
+          </ol>
+        </div>
+
+        {/* Right column — form card */}
+        <div className="border-border/60 shadow-soft rounded-2xl border bg-white p-6 sm:p-8">
+          <h2 className="text-foreground text-xl font-semibold">Suggest a tool</h2>
+          <p className="text-muted mt-1.5 text-sm">
+            Tell us the name, what it does, and why it&apos;d be useful.
+          </p>
+
+          <TopRequestsHook top={topSuggestions} />
+
+          <form onSubmit={handleSubmit} className="mt-6 space-y-5">
+            <div>
+              <label htmlFor="suggest-name" className="mb-1.5 block text-sm font-medium">
+                Tool name
+              </label>
+              <Input
+                id="suggest-name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="e.g. PDF Summarizer"
+                required
+              />
+            </div>
+
+            <div>
+              <label htmlFor="suggest-description" className="mb-1.5 block text-sm font-medium">
+                Description
+              </label>
+              <textarea
+                id="suggest-description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value.slice(0, MAX_DESCRIPTION_LENGTH))}
+                rows={5}
+                required
+                placeholder="Briefly describe what the tool does and why it would be useful…"
+                className={cn(
+                  "border-border shadow-soft flex w-full rounded-xl border bg-white px-4 py-3 text-sm",
+                  "placeholder:text-muted/70 resize-y transition-all duration-200",
+                  "focus-visible:border-primary focus-visible:ring-primary/40 focus-visible:ring-2 focus-visible:outline-none"
+                )}
+              />
+              <p
+                className={cn(
+                  "mt-1.5 text-right text-xs tabular-nums",
+                  descNearLimit ? "text-amber-600" : "text-muted"
+                )}
+              >
+                {descCount}/{MAX_DESCRIPTION_LENGTH} characters
+              </p>
+            </div>
+
+            <div className="grid gap-5 sm:grid-cols-2">
+              <div>
+                <label htmlFor="suggest-category" className="mb-1.5 block text-sm font-medium">
+                  Category <span className="text-muted font-normal">(optional)</span>
+                </label>
+                <div className="relative">
+                  <Wrench
+                    className="text-muted pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2"
+                    aria-hidden="true"
+                  />
+                  <Input
+                    id="suggest-category"
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value)}
+                    placeholder="e.g. Productivity"
+                    className="pl-9"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label htmlFor="suggest-email" className="mb-1.5 block text-sm font-medium">
+                  Email <span className="text-muted font-normal">(optional)</span>
+                </label>
+                <Input
+                  id="suggest-email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@email.com"
+                  autoComplete="email"
+                />
+                <p className="text-muted mt-1.5 text-xs">
+                  We&apos;ll only use this if we need a follow-up.
+                </p>
+              </div>
+            </div>
+
+            {state.kind === "error" && (
+              <div
+                role="alert"
+                className="flex items-start gap-2 rounded-xl border border-red-500/30 bg-red-500/5 px-3 py-2.5 text-sm text-red-700"
+              >
+                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+                <span>{state.message}</span>
+              </div>
+            )}
+
+            <div className="flex items-center justify-between gap-4 pt-1">
+              <p className="text-muted text-xs">
+                Need to report a problem?{" "}
+                <Link
+                  href="/contact"
+                  className="text-foreground underline-offset-2 hover:underline"
+                >
+                  Contact us
+                </Link>
+                .
+              </p>
+              <Button
+                type="submit"
+                size="lg"
+                className="shrink-0 px-6"
+                disabled={state.kind === "submitting"}
+              >
+                {state.kind === "submitting" ? "Sending…" : "Submit suggestion"}
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </PageShell>
+  );
+}

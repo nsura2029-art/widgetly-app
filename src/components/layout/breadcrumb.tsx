@@ -4,11 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { ChevronRight, Home } from "lucide-react";
 import { cn } from "@/lib/utils";
-import {
-  generateBreadcrumbs,
-  generateBreadcrumbSchema,
-  type Crumb,
-} from "@/lib/breadcrumbs";
+import { generateBreadcrumbs, generateBreadcrumbSchema, type Crumb } from "@/lib/breadcrumbs";
 
 /**
  * Breadcrumb navigation. Server-rendered on the initial request (Next.js
@@ -51,15 +47,12 @@ export function Breadcrumb({
   // Memoize the trail so the JSON-LD and the visible nav stay in sync
   // and re-renders are cheap.
   const crumbs = React.useMemo(
-    () =>
-      items
-        ? items
-        : generateBreadcrumbs(path, { customLabels, hideHome }),
-    [items, path, customLabels, hideHome],
+    () => (items ? items : generateBreadcrumbs(path, { customLabels, hideHome })),
+    [items, path, customLabels, hideHome]
   );
   const schema = React.useMemo(
     () => (withSchema ? generateBreadcrumbSchema(crumbs) : null),
-    [crumbs, withSchema],
+    [crumbs, withSchema]
   );
 
   // No trail → render nothing.
@@ -72,15 +65,21 @@ export function Breadcrumb({
       <nav
         aria-label="Breadcrumb"
         className={cn(
-          "border-b border-border/60 bg-white/60 backdrop-blur supports-[backdrop-filter]:bg-white/50",
-          className,
+          // Stable visual band under the sticky header. Background, border,
+          // and vertical rhythm are fixed so the breadcrumb does not shift
+          // shape between pages. The top padding gives a small breathing
+          // gap between the sticky header and the breadcrumb (matches the
+          // py-4 rhythm used by adjacent content bands so the breadcrumb
+          // doesn't feel pinned to the header).
+          "border-border/60 border-b bg-white/70 pt-2 backdrop-blur supports-[backdrop-filter]:bg-white/60",
+          className
         )}
       >
         <div className="container">
           <ol
             itemScope
             itemType="https://schema.org/BreadcrumbList"
-            className="flex flex-wrap items-center gap-x-1.5 gap-y-1 py-2.5 text-sm text-muted sm:gap-x-2 sm:py-3 sm:text-sm"
+            className="text-muted flex flex-wrap items-center gap-y-1 py-3 text-sm"
           >
             {crumbs.map((crumb, i) => {
               const isLast = i === lastIndex;
@@ -91,7 +90,7 @@ export function Breadcrumb({
                   itemProp="itemListElement"
                   itemScope
                   itemType="https://schema.org/ListItem"
-                  className="inline-flex min-w-0 max-w-full items-center"
+                  className="flex max-w-full min-w-0 items-center gap-1.5 sm:gap-2"
                 >
                   <meta itemProp="position" content={String(position)} />
 
@@ -99,7 +98,7 @@ export function Breadcrumb({
                     <span
                       itemProp="name"
                       aria-current="page"
-                      className="truncate font-semibold text-foreground"
+                      className="text-foreground min-w-0 truncate font-semibold"
                       title={crumb.label}
                     >
                       {crumb.label}
@@ -109,17 +108,14 @@ export function Breadcrumb({
                       href={crumb.href}
                       itemProp="item"
                       className={cn(
-                        "inline-flex max-w-[12rem] items-center gap-1 truncate rounded-md px-1 py-0.5 align-middle",
-                        "transition-colors hover:text-foreground focus-visible:text-foreground",
-                        "sm:max-w-[16rem]",
+                        "inline-flex max-w-[12rem] min-w-0 items-center gap-1 truncate rounded-md px-1 py-0.5",
+                        "hover:text-foreground focus-visible:text-foreground transition-colors",
+                        "sm:max-w-[16rem]"
                       )}
                       title={crumb.label}
                     >
                       {i === 0 && !hideHome ? (
-                        <Home
-                          aria-hidden="true"
-                          className="h-3.5 w-3.5 shrink-0"
-                        />
+                        <Home aria-hidden="true" className="h-3.5 w-3.5 shrink-0" />
                       ) : null}
                       <span itemProp="name" className="truncate">
                         {crumb.label}
@@ -130,7 +126,7 @@ export function Breadcrumb({
                   {!isLast ? (
                     <ChevronRight
                       aria-hidden="true"
-                      className="mx-1 h-3.5 w-3.5 shrink-0 text-muted/70 sm:mx-1.5"
+                      className="text-muted/70 h-3.5 w-3.5 shrink-0"
                     />
                   ) : null}
                 </li>

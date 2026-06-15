@@ -1,35 +1,47 @@
 name = "widgetly"
-compatibility_date = "2024-11-06"
-compatibility_flags = ["nodejs_compat"]
-pages_build_output_dir = ".vercel/output/static"
+compatibility_date = "2025-04-01"
+compatibility_flags = ["nodejs_compat", "global_fetch_strictly_public"]
 
-# Static assets — long-lived caching with content-hash filenames
-[build]
-command = "npm run build"
+main = ".open-next/worker.js"
+
+[assets]
+directory = ".open-next/assets"
+binding = "ASSETS"
+
+[observability]
+enabled = true
 
 # ---------------------------------------------------------------------------
-# Cloudflare Pages configuration
+# Cloudflare Workers configuration (OpenNext adapter)
 # ---------------------------------------------------------------------------
-# This file is consumed by `wrangler pages deploy`. The Next.js build emits
-# a fully static site to .vercel/output/static (see `output: "export"` in
-# next.config.ts) so we don't need a Workers bundle — Pages serves the
-# static output directly from its CDN.
-#
-# To add dynamic functionality (e.g. persisting waitlist signups), uncomment
-# the KV namespace below and wire it up in /src/app/api/waitlist/route.ts.
+# `pnpm build` produces .open-next/ via @opennextjs/cloudflare. `pnpm deploy`
+# invokes `opennextjs-cloudflare build && wrangler deploy` to ship the worker.
 # ---------------------------------------------------------------------------
 
+# Optional KV (e.g. waitlist persistence)
 # [[kv_namespaces]]
 # binding = "WAITLIST"
 # id = "REPLACE_WITH_KV_NAMESPACE_ID"
 # preview_id = "REPLACE_WITH_PREVIEW_KV_NAMESPACE_ID"
 
 # ---------------------------------------------------------------------------
-# Environment variables (set in Cloudflare Pages dashboard, not here)
+# KV: user locale preference (set by POST /api/locale, read by the middleware
+# via the wly_locale cookie). Anonymous identity is the key.
+#
+# Created via:
+#   pnpm wrangler kv:namespace create LOCALE_KV
+#   pnpm wrangler kv:namespace create LOCALE_KV --preview
+# Paste the printed IDs into `id` / `preview_id` below.
+# ---------------------------------------------------------------------------
+# [[kv_namespaces]]
+# binding = "LOCALE_KV"
+# id = "REPLACE_WITH_KV_NAMESPACE_ID"
+# preview_id = "REPLACE_WITH_PREVIEW_KV_NAMESPACE_ID"
+
+# ---------------------------------------------------------------------------
+# Environment variables (set in Cloudflare dashboard, not here)
 # ---------------------------------------------------------------------------
 # WAITLIST_KV      — KV binding (if KV enabled)
+# LOCALE_KV        — KV binding (locale preference persistence)
 # ANALYTICS_TOKEN  — Cloudflare Web Analytics token (set in dashboard)
 # ---------------------------------------------------------------------------
-
-[observability]
-enabled = true
