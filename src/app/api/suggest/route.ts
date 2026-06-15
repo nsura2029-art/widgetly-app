@@ -10,6 +10,7 @@ import {
 import { suggestRequest, type SuggestResponse } from "@/lib/api/schemas";
 import { isSupabaseConfigured } from "@/lib/supabase/server";
 import { recordSuggestion } from "@/lib/supabase/suggestions";
+import { log } from "@/lib/log";
 
 /**
  * POST /api/suggest
@@ -33,8 +34,35 @@ import { recordSuggestion } from "@/lib/supabase/suggestions";
  */
 export const runtime = "edge";
 
+function shortReqId(): string {
+  return Math.floor(Math.random() * 0xffffffff)
+    .toString(36)
+    .slice(-6);
+}
+
 async function handle(request: NextRequest) {
-  const body = await parseJson(request, suggestRequest);
+  const start = Date.now();
+  const reqId = shortReqId();
+
+  log.info("api.suggest", "request", {
+    req_id: reqId,
+    method: request.method,
+    content_type: request.headers.get("content-type"),
+    ua_present: Boolean(request.headers.get("user-agent")),
+  });
+
+  let body;
+  try {
+    body = await parseJson(request, suggestRequest);
+  } catch (e) {
+    log.warn("api.suggest", "validation failed", {
+      req_id: reqId,
+      err: e instanceof Error ? e.message : "unknown",
+      duration_ms: Date.now() - start,
+    });
+    throw e;
+  }
+
   const slug = body.name
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
@@ -45,8 +73,23 @@ async function handle(request: NextRequest) {
   const localeHeader = request.headers.get("accept-language") ?? "";
   const locale = (localeHeader.split(",")[0]?.split(";")[0]?.split("-")[0] || "en").toLowerCase();
 
+  log.info("api.suggest", "validated", {
+    req_id: reqId,
+    id,
+    slug,
+    name_len: body.name.length,
+    desc_len: body.description.length,
+    locale,
+  });
+
+  const configured = isSupabaseConfigured();
+  log.info("api.suggest", "config check", {
+    req_id: reqId,
+    supabase_configured: configured,
+  });
+
   // ---- Persistence path: Supabase ----
-  if (isSupabaseConfigured()) {
+  if (configured) {
     const result = await recordSuggestion({
       id,
       slug,
@@ -73,10 +116,20 @@ async function handle(request: NextRequest) {
         status: "pending_review",
         message: "Got it — your idea is in the queue. We'll review it within one business day.",
       };
+      log.info("api.suggest", "returning 200", {
+        req_id: reqId,
+        id: result.id,
+        duration_ms: Date.now() - start,
+      });
       return jsonOk(response);
     }
 
     if (result.kind === "duplicate_slug") {
+      log.warn("api.suggest", "duplicate slug, returning 409", {
+        req_id: reqId,
+        slug,
+        duration_ms: Date.now() - start,
+      });
       // Surface a 409 with a stable code so the client can offer
       // "this name is already taken — try rephrasing".
       return jsonError(
@@ -87,6 +140,11 @@ async function handle(request: NextRequest) {
     }
 
     // DB error. Forward to webhook for manual recovery, return 503.
+    log.error("api.suggest", "db write failed, returning 503", {
+      req_id: reqId,
+      err: result.message,
+      duration_ms: Date.now() - start,
+    });
     await forwardToWebhook(process.env.SUGGEST_WEBHOOK_URL, {
       type: "widgetly.suggest.db_fallback",
       submittedAt: new Date().toISOString(),
@@ -107,6 +165,7 @@ async function handle(request: NextRequest) {
   }
 
   // ---- Fallback path: webhook-only ----
+  log.warn("api.suggest", "supabase not configured, using fallback", { req_id: reqId });
   await forwardToWebhook(process.env.SUGGEST_WEBHOOK_URL, {
     type: "widgetly.suggest",
     id,
@@ -123,6 +182,11 @@ async function handle(request: NextRequest) {
     status: "pending_review",
     message: "Got it — your idea is in the queue. We'll review it within one business day.",
   };
+  log.info("api.suggest", "returning 200 (fallback)", {
+    req_id: reqId,
+    id,
+    duration_ms: Date.now() - start,
+  });
   return jsonOk(response);
 }
 

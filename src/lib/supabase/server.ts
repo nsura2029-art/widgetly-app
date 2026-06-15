@@ -27,9 +27,15 @@
  *     "do we have a database?" — if the user hasn't set the env vars yet
  *     (e.g. mid-setup, or running a preview deploy without secrets), the
  *     routes fall back to the existing webhook behavior instead of 500ing.
+ *
+ *  6. Every step logs to `console.log` / `console.error` (via the
+ *     `lib/log` helper) in single-line JSON. Visible in `next dev` output
+ *     and in `wrangler tail`. This is what the user greps when "no row
+ *     appeared in Supabase" — the answer is always in the logs.
  */
 
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { log, maskSecret } from "@/lib/log";
 
 type DbClient = SupabaseClient;
 
@@ -53,11 +59,37 @@ export function isSupabaseConfigured(): boolean {
  * don't change at runtime, so a single init is safe.
  */
 export function getSupabase(): DbClient {
-  if (cached) return cached;
+  if (cached) {
+    log.debug("supabase.init", "cache hit, returning existing client");
+    return cached;
+  }
 
   const url = process.env.SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  // Log config presence BEFORE we throw. This is the line you want to
+  // see first if Supabase writes aren't landing — if it says
+  // "has_url: false" you know the env file isn't being read; if it
+  // says "has_url: true / has_key: true" the issue is downstream
+  // (network, RLS, schema mismatch, etc.).
+  let host = "(none)";
+  try {
+    if (url) host = new URL(url).host;
+  } catch {
+    host = "(invalid-url)";
+  }
+  log.info("supabase.init", "config check", {
+    has_url: Boolean(url),
+    has_key: Boolean(key),
+    url_host: host,
+    key: maskSecret(key),
+  });
+
   if (!url || !key) {
+    log.warn("supabase.init", "missing env vars, throwing", {
+      has_url: Boolean(url),
+      has_key: Boolean(key),
+    });
     throw new Error(
       "Supabase env vars missing. Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY " +
         "in your .env.local (dev) and as `wrangler secret put` (prod), or " +
@@ -65,21 +97,31 @@ export function getSupabase(): DbClient {
     );
   }
 
-  cached = createClient(url, key, {
-    auth: {
-      // Critical in Workers — the client must NOT try to read/write
-      // local storage; it would throw. We have no users, no sessions.
-      persistSession: false,
-      autoRefreshToken: false,
-      detectSessionInUrl: false,
-    },
-    // Reasonable timeouts. Cloudflare Workers have a 30s wall clock
-    // per request; we want a DB call to fail fast so the route can
-    // return a friendly 503 instead of hanging.
-    db: { schema: "public" },
-    global: {
-      headers: { "x-application-name": "widgetly-api" },
-    },
-  });
-  return cached;
+  try {
+    cached = createClient(url, key, {
+      auth: {
+        // Critical in Workers — the client must NOT try to read/write
+        // local storage; it would throw. We have no users, no sessions.
+        persistSession: false,
+        autoRefreshToken: false,
+        detectSessionInUrl: false,
+      },
+      // Reasonable timeouts. Cloudflare Workers have a 30s wall clock
+      // per request; we want a DB call to fail fast so the route can
+      // return a friendly 503 instead of hanging.
+      db: { schema: "public" },
+      global: {
+        headers: { "x-application-name": "widgetly-api" },
+      },
+    });
+    log.info("supabase.init", "client created", { url_host: host });
+    return cached;
+  } catch (e) {
+    // createClient itself doesn't usually throw, but if it does (e.g. a
+    // bad URL slips past the parse above) we want a clean log line.
+    log.error("supabase.init", "createClient threw", {
+      err: e instanceof Error ? e.message : "unknown",
+    });
+    throw e;
+  }
 }

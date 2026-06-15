@@ -5,6 +5,7 @@
  * deep-link to `/suggest/[slug]` without an extra id-resolution hop.
  */
 
+import { log } from "@/lib/log";
 import { getSupabase } from "./server";
 
 export type SuggestionInput = {
@@ -29,11 +30,27 @@ export type SuggestionResult =
  * try rephrasing" message.
  */
 export async function recordSuggestion(input: SuggestionInput): Promise<SuggestionResult> {
+  const start = Date.now();
+
+  log.info("suggestions.insert", "start", {
+    id: input.id,
+    slug: input.slug,
+    name_len: input.name.length,
+    pitch_len: input.pitch.length,
+    locale: input.locale,
+  });
+
   let supabase;
   try {
     supabase = getSupabase();
   } catch (e) {
-    return { kind: "error", message: e instanceof Error ? e.message : "supabase not configured" };
+    const msg = e instanceof Error ? e.message : "supabase not configured";
+    log.error("suggestions.insert", "client unavailable", {
+      id: input.id,
+      err: msg,
+      duration_ms: Date.now() - start,
+    });
+    return { kind: "error", message: msg };
   }
 
   const { data, error } = await supabase
@@ -52,6 +69,11 @@ export async function recordSuggestion(input: SuggestionInput): Promise<Suggesti
     .single();
 
   if (!error && data) {
+    log.info("suggestions.insert", "inserted", {
+      id: String(data.id),
+      slug: String(data.slug),
+      duration_ms: Date.now() - start,
+    });
     return {
       kind: "inserted",
       id: String(data.id),
@@ -63,9 +85,24 @@ export async function recordSuggestion(input: SuggestionInput): Promise<Suggesti
   // 23505 = Postgres unique_violation. Supabase surfaces this as
   // error.code on the JS client.
   if (error && (error.code === "23505" || /duplicate key/i.test(error.message))) {
+    log.warn("suggestions.insert", "duplicate slug", {
+      id: input.id,
+      slug: input.slug,
+      code: error.code,
+      duration_ms: Date.now() - start,
+    });
     return { kind: "duplicate_slug", existingSlug: input.slug };
   }
 
+  log.error("suggestions.insert", "supabase returned error", {
+    id: input.id,
+    slug: input.slug,
+    code: error?.code,
+    message: error?.message,
+    details: error?.details,
+    hint: error?.hint,
+    duration_ms: Date.now() - start,
+  });
   return { kind: "error", message: error?.message ?? "unknown supabase error" };
 }
 
@@ -80,10 +117,14 @@ export async function readTopSuggestions(
 ): Promise<
   Array<{ slug: string; name: string; voteCount: number; pitch: string; status: string }>
 > {
+  const start = Date.now();
+  log.debug("suggestions.read", "start", { limit });
+
   let supabase;
   try {
     supabase = getSupabase();
   } catch {
+    log.debug("suggestions.read", "supabase not configured, returning []");
     return [];
   }
 
@@ -94,7 +135,18 @@ export async function readTopSuggestions(
     .order("created_at", { ascending: false })
     .limit(limit);
 
-  if (error || !data) return [];
+  if (error || !data) {
+    log.warn("suggestions.read", "read failed", {
+      code: error?.code,
+      message: error?.message,
+      duration_ms: Date.now() - start,
+    });
+    return [];
+  }
+  log.info("suggestions.read", "ok", {
+    rows: data.length,
+    duration_ms: Date.now() - start,
+  });
   return data.map((row) => ({
     slug: String(row.slug),
     name: String(row.name),

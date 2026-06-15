@@ -9,6 +9,7 @@
  *    reads like a verb.
  */
 
+import { log, maskEmail } from "@/lib/log";
 import { getSupabase } from "./server";
 
 export type WaitlistInput = {
@@ -37,11 +38,28 @@ export type WaitlistResult =
  * response if the system is at all reachable.
  */
 export async function recordWaitlist(input: WaitlistInput): Promise<WaitlistResult> {
+  const start = Date.now();
+  const emailDomain = input.email.includes("@") ? input.email.split("@")[1] : "(no-domain)";
+
+  log.info("waitlist.insert", "start", {
+    email: maskEmail(input.email),
+    email_domain: emailDomain,
+    locale: input.locale,
+    has_referrer: Boolean(input.referrer),
+    has_user_agent: Boolean(input.userAgent),
+  });
+
   let supabase;
   try {
     supabase = getSupabase();
   } catch (e) {
-    return { kind: "error", message: e instanceof Error ? e.message : "supabase not configured" };
+    const msg = e instanceof Error ? e.message : "supabase not configured";
+    log.error("waitlist.insert", "client unavailable", {
+      email_domain: emailDomain,
+      err: msg,
+      duration_ms: Date.now() - start,
+    });
+    return { kind: "error", message: msg };
   }
 
   // The unique constraint on `email` plus Postgres's `returning` clause
@@ -67,6 +85,14 @@ export async function recordWaitlist(input: WaitlistInput): Promise<WaitlistResu
     .single();
 
   if (error) {
+    log.error("waitlist.insert", "supabase returned error", {
+      email_domain: emailDomain,
+      code: error.code,
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+      duration_ms: Date.now() - start,
+    });
     return { kind: "error", message: error.message };
   }
 
@@ -76,9 +102,16 @@ export async function recordWaitlist(input: WaitlistInput): Promise<WaitlistResu
   // created within the last 2 seconds; if not, it's a re-signup.
   const createdAt = String(data.created_at);
   const isFresh = Date.now() - new Date(createdAt).getTime() < 2_000;
-  return {
+  const result = {
     kind: isFresh ? "inserted" : "duplicate",
     position: Number(data.position),
     createdAt,
-  };
+  } as const;
+
+  log.info("waitlist.insert", result.kind, {
+    email_domain: emailDomain,
+    position: result.position,
+    duration_ms: Date.now() - start,
+  });
+  return result;
 }
