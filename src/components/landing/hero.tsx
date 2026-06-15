@@ -17,7 +17,7 @@ import { AnimatedBackground } from "@/components/shared/animated-background";
  * are pulled from the `home.hero.audiences` namespace and cycled
  * by the typewriter effect.
  */
-export function Hero() {
+export function Hero({ mascotSeed }: { mascotSeed?: number } = {}) {
   const t = useTranslations("home.hero");
   const audiences = [
     t("audiences.students"),
@@ -160,7 +160,7 @@ export function Hero() {
           </motion.div>
 
           <div className="mt-10 w-full">
-            <RandomMascot />
+            <RandomMascot seed={mascotSeed} />
           </div>
 
           <div className="mt-2 w-full">

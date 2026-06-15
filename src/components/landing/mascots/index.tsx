@@ -50,9 +50,32 @@ function stableHash(input: string): number {
  *         in the previous version never happens.
  *  - Respects `prefers-reduced-motion: reduce` via the CSS rules.
  */
-export function RandomMascot({ className = "h-32 w-32 sm:h-40 sm:w-40" }: { className?: string }) {
+export function RandomMascot({
+  className = "h-32 w-32 sm:h-40 sm:w-40",
+  seed,
+}: {
+  className?: string;
+  /**
+   * Per-request random seed. The home page (a server component)
+   * generates a fresh int for every render and passes it down. This
+   * makes every page load actually feel random, while keeping the
+   * SSR HTML and the client hydration aligned (both see the same
+   * seed value, derived from the same prop).
+   *
+   * If not provided (e.g., someone renders `<RandomMascot />` with
+   * no seed in their own component), we fall back to `useId()` for
+   * hydration safety — the pick will be stable for that component's
+   * position in the tree, but not random across page loads.
+   */
+  seed?: number;
+}) {
   const reactId = React.useId();
-  const Picked: MascotComponent = MASCOTS[stableHash(reactId) % MASCOTS.length] ?? MASCOTS[0];
+  // The hash input combines the seed (varies per request) with the
+  // useId (varies per instance). Including useId is what keeps
+  // multiple <RandomMascot /> on the same page from picking the
+  // same mascot — but on the home page there's only one.
+  const hashInput = seed !== undefined ? `${seed}:${reactId}` : reactId;
+  const Picked: MascotComponent = MASCOTS[stableHash(hashInput) % MASCOTS.length] ?? MASCOTS[0];
 
   return (
     <div className={`relative mx-auto ${className}`} aria-hidden="true" data-wly-mascot={reactId}>
