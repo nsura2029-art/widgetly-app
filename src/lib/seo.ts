@@ -206,9 +206,13 @@ export function organizationJsonLd() {
     url: SITE_CONFIG.url,
     logo: {
       "@type": "ImageObject",
-      url: `${SITE_CONFIG.url}/logo.png`,
-      width: 512,
-      height: 512,
+      // Use the existing og-image.svg — the file at /logo.png does
+      // not exist on the deployed site. The aspect is 1:1 (1024×1024
+      // viewBox) which Google's structured-data guidelines consider
+      // the minimum acceptable logo size.
+      url: `${SITE_CONFIG.url}/og-image.svg`,
+      width: 1024,
+      height: 1024,
     },
     description: SITE_CONFIG.description,
     foundingDate: "2025",
@@ -242,13 +246,12 @@ export function softwareApplicationJsonLd() {
       availability: "https://schema.org/PreOrder",
       description: "Free during launch. Premium tiers planned.",
     },
-    aggregateRating: {
-      "@type": "AggregateRating",
-      ratingValue: "4.9",
-      reviewCount: "128",
-      bestRating: "5",
-      worstRating: "1",
-    },
+    // No aggregateRating here: the platform is pre-launch with zero
+    // real users. A fabricated rating (4.9, 128 reviews) violates
+    // Google's structured data guidelines on misleading
+    // representations and could be flagged by Search Console as
+    // a spam signal. Add this back only when an actual review
+    // pipeline is wired up.
     featureList: [
       "500+ AI-powered online tools",
       "Calculators, converters, generators, PDF tools",
