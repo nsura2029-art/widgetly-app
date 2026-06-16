@@ -13,11 +13,7 @@
  * in this category" rail automatically.
  */
 
-export type SuggestionStatus =
-  | "pending_review"
-  | "in_queue"
-  | "in_development"
-  | "shipped";
+export type SuggestionStatus = "pending_review" | "in_queue" | "in_development" | "shipped";
 
 export type Suggestion = {
   /** URL slug. Used in /suggest/{slug}. Lowercase letters, digits, hyphens. */
@@ -104,7 +100,8 @@ export const SUGGESTIONS: readonly Suggestion[] = [
   {
     slug: "markdown-to-pdf",
     name: "Markdown → PDF",
-    pitch: "Convert a markdown file (or paste) into a styled PDF. Custom fonts, print CSS, headers.",
+    pitch:
+      "Convert a markdown file (or paste) into a styled PDF. Custom fonts, print CSS, headers.",
     description:
       "Drop in a markdown file and get a print-ready PDF that respects your custom fonts, syntax highlighting, and page breaks. Designed for technical writers who want to ship polished PDFs without opening Word.",
     reasons: [
@@ -166,7 +163,8 @@ export const SUGGESTIONS: readonly Suggestion[] = [
   {
     slug: "json-to-typescript",
     name: "JSON → TypeScript Types",
-    pitch: "Paste JSON, get a typed TypeScript interface. Handles unions, nullables, and recursive shapes.",
+    pitch:
+      "Paste JSON, get a typed TypeScript interface. Handles unions, nullables, and recursive shapes.",
     description:
       "Drop a JSON sample (or a schema URL) and get a TypeScript interface with the right nullable handling, recursive shapes, and discriminated unions. Saves the 'convert this API response to types' step every developer does 10 times a day.",
     reasons: [
@@ -210,7 +208,8 @@ export const SUGGESTIONS: readonly Suggestion[] = [
   {
     slug: "csv-diff",
     name: "CSV Diff",
-    pitch: "Compare two CSV files cell-by-cell, with a side-by-side highlight and a one-click diff download.",
+    pitch:
+      "Compare two CSV files cell-by-cell, with a side-by-side highlight and a one-click diff download.",
     description:
       "Drop in two CSVs (the old and the new) and get a side-by-side comparison with the changed cells highlighted. Add a column to compare on, then export the diff as a new CSV or a patch. The tool anyone who touches a database dumps wishes existed.",
     reasons: [
@@ -230,7 +229,8 @@ export const SUGGESTIONS: readonly Suggestion[] = [
   {
     slug: "youtube-to-article",
     name: "YouTube → Article",
-    pitch: "Paste a YouTube URL, get a clean article with the transcript, key points, and a 3-tweet thread.",
+    pitch:
+      "Paste a YouTube URL, get a clean article with the transcript, key points, and a 3-tweet thread.",
     description:
       "Drop in any YouTube URL and get a clean reading-mode article: the full transcript cleaned up, the 5 key points, and a 3-tweet thread you can post. Saves the 'I watched a 40-minute video just to find the one thing I needed' problem.",
     reasons: [
@@ -323,10 +323,7 @@ export function statusTone(s: SuggestionStatus): "neutral" | "info" | "warning" 
  * Sibling suggestions — same `toolsCategorySlug`, excluding self.
  * Used in the "Related tools in this category" rail.
  */
-export function getRelatedSuggestions(
-  slug: string,
-  limit = 4
-): readonly Suggestion[] {
+export function getRelatedSuggestions(slug: string, limit = 4): readonly Suggestion[] {
   const me = SUGGESTION_BY_SLUG.get(slug);
   if (!me) return [];
   return SUGGESTIONS.filter(

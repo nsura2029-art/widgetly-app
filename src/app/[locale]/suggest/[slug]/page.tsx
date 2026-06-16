@@ -45,11 +45,7 @@ export function generateStaticParams(): Params[] {
 
 export const dynamicParams = false;
 
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<Params>;
-}): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<Params> }): Promise<Metadata> {
   const { slug } = await params;
   const s = getSuggestion(slug);
   if (!s) return { title: "Not Found" };
@@ -97,11 +93,7 @@ const STATUS_ICON: Record<SuggestionStatus, React.ReactNode> = {
   shipped: <CheckCircle2 className="h-4 w-4" aria-hidden="true" />,
 };
 
-export default async function SuggestionPage({
-  params,
-}: {
-  params: Promise<Params>;
-}) {
+export default async function SuggestionPage({ params }: { params: Promise<Params> }) {
   const { slug } = await params;
   const s = getSuggestion(slug);
   if (!s) notFound();
@@ -138,7 +130,12 @@ export default async function SuggestionPage({
       itemListElement: [
         { "@type": "ListItem", position: 1, name: "Home", item: SITE_CONFIG.url },
         { "@type": "ListItem", position: 2, name: "Suggest", item: `${SITE_CONFIG.url}/suggest` },
-        { "@type": "ListItem", position: 3, name: s.name, item: `${SITE_CONFIG.url}/suggest/${s.slug}` },
+        {
+          "@type": "ListItem",
+          position: 3,
+          name: s.name,
+          item: `${SITE_CONFIG.url}/suggest/${s.slug}`,
+        },
       ],
     },
     {
@@ -169,10 +166,7 @@ export default async function SuggestionPage({
       {/* Per-page breadcrumb override (puts the suggestion name
           in the auto-generated crumb trail). suppressSchema because
           we emit our own BreadcrumbList below. */}
-      <BreadcrumbConfig
-        customLabels={{ [s.slug]: s.name }}
-        suppressSchema
-      />
+      <BreadcrumbConfig customLabels={{ [s.slug]: s.name }} suppressSchema />
 
       <script
         type="application/ld+json"
@@ -180,7 +174,7 @@ export default async function SuggestionPage({
       />
 
       {/* Hero */}
-      <header className="border-border/60 rounded-2xl border bg-white p-6 shadow-soft sm:p-10">
+      <header className="border-border/60 shadow-soft rounded-2xl border bg-white p-6 sm:p-10">
         <div className="flex flex-wrap items-center gap-2">
           <span
             className={
@@ -200,7 +194,7 @@ export default async function SuggestionPage({
           {toolsCat && (
             <Link
               href={`/tools/${toolsCat.slug}`}
-              className="border-border bg-muted/5 text-muted inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors hover:border-primary/40 hover:text-primary"
+              className="border-border bg-muted/5 text-muted hover:border-primary/40 hover:text-primary inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors"
             >
               {toolsCat.name}
             </Link>
@@ -252,7 +246,7 @@ export default async function SuggestionPage({
         <h2 className="text-foreground text-lg font-semibold tracking-tight">
           Where this idea is in the pipeline
         </h2>
-        <ol className="border-border/60 mt-4 grid gap-0 rounded-2xl border bg-white shadow-soft sm:grid-cols-4">
+        <ol className="border-border/60 shadow-soft mt-4 grid gap-0 rounded-2xl border bg-white sm:grid-cols-4">
           {SUGGESTION_STATUS_FLOW.map((step, i) => {
             const isCurrent = step === s.status;
             const isPast = SUGGESTION_STATUS_FLOW.indexOf(s.status) > i;
@@ -272,7 +266,7 @@ export default async function SuggestionPage({
               <li
                 key={step}
                 className={
-                  "relative flex flex-col gap-2 p-5 sm:border-r sm:border-border/60 sm:last:border-r-0 " +
+                  "sm:border-border/60 relative flex flex-col gap-2 p-5 sm:border-r sm:last:border-r-0 " +
                   (isCurrent ? "bg-primary/5" : "")
                 }
               >
@@ -366,7 +360,7 @@ export default async function SuggestionPage({
               <li key={r.slug}>
                 <Link
                   href={`/suggest/${r.slug}`}
-                  className="border-border/60 hover:border-primary/40 group flex h-full flex-col rounded-2xl border bg-white p-5 shadow-soft transition-all hover:-translate-y-0.5 hover:shadow-soft-lg"
+                  className="border-border/60 hover:border-primary/40 group shadow-soft hover:shadow-soft-lg flex h-full flex-col rounded-2xl border bg-white p-5 transition-all hover:-translate-y-0.5"
                 >
                   <div className="flex items-center justify-between">
                     <span
@@ -387,12 +381,10 @@ export default async function SuggestionPage({
                       {r.voteCount.toLocaleString()} votes
                     </span>
                   </div>
-                  <h3 className="text-foreground mt-3 text-base font-semibold group-hover:text-primary">
+                  <h3 className="text-foreground group-hover:text-primary mt-3 text-base font-semibold">
                     {r.name}
                   </h3>
-                  <p className="text-muted mt-1 line-clamp-2 text-sm leading-relaxed">
-                    {r.pitch}
-                  </p>
+                  <p className="text-muted mt-1 line-clamp-2 text-sm leading-relaxed">{r.pitch}</p>
                 </Link>
               </li>
             ))}
@@ -418,17 +410,15 @@ export default async function SuggestionPage({
             <li key={t.slug}>
               <Link
                 href={`/suggest/${t.slug}`}
-                className="border-border/60 hover:border-primary/40 group block rounded-2xl border bg-white p-5 shadow-soft transition-colors"
+                className="border-border/60 hover:border-primary/40 group shadow-soft block rounded-2xl border bg-white p-5 transition-colors"
               >
                 <div className="text-muted text-xs tabular-nums">
                   {t.voteCount.toLocaleString()} votes
                 </div>
-                <h3 className="text-foreground mt-2 text-sm font-semibold group-hover:text-primary">
+                <h3 className="text-foreground group-hover:text-primary mt-2 text-sm font-semibold">
                   {t.name}
                 </h3>
-                <p className="text-muted mt-1 line-clamp-2 text-xs leading-relaxed">
-                  {t.pitch}
-                </p>
+                <p className="text-muted mt-1 line-clamp-2 text-xs leading-relaxed">{t.pitch}</p>
               </Link>
             </li>
           ))}
@@ -436,11 +426,9 @@ export default async function SuggestionPage({
       </section>
 
       {/* Bottom CTA */}
-      <section className="mt-14 grid gap-4 rounded-2xl border border-primary/20 bg-primary/5 p-6 sm:grid-cols-[1fr_auto] sm:items-center sm:p-8">
+      <section className="border-primary/20 bg-primary/5 mt-14 grid gap-4 rounded-2xl border p-6 sm:grid-cols-[1fr_auto] sm:items-center sm:p-8">
         <div>
-          <h2 className="text-foreground text-lg font-semibold">
-            Have an idea of your own?
-          </h2>
+          <h2 className="text-foreground text-lg font-semibold">Have an idea of your own?</h2>
           <p className="text-muted mt-1 text-sm">
             The most-requested tools ship first. We read every submission.
           </p>
@@ -455,8 +443,8 @@ export default async function SuggestionPage({
 
       {/* Tiny meta line for screen readers / crawlers */}
       <p className="text-muted sr-only">
-        {s.name} — community-suggested tool. Status: {statusLabel(s.status)}.
-        Submitted {s.submittedAt}, accepted {s.acceptedAt}
+        {s.name} — community-suggested tool. Status: {statusLabel(s.status)}. Submitted{" "}
+        {s.submittedAt}, accepted {s.acceptedAt}
         {s.estimatedShipDate ? `, ETA ${s.estimatedShipDate}` : ""}
         {s.shippedAt ? `, shipped ${s.shippedAt}` : ""}.
       </p>

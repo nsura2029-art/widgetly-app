@@ -32,9 +32,7 @@ export const metadata: Metadata = {
 
 // The three most recent posts, by publishedAt. Server-computed at build.
 function recentPosts() {
-  return [...BLOG_POSTS]
-    .sort((a, b) => (a.publishedAt < b.publishedAt ? 1 : -1))
-    .slice(0, 3);
+  return [...BLOG_POSTS].sort((a, b) => (a.publishedAt < b.publishedAt ? 1 : -1)).slice(0, 3);
 }
 
 function formatDate(iso: string): string {
@@ -74,15 +72,14 @@ export default function BlogPostNotFound() {
             This post isn&apos;t live yet.
           </h1>
           <p className="text-muted mt-4 text-base leading-relaxed sm:text-lg">
-            We&apos;re writing it. In the meantime, the rest of the Widgetly
-            blog is full of product updates, in-depth guides, and curated
-            best-of lists on the tools we&apos;re shipping.
+            We&apos;re writing it. In the meantime, the rest of the Widgetly blog is full of product
+            updates, in-depth guides, and curated best-of lists on the tools we&apos;re shipping.
           </p>
 
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Link
               href="/blog"
-              className="bg-brand-gradient inline-flex h-11 items-center justify-center gap-2 rounded-xl px-5 text-sm font-medium text-white shadow-glow-sm transition-all hover:brightness-110 hover:shadow-glow"
+              className="bg-brand-gradient shadow-glow-sm hover:shadow-glow inline-flex h-11 items-center justify-center gap-2 rounded-xl px-5 text-sm font-medium text-white transition-all hover:brightness-110"
             >
               <BookOpen className="h-4 w-4" aria-hidden="true" />
               Browse the blog
@@ -90,7 +87,7 @@ export default function BlogPostNotFound() {
             </Link>
             <Link
               href="/suggest"
-              className="border-border bg-white text-foreground shadow-soft hover:border-primary/40 inline-flex h-11 items-center justify-center gap-2 rounded-xl border px-5 text-sm font-medium transition-all hover:-translate-y-0.5 hover:shadow-soft-lg"
+              className="border-border text-foreground shadow-soft hover:border-primary/40 hover:shadow-soft-lg inline-flex h-11 items-center justify-center gap-2 rounded-xl border bg-white px-5 text-sm font-medium transition-all hover:-translate-y-0.5"
             >
               Suggest a topic
               <ArrowRight className="h-4 w-4" aria-hidden="true" />
@@ -104,9 +101,7 @@ export default function BlogPostNotFound() {
               <h2 className="text-foreground text-sm font-semibold tracking-wider uppercase">
                 What&apos;s live right now
               </h2>
-              <p className="text-muted mt-2 text-sm">
-                Fresh from the Widgetly team.
-              </p>
+              <p className="text-muted mt-2 text-sm">Fresh from the Widgetly team.</p>
             </div>
 
             <ul className="mt-8 grid gap-4 sm:grid-cols-3">
@@ -114,7 +109,7 @@ export default function BlogPostNotFound() {
                 <li key={p.slug}>
                   <Link
                     href={`/blog/${p.slug}`}
-                    className="border-border/60 shadow-soft hover:border-primary/40 group block h-full rounded-xl border bg-white p-5 transition-all hover:-translate-y-0.5 hover:shadow-soft-lg"
+                    className="border-border/60 shadow-soft hover:border-primary/40 group hover:shadow-soft-lg block h-full rounded-xl border bg-white p-5 transition-all hover:-translate-y-0.5"
                   >
                     <div className="text-muted flex items-center gap-2 text-xs">
                       <span>{formatDate(p.publishedAt)}</span>

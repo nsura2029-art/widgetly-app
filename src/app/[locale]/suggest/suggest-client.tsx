@@ -100,7 +100,7 @@ function TopRequestsHook({
               >
                 <div className="relative overflow-hidden rounded-md">
                   <div
-                    className="absolute inset-y-0 left-0 rounded-md bg-gradient-to-r from-primary/15 to-secondary/15 transition-all group-hover:from-primary/25 group-hover:to-secondary/25"
+                    className="from-primary/15 to-secondary/15 group-hover:from-primary/25 group-hover:to-secondary/25 absolute inset-y-0 left-0 rounded-md bg-gradient-to-r transition-all"
                     style={{ width: `${pct}%` }}
                     aria-hidden="true"
                   />
@@ -108,9 +108,7 @@ function TopRequestsHook({
                     <span className="text-muted-foreground/70 w-3 shrink-0 text-right tabular-nums">
                       {i + 1}
                     </span>
-                    <span className="text-foreground flex-1 truncate font-medium">
-                      {t.name}
-                    </span>
+                    <span className="text-foreground flex-1 truncate font-medium">{t.name}</span>
                     <span className="text-muted shrink-0 tabular-nums">
                       {t.voteCount.toLocaleString()}
                     </span>
@@ -122,9 +120,8 @@ function TopRequestsHook({
         })}
       </ul>
       <p className="text-muted mt-2.5 text-[11px] leading-snug">
-        Hit{" "}
-        <span className="text-foreground font-medium">{SUGGESTION_THRESHOLD} votes</span> and your
-        idea jumps to the top of our build queue.
+        Hit <span className="text-foreground font-medium">{SUGGESTION_THRESHOLD} votes</span> and
+        your idea jumps to the top of our build queue.
       </p>
     </div>
   );

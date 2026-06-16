@@ -63,9 +63,7 @@ export function blogJsonLd(posts: ReadonlyArray<BlogPostMeta>) {
   };
 }
 
-export function breadcrumbJsonLd(
-  items: ReadonlyArray<{ name: string; url: string }>,
-) {
+export function breadcrumbJsonLd(items: ReadonlyArray<{ name: string; url: string }>) {
   return {
     "@context": SCHEMA_BASE,
     "@type": "BreadcrumbList",

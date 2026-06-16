@@ -69,7 +69,7 @@ const KNOWN_LABELS: Record<string, string> = {
   home: "Home",
   // Categories (auto-derived from CATEGORIES below for type safety)
   ...Object.fromEntries(
-    CATEGORIES.map((c) => [c.slug, c.slug] as const)  // category names resolved at render time via t(),
+    CATEGORIES.map((c) => [c.slug, c.slug] as const) // category names resolved at render time via t(),
   ),
   // Top-level sections
   blog: "Blog",
@@ -209,7 +209,7 @@ function cleanPath(path: string, stripQueryHash: boolean): string {
  */
 export function generateBreadcrumbs(
   path: string,
-  options: GenerateBreadcrumbsOptions = {},
+  options: GenerateBreadcrumbsOptions = {}
 ): Crumb[] {
   if (options.override && options.override.length > 0) {
     return normalizeCrumbs(options.override, options);
@@ -217,10 +217,7 @@ export function generateBreadcrumbs(
 
   const cleaned = cleanPath(path, true);
   // Normalize trailing slash (except for root).
-  const normalized =
-    cleaned === "/" || cleaned === ""
-      ? "/"
-      : cleaned.replace(/\/+$/, "");
+  const normalized = cleaned === "/" || cleaned === "" ? "/" : cleaned.replace(/\/+$/, "");
   const segments = normalized.split("/").filter(Boolean);
 
   // Home (or root).
@@ -239,10 +236,7 @@ export function generateBreadcrumbs(
   return normalizeCrumbs(crumbs, options);
 }
 
-function normalizeCrumbs(
-  crumbs: Crumb[],
-  options: GenerateBreadcrumbsOptions,
-): Crumb[] {
+function normalizeCrumbs(crumbs: Crumb[], options: GenerateBreadcrumbsOptions): Crumb[] {
   const next = options.hideHome ? crumbs.slice(1) : crumbs;
   // Make sure every href is a root-relative path; that's what Next/Link expects.
   return next.map((c) => ({
@@ -274,7 +268,7 @@ export type BreadcrumbSchema = {
  */
 export function generateBreadcrumbSchema(
   crumbs: ReadonlyArray<Crumb>,
-  baseUrl: string = SITE_CONFIG.url,
+  baseUrl: string = SITE_CONFIG.url
 ): BreadcrumbSchema {
   const origin = baseUrl.replace(/\/$/, "");
   return {
@@ -307,7 +301,7 @@ export type BreadcrumbClickEvent = {
 export function buildBreadcrumbClickEvent(
   fromPath: string,
   toPath: string,
-  depth: number,
+  depth: number
 ): BreadcrumbClickEvent {
   return {
     event: "breadcrumb_click",

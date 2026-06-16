@@ -62,11 +62,7 @@ export function buildMetadata({
   // a truthy non-string (build a dynamic URL from `path`), or omitted
   // (use the site default static OG image).
   const ogImage =
-    typeof image === "string"
-      ? image
-      : image
-        ? getOgImageUrl({ path })
-        : getOgImageUrl();
+    typeof image === "string" ? image : image ? getOgImageUrl({ path }) : getOgImageUrl();
   const allKeywords = [...(keywords ?? []), ...SITE_CONFIG.keywords].join(", ");
 
   return {
