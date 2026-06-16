@@ -3,6 +3,10 @@ compatibility_date = "2025-04-01"
 compatibility_flags = ["nodejs_compat", "global_fetch_strictly_public"]
 
 main = ".open-next/worker.js"
+routes = [
+  { pattern = "widgetly.tech", custom_domain = true },
+  { pattern = "www.widgetly.tech", custom_domain = true },
+]
 
 [assets]
 directory = ".open-next/assets"
