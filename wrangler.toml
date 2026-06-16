@@ -3,10 +3,6 @@ compatibility_date = "2025-04-01"
 compatibility_flags = ["nodejs_compat", "global_fetch_strictly_public"]
 
 main = ".open-next/worker.js"
-routes = [
-  { pattern = "widgetly.tech/*", zone_name = "widgetly.tech" },
-  { pattern = "www.widgetly.tech/*", zone_name = "widgetly.tech" },
-]
 
 [assets]
 directory = ".open-next/assets"
@@ -20,6 +16,8 @@ enabled = true
 # ---------------------------------------------------------------------------
 # `pnpm build` produces .open-next/ via @opennextjs/cloudflare. `pnpm deploy`
 # invokes `opennextjs-cloudflare build && wrangler deploy` to ship the worker.
+# Production domains are attached in the Cloudflare dashboard so CI deploys
+# only update Worker code and assets, not route/custom-domain triggers.
 # ---------------------------------------------------------------------------
 
 # Optional KV (e.g. waitlist persistence)
