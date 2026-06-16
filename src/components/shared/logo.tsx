@@ -23,13 +23,13 @@ export function Logo({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-2.5 font-semibold tracking-tight text-foreground",
+        "text-foreground inline-flex items-center gap-2.5 font-semibold tracking-tight",
         className
       )}
       aria-label="Widgetly"
     >
       <span
-        className="relative inline-flex h-9 w-9 items-center justify-center rounded-xl bg-brand-gradient shadow-glow-sm ring-1 ring-white/10"
+        className="bg-brand-gradient shadow-glow-sm relative inline-flex h-9 w-9 items-center justify-center rounded-xl ring-1 ring-white/10"
         aria-hidden="true"
       >
         <svg
@@ -47,13 +47,9 @@ export function Logo({
             fill="currentColor"
           />
         </svg>
-        <span className="absolute -inset-1 -z-10 rounded-2xl bg-brand-gradient opacity-30 blur-md" />
+        <span className="bg-brand-gradient absolute -inset-1 -z-10 rounded-2xl opacity-30 blur-md" />
       </span>
-      {showWordmark && (
-        <span className="text-lg font-semibold tracking-tight">
-          Widgetly
-        </span>
-      )}
+      {showWordmark && <span className="text-lg font-semibold tracking-tight">Widgetly</span>}
     </span>
   );
 }

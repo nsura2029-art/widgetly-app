@@ -36,13 +36,15 @@ export type LocaleMeta = {
 };
 
 export const LOCALES: readonly LocaleMeta[] = [
-  { code: "en", nativeName: "English",   englishName: "English", dir: "ltr", shortLabel: "EN" },
-  { code: "es", nativeName: "Español",   englishName: "Spanish", dir: "ltr", shortLabel: "ES" },
-  { code: "fr", nativeName: "Français",  englishName: "French",  dir: "ltr", shortLabel: "FR" },
+  { code: "en", nativeName: "English", englishName: "English", dir: "ltr", shortLabel: "EN" },
+  { code: "es", nativeName: "Español", englishName: "Spanish", dir: "ltr", shortLabel: "ES" },
+  { code: "fr", nativeName: "Français", englishName: "French", dir: "ltr", shortLabel: "FR" },
 ];
 
 export const SUPPORTED_LOCALES: readonly LocaleCode[] = LOCALES.map((l) => l.code);
-export const RTL_LOCALES: readonly LocaleCode[] = LOCALES.filter((l) => l.dir === "rtl").map((l) => l.code);
+export const RTL_LOCALES: readonly LocaleCode[] = LOCALES.filter((l) => l.dir === "rtl").map(
+  (l) => l.code
+);
 
 const LOCALE_SET = new Set<string>(SUPPORTED_LOCALES);
 
@@ -70,10 +72,23 @@ export function getDirection(code: LocaleCode): LocaleDirection {
  */
 export const COUNTRY_TO_LOCALE: Record<string, LocaleCode> = {
   // Spanish (Spain + 12 Latin American countries)
-  ES: "es", MX: "es", AR: "es", CO: "es", PE: "es",
-  CL: "es", VE: "es", UY: "es", PY: "es", BO: "es", EC: "es", CR: "es",
+  ES: "es",
+  MX: "es",
+  AR: "es",
+  CO: "es",
+  PE: "es",
+  CL: "es",
+  VE: "es",
+  UY: "es",
+  PY: "es",
+  BO: "es",
+  EC: "es",
+  CR: "es",
   // French (France + 3 neighbours)
-  FR: "fr", BE: "fr", LU: "fr", MC: "fr",
+  FR: "fr",
+  BE: "fr",
+  LU: "fr",
+  MC: "fr",
 };
 
 /** Cookie names. Centralized so the middleware, API, and picker agree. */

@@ -29,7 +29,10 @@ export default getRequestConfig(async ({ requestLocale }) => {
   } catch (err) {
     // If a locale file is missing (shouldn't happen — we ship all 24),
     // fall back to the default English bundle rather than crash the build.
-    console.error(`[i18n] missing messages for "${requested}", falling back to ${DEFAULT_LOCALE}`, err);
+    console.error(
+      `[i18n] missing messages for "${requested}", falling back to ${DEFAULT_LOCALE}`,
+      err
+    );
     messages = (await import(`./messages/${DEFAULT_LOCALE}.json`)).default;
   }
 

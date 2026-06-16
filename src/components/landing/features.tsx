@@ -29,13 +29,11 @@ export function Features() {
         <FadeIn className="mx-auto max-w-2xl text-center">
           <h2
             id="features-title"
-            className="text-display-sm font-semibold tracking-tight text-foreground sm:text-display-md"
+            className="text-display-sm text-foreground sm:text-display-md font-semibold tracking-tight"
           >
             {t("title")}
           </h2>
-          <p className="mt-4 text-base text-muted sm:text-lg">
-            {t("subtitle")}
-          </p>
+          <p className="text-muted mt-4 text-base sm:text-lg">{t("subtitle")}</p>
         </FadeIn>
 
         <Stagger
@@ -51,7 +49,7 @@ export function Features() {
                   whileHover={{ y: -4 }}
                   transition={{ duration: 0.25, ease: "easeOut" }}
                   className={cn(
-                    "group relative h-full overflow-hidden rounded-2xl border border-border/80 bg-white p-6 shadow-soft transition-shadow",
+                    "group border-border/80 shadow-soft relative h-full overflow-hidden rounded-2xl border bg-white p-6 transition-shadow",
                     "hover:shadow-soft-lg"
                   )}
                 >
@@ -59,9 +57,9 @@ export function Features() {
                     aria-hidden="true"
                     className={cn(
                       "pointer-events-none absolute inset-0 rounded-2xl opacity-0 transition-opacity duration-300 group-hover:opacity-100",
-                      feature.accent === "primary" && "ring-1 ring-primary/30",
-                      feature.accent === "secondary" && "ring-1 ring-secondary/30",
-                      feature.accent === "accent" && "ring-1 ring-accent/30"
+                      feature.accent === "primary" && "ring-primary/30 ring-1",
+                      feature.accent === "secondary" && "ring-secondary/30 ring-1",
+                      feature.accent === "accent" && "ring-accent/30 ring-1"
                     )}
                   />
 
@@ -74,20 +72,23 @@ export function Features() {
                     <Icon className="h-5 w-5" />
                   </div>
 
-                  <h3 className="mt-5 text-base font-semibold tracking-tight text-foreground">
+                  <h3 className="text-foreground mt-5 text-base font-semibold tracking-tight">
                     {t(`items.${feature.id}.title`)}
                   </h3>
-                  <p className="mt-2 text-sm leading-relaxed text-muted">
+                  <p className="text-muted mt-2 text-sm leading-relaxed">
                     {t(`items.${feature.id}.description`)}
                   </p>
 
                   <div
                     aria-hidden="true"
                     className={cn(
-                      "absolute -bottom-px -right-px h-12 w-12 rounded-tl-2xl opacity-0 transition-opacity duration-300 group-hover:opacity-100",
-                      feature.accent === "primary" && "bg-gradient-to-tl from-primary/15 to-transparent",
-                      feature.accent === "secondary" && "bg-gradient-to-tl from-secondary/15 to-transparent",
-                      feature.accent === "accent" && "bg-gradient-to-tl from-accent/15 to-transparent"
+                      "absolute -right-px -bottom-px h-12 w-12 rounded-tl-2xl opacity-0 transition-opacity duration-300 group-hover:opacity-100",
+                      feature.accent === "primary" &&
+                        "from-primary/15 bg-gradient-to-tl to-transparent",
+                      feature.accent === "secondary" &&
+                        "from-secondary/15 bg-gradient-to-tl to-transparent",
+                      feature.accent === "accent" &&
+                        "from-accent/15 bg-gradient-to-tl to-transparent"
                     )}
                   />
                 </motion.div>

@@ -138,6 +138,7 @@ export async function GET() {
   return NextResponse.json({
     cookie: cookieLocale ?? null,
     kv: kvLocale,
-    resolved: (cookieLocale && isSupportedLocale(cookieLocale) ? cookieLocale : null) ?? DEFAULT_LOCALE,
+    resolved:
+      (cookieLocale && isSupportedLocale(cookieLocale) ? cookieLocale : null) ?? DEFAULT_LOCALE,
   });
 }

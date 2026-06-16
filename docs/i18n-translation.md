@@ -81,6 +81,7 @@ rm -rf tmp/translate
 ```
 
 The file-based workflow is:
+
 - **API-free** (no DeepL/Google API key needed)
 - **Provider-agnostic** (any tool that can translate a .txt works)
 - **Auditable** (you can read every translation before importing)
@@ -106,13 +107,13 @@ pnpm i18n:import
 
 ## Provider reference
 
-| Provider | Auth | Best for | Env var(s) |
-|---|---|---|---|
-| `libretranslate` | none (free public) | MVP only, marketing copy | — |
-| `deepl` | DeepL Auth Key | European languages | `DEEPL_API_KEY` |
-| `google` | GCP API key | All 22 locales | `GOOGLE_TRANSLATE_API_KEY` |
-| `gemini` | Public AIza key OR Vertex OAuth | All 22, with prompt context | `GEMINI_API_KEY` *or* `GEMINI_VERTEX_TOKEN` + `GEMINI_PROJECT_ID` |
-| `auto` | chain of the above | recommended | see individual providers |
+| Provider         | Auth                            | Best for                    | Env var(s)                                                        |
+| ---------------- | ------------------------------- | --------------------------- | ----------------------------------------------------------------- |
+| `libretranslate` | none (free public)              | MVP only, marketing copy    | —                                                                 |
+| `deepl`          | DeepL Auth Key                  | European languages          | `DEEPL_API_KEY`                                                   |
+| `google`         | GCP API key                     | All 22 locales              | `GOOGLE_TRANSLATE_API_KEY`                                        |
+| `gemini`         | Public AIza key OR Vertex OAuth | All 22, with prompt context | `GEMINI_API_KEY` _or_ `GEMINI_VERTEX_TOKEN` + `GEMINI_PROJECT_ID` |
+| `auto`           | chain of the above              | recommended                 | see individual providers                                          |
 
 Optional for Gemini: `GEMINI_MODEL` (default `gemini-2.0-flash`; can also
 be `gemini-2.0-flash-lite`, `gemini-1.5-pro`, etc.).
@@ -121,10 +122,10 @@ be `gemini-2.0-flash-lite`, `gemini-1.5-pro`, etc.).
 
 For Gemini, the script auto-detects auth mode from the credential:
 
-| Prefix | Auth | Endpoint |
-|---|---|---|
-| `AIza...` | Public Gemini API | `generativelanguage.googleapis.com` (uses `?key=...`) |
-| `ya29.`, `AQ.`, `1//` | Vertex AI OAuth | `us-central1-aiplatform.googleapis.com` (uses `Authorization: Bearer ...`) |
+| Prefix                | Auth              | Endpoint                                                                   |
+| --------------------- | ----------------- | -------------------------------------------------------------------------- |
+| `AIza...`             | Public Gemini API | `generativelanguage.googleapis.com` (uses `?key=...`)                      |
+| `ya29.`, `AQ.`, `1//` | Vertex AI OAuth   | `us-central1-aiplatform.googleapis.com` (uses `Authorization: Bearer ...`) |
 
 ## ICU placeholder handling
 
@@ -205,13 +206,13 @@ match the English value, then re-run.
 
 ## Cost reference (June 2025 pricing) — MVP scope (en + es + fr)
 
-| Provider | Cost per 196 × 2 strings | Notes |
-|---|---|---|
-| LibreTranslate | free | unreliable, MVP quality |
-| DeepL Free | free | 500k chars/month cap |
-| DeepL Pro | <$0.01 | best for European |
-| Google Cloud Translation | <$0.01 | covers everything |
-| Gemini 2.0 Flash | <$0.01 | cheapest paid, slightly lower quality |
+| Provider                 | Cost per 196 × 2 strings | Notes                                 |
+| ------------------------ | ------------------------ | ------------------------------------- |
+| LibreTranslate           | free                     | unreliable, MVP quality               |
+| DeepL Free               | free                     | 500k chars/month cap                  |
+| DeepL Pro                | <$0.01                   | best for European                     |
+| Google Cloud Translation | <$0.01                   | covers everything                     |
+| Gemini 2.0 Flash         | <$0.01                   | cheapest paid, slightly lower quality |
 
 The full MVP pass is essentially free on any of the paid tiers.
 
@@ -228,6 +229,7 @@ Three steps, in this order:
    should detect to this locale.
 
 2. **Create the messages file.**
+
    ```bash
    cp src/i18n/messages/en.json src/i18n/messages/<code>.json
    ```

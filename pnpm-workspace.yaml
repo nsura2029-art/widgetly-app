@@ -1,11 +1,5 @@
-allowBuilds:
-  "@parcel/watcher": set this to true or false
-  "@scarf/scarf": set this to true or false
-  "@swc/core": set this to true or false
-  esbuild: false
-  sharp: false
-  unrs-resolver: false
-  workerd: false
+packages:
+  - "."
 onlyBuiltDependencies:
   - esbuild
   - sharp
