@@ -1,5 +1,5 @@
 /**
- * Edge proxy: locale path-prefix routing + cookie persistence.
+ * Edge middleware: locale path-prefix routing + cookie persistence.
  *
  * Runs in the Cloudflare Worker (via @opennextjs/cloudflare), before the
  * request reaches the Next.js renderer. Responsibilities:
@@ -25,7 +25,7 @@
  *     next-intl doesn't know about.
  *   - We want to set the `wly_anon` cookie in the same pass.
  */
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import createIntlMiddleware from "next-intl/middleware";
 import { routing } from "../next-intl.config";
 import {
@@ -73,7 +73,7 @@ function resolveLocaleFromRequest(req: NextRequest): LocaleCode {
   return DEFAULT_LOCALE;
 }
 
-export function proxy(req: NextRequest) {
+export function middleware(req: NextRequest) {
   // Run the next-intl middleware first. It may issue a 308 redirect
   // (we capture and return that as-is) or a pass-through NextResponse
   // for already-prefixed URLs.
