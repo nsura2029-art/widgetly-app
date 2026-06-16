@@ -1,8 +1,3 @@
-/*
-  Cloudflare Pages-style headers file, passed through by OpenNext to the
-  Worker. See https://developers.cloudflare.com/pages/configuration/headers/
-*/
-
 /
   X-Content-Type-Options: nosniff
   X-Frame-Options: DENY
