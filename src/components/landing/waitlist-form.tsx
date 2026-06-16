@@ -64,9 +64,7 @@ export function WaitlistForm() {
     } catch (err) {
       // Fallback: if no backend is configured, accept the email locally
       // so the page still demos correctly.
-      const local =
-        typeof window !== "undefined" &&
-        !window.location.pathname.startsWith("/_");
+      const local = typeof window !== "undefined" && !window.location.pathname.startsWith("/_");
       if (local) {
         setStatus("success");
         setMessage("You're on the list! We'll be in touch soon.");
@@ -74,9 +72,7 @@ export function WaitlistForm() {
         setTouched(false);
       } else {
         setStatus("error");
-        setMessage(
-          err instanceof Error ? err.message : "Something went wrong"
-        );
+        setMessage(err instanceof Error ? err.message : "Something went wrong");
       }
     }
   };
@@ -99,21 +95,19 @@ export function WaitlistForm() {
               initial={{ scale: 0, rotate: -90 }}
               animate={{ scale: 1, rotate: 0 }}
               transition={{ delay: 0.1, type: "spring", stiffness: 200 }}
-              className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500 text-white shadow-glow-sm"
+              className="shadow-glow-sm inline-flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500 text-white"
             >
               <CheckCircle2 className="h-6 w-6" />
             </motion.div>
-            <p className="text-base font-semibold text-foreground">
-              You're on the list!
-            </p>
-            <p className="text-sm text-muted">{message}</p>
+            <p className="text-foreground text-base font-semibold">You're on the list!</p>
+            <p className="text-muted text-sm">{message}</p>
             <button
               type="button"
               onClick={() => {
                 setStatus("idle");
                 setMessage("");
               }}
-              className="mt-2 text-xs font-medium text-primary underline-offset-4 hover:underline"
+              className="text-primary mt-2 text-xs font-medium underline-offset-4 hover:underline"
             >
               Add another email
             </button>
@@ -135,7 +129,7 @@ export function WaitlistForm() {
               </label>
               <div className="relative flex-1">
                 <Mail
-                  className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted"
+                  className="text-muted pointer-events-none absolute top-1/2 left-4 h-4 w-4 -translate-y-1/2"
                   aria-hidden="true"
                 />
                 <Input
@@ -155,12 +149,7 @@ export function WaitlistForm() {
                   aria-describedby="waitlist-help"
                 />
               </div>
-              <Button
-                type="submit"
-                size="lg"
-                className="group"
-                disabled={status === "submitting"}
-              >
+              <Button type="submit" size="lg" className="group" disabled={status === "submitting"}>
                 {status === "submitting" ? (
                   <>
                     <Loader2 className="animate-spin" />
@@ -176,15 +165,13 @@ export function WaitlistForm() {
             </div>
             <div
               id="waitlist-help"
-              className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted"
+              className="text-muted flex flex-wrap items-center justify-between gap-2 text-xs"
             >
               <span>We'll only email you about the launch. No spam.</span>
               {(showInvalid || status === "error") && (
                 <span className="inline-flex items-center gap-1 text-red-600">
                   <AlertCircle className="h-3.5 w-3.5" />
-                  {status === "error"
-                    ? message
-                    : "Please enter a valid email address."}
+                  {status === "error" ? message : "Please enter a valid email address."}
                 </span>
               )}
             </div>

@@ -76,13 +76,15 @@ export function UpvoteButton({
       onClick={handleClick}
       disabled={pending}
       aria-pressed={voted}
-      aria-label={voted ? `Remove your upvote (${count} total)` : `Upvote this suggestion (${count} total)`}
+      aria-label={
+        voted ? `Remove your upvote (${count} total)` : `Upvote this suggestion (${count} total)`
+      }
       className={cn(
         "group inline-flex items-center gap-3 rounded-2xl border px-5 py-3 text-sm font-medium transition-all",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
+        "focus-visible:ring-primary/40 focus-visible:ring-2 focus-visible:outline-none",
         voted
           ? "border-primary bg-primary/5 text-foreground shadow-glow-sm"
-          : "border-border bg-white text-foreground hover:border-primary/40 hover:bg-primary/5",
+          : "border-border text-foreground hover:border-primary/40 hover:bg-primary/5 bg-white",
         "disabled:cursor-wait",
         className
       )}
@@ -90,7 +92,9 @@ export function UpvoteButton({
       <span
         className={cn(
           "flex h-9 w-9 items-center justify-center rounded-xl transition-colors",
-          voted ? "bg-primary text-white" : "bg-muted/5 text-muted group-hover:bg-primary/10 group-hover:text-primary"
+          voted
+            ? "bg-primary text-white"
+            : "bg-muted/5 text-muted group-hover:bg-primary/10 group-hover:text-primary"
         )}
       >
         {pending ? (

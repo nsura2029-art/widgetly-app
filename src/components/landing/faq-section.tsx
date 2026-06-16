@@ -39,49 +39,42 @@ export async function FaqSection() {
       key,
       question: await tItems(`${key}.question`),
       answer: await tItems(`${key}.answer`),
-    })),
+    }))
   );
 
   return (
     <section
       id="faq"
-      className="relative border-t border-border/60 py-12 sm:py-16 lg:py-20"
+      className="border-border/60 relative border-t py-12 sm:py-16 lg:py-20"
       aria-labelledby="faq-title"
     >
       <div className="container">
         <FadeIn className="mx-auto max-w-2xl text-center">
-          <span className="inline-flex items-center rounded-full border border-border/80 bg-white px-3 py-1 text-xs font-medium text-muted shadow-soft">
+          <span className="border-border/80 text-muted shadow-soft inline-flex items-center rounded-full border bg-white px-3 py-1 text-xs font-medium">
             {t("pill")}
           </span>
           <h2
             id="faq-title"
-            className="mt-4 text-display-sm font-semibold tracking-tight text-foreground sm:text-display-md"
+            className="text-display-sm text-foreground sm:text-display-md mt-4 font-semibold tracking-tight"
           >
             {t("title")}
           </h2>
-          <p className="mt-4 text-base text-muted sm:text-lg">
-            {t("subtitle")}
-          </p>
+          <p className="text-muted mt-4 text-base sm:text-lg">{t("subtitle")}</p>
         </FadeIn>
 
-        <div className="mx-auto mt-12 max-w-3xl divide-y divide-border/60 rounded-2xl border border-border/60 bg-white shadow-soft">
+        <div className="divide-border/60 border-border/60 shadow-soft mx-auto mt-12 max-w-3xl divide-y rounded-2xl border bg-white">
           {items.map((item) => (
-            <details
-              key={item.key}
-              className="group p-6 [&[open]]:bg-muted/5"
-            >
-              <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-left text-base font-semibold text-foreground marker:hidden">
+            <details key={item.key} className="group [&[open]]:bg-muted/5 p-6">
+              <summary className="text-foreground flex cursor-pointer list-none items-center justify-between gap-4 text-left text-base font-semibold marker:hidden">
                 <span>{item.question}</span>
                 <span
                   aria-hidden="true"
-                  className="grid h-7 w-7 shrink-0 place-items-center rounded-full border border-border/80 text-muted transition-transform group-open:rotate-45"
+                  className="border-border/80 text-muted grid h-7 w-7 shrink-0 place-items-center rounded-full border transition-transform group-open:rotate-45"
                 >
                   +
                 </span>
               </summary>
-              <p className="mt-4 text-sm leading-relaxed text-muted">
-                {item.answer}
-              </p>
+              <p className="text-muted mt-4 text-sm leading-relaxed">{item.answer}</p>
             </details>
           ))}
         </div>

@@ -16,7 +16,7 @@ export function Waitlist() {
   return (
     <section
       id="waitlist"
-      className="relative overflow-hidden border-t border-border/60 py-12 sm:py-16 lg:py-20"
+      className="border-border/60 relative overflow-hidden border-t py-12 sm:py-16 lg:py-20"
       aria-labelledby="waitlist-title"
     >
       {/* Background gradient */}
@@ -31,18 +31,16 @@ export function Waitlist() {
 
       <div className="container">
         <FadeIn className="mx-auto max-w-2xl text-center">
-          <span className="inline-flex items-center rounded-full border border-border/80 bg-white px-3 py-1 text-xs font-medium text-muted shadow-soft">
+          <span className="border-border/80 text-muted shadow-soft inline-flex items-center rounded-full border bg-white px-3 py-1 text-xs font-medium">
             {t("pill")}
           </span>
           <h2
             id="waitlist-title"
-            className="mt-4 text-display-sm font-semibold tracking-tight text-foreground sm:text-display-md"
+            className="text-display-sm text-foreground sm:text-display-md mt-4 font-semibold tracking-tight"
           >
             {t("title")}
           </h2>
-          <p className="mt-4 text-base text-muted sm:text-lg">
-            {t("subtitle")}
-          </p>
+          <p className="text-muted mt-4 text-base sm:text-lg">{t("subtitle")}</p>
         </FadeIn>
 
         <FadeIn delay={0.15} className="mt-10">
@@ -50,7 +48,7 @@ export function Waitlist() {
         </FadeIn>
 
         <FadeIn delay={0.3} className="mx-auto mt-16 max-w-2xl">
-          <div className="mb-6 text-center text-xs font-medium uppercase tracking-wider text-muted">
+          <div className="text-muted mb-6 text-center text-xs font-medium tracking-wider uppercase">
             {t("countdown.label")}
           </div>
           <CountdownBlock className="mx-auto max-w-md" />
@@ -62,12 +60,8 @@ export function Waitlist() {
             transition={{ delay: 0.4, duration: 0.6 }}
             className="mt-12 text-center"
           >
-            <p className="text-base italic text-foreground/80 sm:text-lg">
-              {t("founderQuote")}
-            </p>
-            <footer className="mt-4 text-sm text-muted">
-              {t("founderAttribution")}
-            </footer>
+            <p className="text-foreground/80 text-base italic sm:text-lg">{t("founderQuote")}</p>
+            <footer className="text-muted mt-4 text-sm">{t("founderAttribution")}</footer>
           </motion.blockquote>
         </FadeIn>
       </div>

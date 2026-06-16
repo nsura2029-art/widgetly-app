@@ -128,12 +128,12 @@ export type Feature = {
 };
 
 export const FEATURES: readonly Feature[] = [
-  { icon: "Sparkles",    id: "aiSearch",   accent: "primary"   },
-  { icon: "LayoutGrid",  id: "toolsCount", accent: "secondary" },
-  { icon: "Zap",         id: "fast",       accent: "accent"    },
-  { icon: "Cloud",       id: "cloud",      accent: "primary"   },
-  { icon: "Smartphone",  id: "mobile",     accent: "secondary" },
-  { icon: "ShieldCheck", id: "privacy",    accent: "accent"    },
+  { icon: "Sparkles", id: "aiSearch", accent: "primary" },
+  { icon: "LayoutGrid", id: "toolsCount", accent: "secondary" },
+  { icon: "Zap", id: "fast", accent: "accent" },
+  { icon: "Cloud", id: "cloud", accent: "primary" },
+  { icon: "Smartphone", id: "mobile", accent: "secondary" },
+  { icon: "ShieldCheck", id: "privacy", accent: "accent" },
 ] as const;
 
 export type Category = {

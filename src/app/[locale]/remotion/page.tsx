@@ -23,7 +23,7 @@ export default function RemotionPage() {
   }, []);
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-surface">
+    <main className="bg-surface flex min-h-screen items-center justify-center">
       <div className="prose prose-invert text-center">
         <h1 className="text-3xl font-semibold">
           Designed for
@@ -35,7 +35,7 @@ export default function RemotionPage() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -8 }}
                 transition={{ duration: 0.45 }}
-                className="inline-block px-2 py-1 rounded-md bg-muted/20 text-foreground font-medium"
+                className="bg-muted/20 text-foreground inline-block rounded-md px-2 py-1 font-medium"
               >
                 {AUDIENCES[index]}
               </motion.span>
@@ -43,9 +43,9 @@ export default function RemotionPage() {
           </span>
         </h1>
 
-        <p className="mt-4 text-muted">
-          One audience at a time — animated for emphasis. Use this route to
-          preview an animated banner or export a short clip.
+        <p className="text-muted mt-4">
+          One audience at a time — animated for emphasis. Use this route to preview an animated
+          banner or export a short clip.
         </p>
       </div>
     </main>

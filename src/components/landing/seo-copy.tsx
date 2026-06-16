@@ -53,13 +53,11 @@ export async function SeoCopy() {
 
           <h2
             id="seo-explore-title"
-            className="text-display-sm font-semibold tracking-tight text-foreground sm:text-display-md"
+            className="text-display-sm text-foreground sm:text-display-md font-semibold tracking-tight"
           >
             {t("exploreTitle")}
           </h2>
-          <p className="text-muted mt-4 text-base sm:text-lg">
-            {t("exploreSubtitle")}
-          </p>
+          <p className="text-muted mt-4 text-base sm:text-lg">{t("exploreSubtitle")}</p>
         </div>
 
         <div className="mt-14 grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:mt-20 lg:gap-8">
@@ -73,7 +71,9 @@ export async function SeoCopy() {
               >
                 <h3 className="text-foreground text-base font-semibold tracking-tight">
                   {catName}{" "}
-                  <span className="text-muted text-xs font-medium">({t("count", { count: cat.count })})</span>
+                  <span className="text-muted text-xs font-medium">
+                    ({t("count", { count: cat.count })})
+                  </span>
                 </h3>
                 <p className="text-muted mt-2 text-sm leading-relaxed">{cat.longDescription}</p>
                 <Link
@@ -88,7 +88,7 @@ export async function SeoCopy() {
           })}
         </div>
 
-          {/*
+        {/*
             "Who is Widgetly for?" audience breakdown disabled pre-launch.
             <h3 className="mt-14 text-xl font-semibold tracking-tight text-foreground">
               Who is Widgetly for?
@@ -127,7 +127,7 @@ export async function SeoCopy() {
             </div>
           */}
 
-          {/*
+        {/*
             "Why a coming-soon page matters" copy disabled pre-launch.
             <h3 className="mt-14 text-xl font-semibold tracking-tight text-foreground">
               Why a coming-soon page matters

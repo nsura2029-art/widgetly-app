@@ -51,9 +51,9 @@ export function AdZone({
       aria-label={SLOT_LABELS[slot]}
       data-ad-slot={slot}
       className={cn(
-        "mx-auto my-6 flex items-center justify-center rounded-xl border border-dashed border-border/80 bg-muted/5 px-4 text-center text-xs font-medium uppercase tracking-wider text-muted",
+        "border-border/80 bg-muted/5 text-muted mx-auto my-6 flex items-center justify-center rounded-xl border border-dashed px-4 text-center text-xs font-medium tracking-wider uppercase",
         SLOT_DIMENSIONS[slot],
-        className,
+        className
       )}
     >
       <div className="flex items-center gap-2">

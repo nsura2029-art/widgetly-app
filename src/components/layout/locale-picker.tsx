@@ -107,17 +107,14 @@ export function LocalePicker() {
         aria-expanded={open}
         aria-haspopup="menu"
         className={cn(
-          "border-border/80 inline-flex h-9 items-center gap-1.5 rounded-lg border bg-white/60 px-2.5 text-xs font-medium text-foreground backdrop-blur transition-colors hover:bg-white",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          "border-border/80 text-foreground inline-flex h-9 items-center gap-1.5 rounded-lg border bg-white/60 px-2.5 text-xs font-medium backdrop-blur transition-colors hover:bg-white",
+          "focus-visible:ring-ring focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
         )}
       >
         <Globe className="h-3.5 w-3.5" aria-hidden="true" />
         <span className="uppercase tabular-nums">{currentMeta.shortLabel}</span>
         <ChevronDown
-          className={cn(
-            "h-3 w-3 text-muted transition-transform",
-            open && "rotate-180"
-          )}
+          className={cn("text-muted h-3 w-3 transition-transform", open && "rotate-180")}
           aria-hidden="true"
         />
       </button>
@@ -126,7 +123,7 @@ export function LocalePicker() {
         <ul
           role="menu"
           aria-label={t("label")}
-          className="absolute right-0 z-50 mt-2 max-h-96 w-56 overflow-y-auto rounded-xl border border-border/80 bg-white shadow-soft-lg"
+          className="border-border/80 shadow-soft-lg absolute right-0 z-50 mt-2 max-h-96 w-56 overflow-y-auto rounded-xl border bg-white"
         >
           {LOCALES.map((loc) => {
             const isCurrent = loc.code === current;
@@ -145,21 +142,15 @@ export function LocalePicker() {
                   )}
                 >
                   <span className="flex min-w-0 flex-col">
-                    <span className="truncate font-medium text-foreground">
-                      {loc.nativeName}
-                    </span>
+                    <span className="text-foreground truncate font-medium">{loc.nativeName}</span>
                     {loc.nativeName !== loc.englishName && (
-                      <span className="truncate text-xs text-muted">
-                        {loc.englishName}
-                      </span>
+                      <span className="text-muted truncate text-xs">{loc.englishName}</span>
                     )}
                   </span>
                   {isCurrent && (
-                    <Check className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+                    <Check className="text-primary h-4 w-4 shrink-0" aria-hidden="true" />
                   )}
-                  {isPending && (
-                    <span className="text-xs text-muted">…</span>
-                  )}
+                  {isPending && <span className="text-muted text-xs">…</span>}
                 </button>
               </li>
             );

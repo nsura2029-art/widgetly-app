@@ -19,7 +19,7 @@ export function CtaStrip() {
           <motion.div
             whileHover={{ y: -2 }}
             transition={{ duration: 0.2 }}
-            className="relative overflow-hidden rounded-3xl border border-border/80 bg-dark p-8 text-white shadow-soft-lg sm:p-12"
+            className="border-border/80 bg-dark shadow-soft-lg relative overflow-hidden rounded-3xl border p-8 text-white sm:p-12"
           >
             <div
               aria-hidden="true"
@@ -35,21 +35,17 @@ export function CtaStrip() {
                   Build with us.
                 </h3>
                 <p className="mt-2 text-sm text-white/70 sm:text-base">
-                  Widgetly is open source and built in public. Star us on
-                  GitHub, contribute, or just follow along.
+                  Widgetly is open source and built in public. Star us on GitHub, contribute, or
+                  just follow along.
                 </p>
               </div>
               <div className="flex flex-col gap-2 sm:flex-row">
                 <Button
                   asChild
                   size="lg"
-                  className="bg-white text-dark hover:bg-white/90 hover:text-dark"
+                  className="text-dark hover:text-dark bg-white hover:bg-white/90"
                 >
-                  <a
-                    href={SITE_CONFIG.github}
-                    target="_blank"
-                    rel="noreferrer noopener"
-                  >
+                  <a href={SITE_CONFIG.github} target="_blank" rel="noreferrer noopener">
                     <Github />
                     Star on GitHub
                   </a>

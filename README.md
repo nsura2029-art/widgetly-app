@@ -106,16 +106,16 @@ widgetly/
 
 ### Brand Colors
 
-| Token | Hex | Usage |
-|---|---|---|
-| `primary` | `#5B6CFF` | Main brand, CTAs, links |
-| `secondary` | `#7B61FF` | Mid-tone accents |
-| `accent` | `#A855F7` | Highlights, AI features |
-| `background` | `#FFFFFF` | Page background |
-| `dark` | `#0F172A` | Footer, dark sections |
-| `border` | `#E5E7EB` | Card borders, dividers |
-| `text` | `#111827` | Body text |
-| `muted` | `#6B7280` | Secondary text |
+| Token        | Hex       | Usage                   |
+| ------------ | --------- | ----------------------- |
+| `primary`    | `#5B6CFF` | Main brand, CTAs, links |
+| `secondary`  | `#7B61FF` | Mid-tone accents        |
+| `accent`     | `#A855F7` | Highlights, AI features |
+| `background` | `#FFFFFF` | Page background         |
+| `dark`       | `#0F172A` | Footer, dark sections   |
+| `border`     | `#E5E7EB` | Card borders, dividers  |
+| `text`       | `#111827` | Body text               |
+| `muted`      | `#6B7280` | Secondary text          |
 
 All colors are exposed as Tailwind utilities (`bg-primary`, `text-muted`, etc.) and as CSS variables.
 
@@ -176,22 +176,24 @@ wrangler pages deploy .vercel/output/static --project-name widgetly
 Drop the analytics beacon into `src/app/layout.tsx` to get real-user performance metrics (no cookies, GDPR-friendly):
 
 ```tsx
-<Script src="https://static.cloudflareinsights.com/beacon.min.js"
-        data-cf-beacon={`{"token": "${process.env.NEXT_PUBLIC_ANALYTICS_TOKEN}"}`} />
+<Script
+  src="https://static.cloudflareinsights.com/beacon.min.js"
+  data-cf-beacon={`{"token": "${process.env.NEXT_PUBLIC_ANALYTICS_TOKEN}"}`}
+/>
 ```
 
 ---
 
 ## 🧪 Code Quality
 
-| Tool | Purpose | Command |
-|---|---|---|
-| **ESLint** | Lint (Next + TS rules) | `pnpm lint` |
-| **Prettier** | Formatting | `pnpm format` |
-| **TypeScript** | Type-check | `pnpm type-check` |
-| **Husky** | Git hooks | runs on `prepare` |
-| **lint-staged** | Pre-commit lint/format | runs on staged files |
-| **GitHub Actions** | CI on every PR | `.github/workflows/ci.yml` |
+| Tool               | Purpose                | Command                    |
+| ------------------ | ---------------------- | -------------------------- |
+| **ESLint**         | Lint (Next + TS rules) | `pnpm lint`                |
+| **Prettier**       | Formatting             | `pnpm format`              |
+| **TypeScript**     | Type-check             | `pnpm type-check`          |
+| **Husky**          | Git hooks              | runs on `prepare`          |
+| **lint-staged**    | Pre-commit lint/format | runs on staged files       |
+| **GitHub Actions** | CI on every PR         | `.github/workflows/ci.yml` |
 
 ### Hooks
 
