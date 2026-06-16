@@ -68,3 +68,17 @@ export function prefersReducedMotion(): boolean {
   if (typeof window === "undefined") return false;
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
+
+/**
+ * Canonical site URL — used for canonical tags, hreflang, sitemap,
+ * OpenGraph, and JSON-LD. Driven by `NEXT_PUBLIC_SITE_URL` so staging
+ * / preview deploys can override it. Defaults to the production
+ * primary domain. Trailing slash is stripped so callers can safely
+ * append `/${path}`.
+ */
+export function getSiteUrl(): string {
+  const raw =
+    (typeof process !== "undefined" && process.env?.NEXT_PUBLIC_SITE_URL) ||
+    "https://widgetly.tech";
+  return raw.replace(/\/+$/, "");
+}

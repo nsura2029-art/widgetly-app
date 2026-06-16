@@ -49,3 +49,10 @@ enabled = true
 # LOCALE_KV        — KV binding (locale preference persistence)
 # ANALYTICS_TOKEN  — Cloudflare Web Analytics token (set in dashboard)
 # ---------------------------------------------------------------------------
+
+# Non-secret runtime vars. NEXT_PUBLIC_* are inlined into the client
+# bundle at build time, so do not put secrets here. Override per-env
+# (`wrangler deploy --env preview --var NEXT_PUBLIC_SITE_URL:...`)
+# for staging deploys.
+[vars]
+NEXT_PUBLIC_SITE_URL = "https://widgetly.tech"

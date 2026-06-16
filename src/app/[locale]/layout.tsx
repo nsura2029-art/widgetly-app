@@ -12,6 +12,7 @@ import { Footer } from "@/components/layout/footer";
 import { ConsentProvider } from "@/lib/consent/useConsent";
 import { ConsentBanner } from "@/components/consent/ConsentBanner";
 import { regionFromCountry, regionFromLocale } from "@/lib/consent/region";
+import { getSiteUrl } from "@/lib/utils";
 
 import { websiteJsonLd, organizationJsonLd, softwareApplicationJsonLd, faqJsonLd } from "@/lib/seo";
 import { FAQS } from "@/lib/constants";
@@ -44,7 +45,7 @@ export async function generateMetadata({
   if (!isSupportedLocale(locale)) return {};
 
   const t = await getTranslations({ locale, namespace: "site" });
-  const baseUrl = "https://widgetly.app";
+  const baseUrl = getSiteUrl();
   const localePath = `/${locale}`;
 
   const languages: Record<string, string> = {};

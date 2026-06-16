@@ -11,7 +11,15 @@ export const SITE_CONFIG = {
     "Widgetly is the all-in-one AI tools platform: 500+ free online tools, calculators, converters, generators, PDF editors, and AI assistants — all in one fast, private, mobile-first platform.",
   longDescription:
     "Widgetly brings together hundreds of powerful tools, calculators, generators, converters, PDF utilities, and AI assistants into a single intelligent platform. Built for students, teachers, professionals, creators, developers, marketers, and businesses, Widgetly helps you work better and faster — for free.",
-  url: "https://widgetly.app",
+  // Live getter so the URL can be overridden at build time by
+  // NEXT_PUBLIC_SITE_URL (used by canonical, hreflang, sitemap, and
+  // JSON-LD). Falls back to the production primary domain.
+  get url(): string {
+    return (
+      (typeof process !== "undefined" && process.env?.NEXT_PUBLIC_SITE_URL) ||
+      "https://widgetly.tech"
+    ).replace(/\/+$/, "");
+  },
   ogImage: "/og-image.svg",
   locale: "en_US",
   twitterHandle: "@widgetlyapp",
