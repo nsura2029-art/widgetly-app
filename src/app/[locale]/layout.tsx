@@ -14,6 +14,7 @@ import { ConsentBanner } from "@/components/consent/ConsentBanner";
 import { regionFromCountry, regionFromLocale } from "@/lib/consent/region";
 import { getSiteUrl } from "@/lib/utils";
 import { CloudflareAnalytics } from "@/components/analytics/CloudflareAnalytics";
+import { MotionConfig } from "@/components/layout/motion-config";
 
 import { websiteJsonLd, organizationJsonLd, softwareApplicationJsonLd, faqJsonLd } from "@/lib/seo";
 import { FAQS } from "@/lib/constants";
@@ -172,7 +173,8 @@ export default async function LocaleLayout({
       </head>
       <body className="bg-background min-h-screen font-sans antialiased">
         <NextIntlClientProvider locale={locale} messages={messages}>
-          <ConsentProvider region={consentRegion}>
+          <MotionConfig>
+            <ConsentProvider region={consentRegion}>
             <a
               href="#main"
               className="focus:bg-foreground focus:text-background sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[100] focus:rounded-md focus:px-3 focus:py-2 focus:text-sm"
@@ -188,6 +190,7 @@ export default async function LocaleLayout({
             <Footer />
             <ConsentBanner />
           </ConsentProvider>
+          </MotionConfig>
         </NextIntlClientProvider>
       </body>
     </html>
