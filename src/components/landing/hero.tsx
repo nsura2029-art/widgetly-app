@@ -106,7 +106,7 @@ export function Hero({ mascotSeed }: { mascotSeed?: number } = {}) {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-            className="text-display-md text-foreground sm:text-display-lg lg:text-display-xl mt-8 font-semibold tracking-tight whitespace-nowrap"
+            className="text-display-md text-foreground sm:text-display-lg lg:text-display-xl mt-8 font-semibold tracking-tight md:whitespace-nowrap"
           >
             {t("title")}
           </motion.h1>
