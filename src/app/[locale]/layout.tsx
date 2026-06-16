@@ -13,6 +13,7 @@ import { ConsentProvider } from "@/lib/consent/useConsent";
 import { ConsentBanner } from "@/components/consent/ConsentBanner";
 import { regionFromCountry, regionFromLocale } from "@/lib/consent/region";
 import { getSiteUrl } from "@/lib/utils";
+import { CloudflareAnalytics } from "@/components/analytics/CloudflareAnalytics";
 
 import { websiteJsonLd, organizationJsonLd, softwareApplicationJsonLd, faqJsonLd } from "@/lib/seo";
 import { FAQS } from "@/lib/constants";
@@ -135,8 +136,14 @@ export default async function LocaleLayout({
             load — but if we later add a real Google Analytics tag, it
             should be moved into <ConsentGate category="analytics"> so
             it doesn't fire before the user opts in. */}
-        <link rel="dns-prefetch" href="//www.google-analytics.com" />
         <link rel="dns-prefetch" href="//cdn.jsdelivr.net" />
+        {/* Cloudflare Web Analytics — privacy-respecting, no cookies.
+            The token is a public identifier (not a secret). Omitted
+            in local dev and any environment that hasn't configured
+            NEXT_PUBLIC_CF_ANALYTICS_TOKEN. */}
+        <CloudflareAnalytics
+          token={process.env.NEXT_PUBLIC_CF_ANALYTICS_TOKEN}
+        />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdWebSite) }}

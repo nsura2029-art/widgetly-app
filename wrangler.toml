@@ -56,3 +56,7 @@ enabled = true
 # for staging deploys.
 [vars]
 NEXT_PUBLIC_SITE_URL = "https://widgetly.tech"
+# Cloudflare Web Analytics token (Account Home → Analytics → Web
+# Analytics → Add site → copy the token). Public identifier; safe
+# to inline. Leave empty to disable analytics on a given env.
+NEXT_PUBLIC_CF_ANALYTICS_TOKEN = ""
