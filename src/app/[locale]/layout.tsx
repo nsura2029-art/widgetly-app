@@ -132,11 +132,20 @@ export default async function LocaleLayout({
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        {/* DNS prefetch is a low-cost resolution hint, not a script
-            load — but if we later add a real Google Analytics tag, it
-            should be moved into <ConsentGate category="analytics"> so
-            it doesn't fire before the user opts in. */}
         <link rel="dns-prefetch" href="//cdn.jsdelivr.net" />
+        {/* Mobile browser chrome color (Android Chrome, Edge mobile,
+            Samsung Internet). Single solid color required. */}
+        <meta name="theme-color" content="#0F172A" />
+        {/* iOS / macOS Safari "Add to Home Screen" hints. With these
+            set, the app launches fullscreen without Safari chrome
+            and is treated as a standalone web app. */}
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="Widgetly" />
+        {/* Disable iOS Safari's automatic phone / address / date
+            detection — none of those are in our copy and the
+            auto-styling would add visual noise. */}
+        <meta name="format-detection" content="telephone=no, date=no, address=no" />
         {/* Cloudflare Web Analytics — privacy-respecting, no cookies.
             The token is a public identifier (not a secret). Omitted
             in local dev and any environment that hasn't configured
