@@ -10,7 +10,7 @@ importers:
     dependencies:
       '@opennextjs/cloudflare':
         specifier: 1.19.11
-        version: 1.19.11(next@16.2.9(@babel/core@7.29.7)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(wrangler@4.100.0)
+        version: 1.19.11(patch_hash=8ed6359bc35123574cc03b92a7851f3e57e4d30d9240eee7ffea648d2de7b50c)(next@16.2.9(@babel/core@7.29.7)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(wrangler@4.100.0)
       '@radix-ui/react-slot':
         specifier: ^1.1.0
         version: 1.2.5(@types/react@19.2.17)(react@19.2.0)
@@ -5163,7 +5163,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@opennextjs/cloudflare@1.19.11(next@16.2.9(@babel/core@7.29.7)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(wrangler@4.100.0)':
+  '@opennextjs/cloudflare@1.19.11(patch_hash=8ed6359bc35123574cc03b92a7851f3e57e4d30d9240eee7ffea648d2de7b50c)(next@16.2.9(@babel/core@7.29.7)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(wrangler@4.100.0)':
     dependencies:
       '@ast-grep/napi': 0.40.5
       '@dotenvx/dotenvx': 1.31.0

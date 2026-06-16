@@ -15,6 +15,8 @@ A modern, premium Coming Soon landing page for [Widgetly](https://widgetly.app),
 - 📱 **Mobile-first** — responsive down to 360px
 - 🚀 **Edge-deployed** — static export ready for Cloudflare Pages
 - 🔍 **SEO-ready** — dynamic metadata, OpenGraph, Twitter cards, sitemap, robots.txt
+- 🛡 **GDPR / CCPA cookie consent** — banner, preferences modal, region-aware defaults, version-locked re-prompt, see [docs/CONSENT.md](./docs/CONSENT.md)
+- 🔒 **Zero third-party trackers** — no analytics, no ads, no pageview events; consent store stores only the user's preference in `localStorage`
 - 🛠 **Type-safe** — full TypeScript strict mode
 - 🎯 **Zero-config Tailwind** — ShadCN-style tokens baked into `tailwind.config.ts`
 
@@ -199,6 +201,15 @@ Drop the analytics beacon into `src/app/layout.tsx` to get real-user performance
 
 - **pre-commit**: runs `lint-staged` (format + lint on staged files)
 - **pre-push**: runs `tsc --noEmit`
+
+## 📚 Docs
+
+- [API.md](./docs/API.md) — public HTTP endpoints, OpenAPI spec
+- [FRONTEND.md](./docs/FRONTEND.md) — frontend architecture
+- [DEPLOYMENT.md](./docs/DEPLOYMENT.md) — Cloudflare Pages + Workers deploy
+- [CONSENT.md](./docs/CONSENT.md) — cookie consent system, region detection, what we track
+- [i18n-translation.md](./docs/i18n-translation.md) — adding a locale or translation
+- [LAUNCH_INDEXABILITY.md](./docs/LAUNCH_INDEXABILITY.md) — pre-launch SEO checklist
 
 ---
 

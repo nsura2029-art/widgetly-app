@@ -4,7 +4,8 @@ import { Link } from "@/i18n/navigation";
 import { Github, Twitter, Linkedin } from "lucide-react";
 import { Logo } from "@/components/shared/logo";
 import { useTranslations } from "next-intl";
-import { FOOTER_LINKS, SITE_CONFIG } from "@/lib/constants";
+import { FOOTER_LINKS } from "@/lib/constants";
+import { CookiePreferencesLink } from "@/components/consent/CookiePreferencesLink";
 
 const SOCIAL_ICONS = {
   github: Github,
@@ -67,12 +68,15 @@ export function Footer() {
         </div>
 
         <div className="mt-14 flex flex-col items-start justify-between gap-4 border-t border-white/10 pt-8 text-sm text-white/50 md:flex-row md:items-center">
-          <p>
-            {t.rich("copyright", {
-              year,
-              siteName: tSite("name"),
-            })}
-          </p>
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+            <p>
+              {t.rich("copyright", {
+                year,
+                siteName: tSite("name"),
+              })}
+            </p>
+            <CookiePreferencesLink />
+          </div>
           <p>
             {t.rich("builtWith", {
               platform: (<span className="text-white/80">Cloudflare</span>) as unknown as string,
