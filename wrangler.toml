@@ -4,8 +4,8 @@ compatibility_flags = ["nodejs_compat", "global_fetch_strictly_public"]
 
 main = ".open-next/worker.js"
 routes = [
-  { pattern = "widgetly.tech", custom_domain = true },
-  { pattern = "www.widgetly.tech", custom_domain = true },
+  { pattern = "widgetly.tech/*", zone_name = "widgetly.tech" },
+  { pattern = "www.widgetly.tech/*", zone_name = "widgetly.tech" },
 ]
 
 [assets]
