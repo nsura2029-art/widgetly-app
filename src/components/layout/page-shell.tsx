@@ -45,13 +45,24 @@ export type PageShellWidth = "default" | "wide" | "narrow" | "full";
 
 const WIDTH_CLASS: Record<PageShellWidth, string> = {
   // Default reads comfortably on phones and desktop; used for prose
-  // content (about) and most other text-heavy pages.
+  // content (blog post articles, etc.) where 60-80 chars per line is
+  // the readability sweet spot.
   default: "max-w-3xl",
-  // Blog index, blog post — body benefits from a touch more breathing room.
-  wide: "max-w-5xl",
-  // Contact, suggest — single-column form pages.
+  // Wide now spans the full container width (max-w-7xl == container max
+  // of 80rem). Pages that need a card grid, hero + grid combo, or
+  // anything that fills the screen flow naturally use this. Previously
+  // this was max-w-5xl which left a 256px gap on the right vs the
+  // Join Waitlist button — felt misaligned. Pages that want a
+  // narrower-than-full inner column should use width="default" or
+  // wrap their content in mx-auto max-w-3xl themselves.
+  wide: "max-w-7xl",
+  // Contact, suggest — single-column form pages. 2xl = 672px, leaves
+  // a visible right gutter on wide screens so the form doesn't look
+  // like it's stretched.
   narrow: "max-w-2xl",
-  // Anything that wants the full container width (e.g. category grids).
+  // Explicit "no inner cap". Same as "wide" — kept for clarity at
+  // call sites that want to express intent ("this page is intentionally
+  // full-width, not narrow").
   full: "",
 };
 
