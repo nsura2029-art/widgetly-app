@@ -5,16 +5,31 @@ import { cn } from "@/lib/utils";
  * Canonical page-content wrapper.
  *
  * Every non-landing page should render its body inside `<PageShell>` so the
- * horizontal alignment (Tailwind's `.container`, 1280px max), the top/bottom
- * rhythm, and the inner max-width are identical across the site. This is
- * the single source of truth for "what a content page looks like" — the
- * SEO/Google-Ads template depends on the body width being predictable.
+ * horizontal alignment (Tailwind's `.container`, 1280px max) matches the
+ * sticky header and the breadcrumb band — both of which also span the full
+ * container width. The container is the single source of truth for
+ * "what horizontal edge content sits at" on the site.
  *
- * Variants:
- *  - default: prose/forms/legal (max-w-3xl content card)
- *  - wide:    lists/grid pages (max-w-5xl content)
- *  - narrow:  single-column form pages (max-w-2xl content card)
- *  - full:    no inner max-w (use the container only)
+ * The inner content is LEFT-ALIGNED at the container's left edge (no
+ * `mx-auto`). Inner max-widths come from the `width` prop:
+ *  - default: prose/forms/legal (max-w-3xl content card, ~768px)
+ *  - wide:    lists/grid pages (max-w-5xl content, ~1024px)
+ *  - narrow:  single-column form pages (max-w-2xl content card, ~672px)
+ *  - full:    no inner max-w — spans the full container width
+ *
+ * Why left-align instead of centered? Because the user perceives the
+ * header (logo at container left) and breadcrumb (trail at container left)
+ * as the visual anchor. Centering page content under them creates an
+ * offset that reads as misalignment. Left-aligning content under a
+ * left-aligned header matches how the home page's landing sections are
+ * laid out (Hero, Features, Categories, etc., all start at container
+ * left).
+ *
+ * Pages that want a centered column on top of the container can still
+ * do that internally — e.g. a centered hero header, a centered prose
+ * card on a wider page — by wrapping their content in
+ * `<div className="mx-auto max-w-2xl">` themselves. PageShell doesn't
+ * force one or the other globally.
  *
  * Notes:
  *  - The root <main> is provided by the layout; do NOT wrap children in
@@ -83,7 +98,7 @@ export function PageShell({
         className
       )}
     >
-      <InnerTag className={cn("mx-auto w-full", innerMaxW, innerClassName)}>{children}</InnerTag>
+      <InnerTag className={cn("w-full", innerMaxW, innerClassName)}>{children}</InnerTag>
     </div>
   );
 }
