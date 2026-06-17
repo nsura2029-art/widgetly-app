@@ -30,7 +30,9 @@
     "i18n:export:all": "node scripts/translate-file.mjs export --out=tmp/translate",
     "i18n:export:missing": "node scripts/translate-file.mjs export --locales=es,fr --out=tmp/translate --mode=missing",
     "i18n:import": "node scripts/translate-file.mjs import --dir=tmp/translate",
-    "i18n:translate:mvp": "node scripts/translate-messages.mjs --locales=es,fr"
+    "i18n:translate:mvp": "node scripts/translate-messages.mjs --locales=es,fr",
+    "setup:secrets": "node scripts/setup-cloudflare-secrets.mjs",
+    "setup:secrets:dry": "node scripts/setup-cloudflare-secrets.mjs --dry-run"
   },
   "remotion": {
     "webpackOverride": "./remotion/webpack.override.js"
