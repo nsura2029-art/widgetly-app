@@ -18,7 +18,7 @@ import { contactRequest, type ContactResponse } from "@/lib/api/schemas";
  *
  * Runtime: edge. Web Crypto + `fetch` only.
  */
-export const runtime = "edge";
+export const runtime = "nodejs";
 
 async function handle(request: NextRequest) {
   const body = await parseJson(request, contactRequest);

@@ -7,7 +7,7 @@ import { NextResponse } from "next/server";
  * Serves the OpenAPI 3.0 specification as JSON. Self-describing —
  * the same document drives the Swagger UI at `/docs`.
  */
-export const runtime = "edge";
+export const runtime = "nodejs";
 
 export async function GET() {
   return NextResponse.json(openapiSpec, {

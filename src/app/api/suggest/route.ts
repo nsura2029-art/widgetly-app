@@ -32,7 +32,7 @@ import { log } from "@/lib/log";
  * Runtime: edge. Uses Web Crypto for the id and the standard `fetch`
  * for the webhook + Supabase HTTP API. No Node-only APIs.
  */
-export const runtime = "edge";
+export const runtime = "nodejs";
 
 function shortReqId(): string {
   return Math.floor(Math.random() * 0xffffffff)

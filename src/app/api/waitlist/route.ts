@@ -33,7 +33,7 @@ import { log, maskEmail } from "@/lib/log";
  *
  * Runtime: edge. Uses Web Crypto + `fetch` only.
  */
-export const runtime = "edge";
+export const runtime = "nodejs";
 
 function shortReqId(): string {
   // 6 chars of base36 is enough to correlate start/end log lines for

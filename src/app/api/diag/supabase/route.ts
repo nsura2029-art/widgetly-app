@@ -22,7 +22,7 @@ import { log, maskSecret } from "@/lib/log";
  * Access: GET /api/diag/supabase from your dev server only.
  * Returns: 200 with the diagnostic object, OR 404 in production.
  */
-export const runtime = "edge";
+export const runtime = "nodejs";
 
 export async function GET(_request: NextRequest) {
   if (process.env.NODE_ENV === "production") {
