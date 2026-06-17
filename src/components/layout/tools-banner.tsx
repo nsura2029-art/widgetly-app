@@ -7,8 +7,30 @@ import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { getIcon } from "@/lib/icons";
 import { TOOLS_CATEGORIES } from "@/lib/tools-categories";
-import { type Subgroup, type SubTool, getSubgroups } from "@/lib/tools-subgroups";
+import { type AccentColor, type Subgroup, type SubTool, getSubgroups } from "@/lib/tools-subgroups";
 import { cn } from "@/lib/utils";
+
+/**
+ * Map an `AccentColor` enum value to the Tailwind classes for the
+ * sub-tool icon tile (small square behind the icon). Each color is
+ * rendered as a saturated background with a white icon. Kept as a
+ * static map (not a template string) so Tailwind's JIT sees every
+ * class name at build time and includes them in the bundle.
+ *
+ * `hover:` is darker than `bg-` so hover feels like a press.
+ */
+const ACCENT_TILE_CLASSES: Record<AccentColor, string> = {
+  red: "bg-red-500 hover:bg-red-600 text-white",
+  green: "bg-green-500 hover:bg-green-600 text-white",
+  blue: "bg-blue-500 hover:bg-blue-600 text-white",
+  indigo: "bg-indigo-500 hover:bg-indigo-600 text-white",
+  purple: "bg-purple-500 hover:bg-purple-600 text-white",
+  orange: "bg-orange-500 hover:bg-orange-600 text-white",
+  pink: "bg-pink-500 hover:bg-pink-600 text-white",
+  teal: "bg-teal-500 hover:bg-teal-600 text-white",
+  amber: "bg-amber-500 hover:bg-amber-600 text-white",
+  cyan: "bg-cyan-500 hover:bg-cyan-600 text-white",
+};
 
 /**
  * Slugs shown in the banner. Picked to be a representative mix of
@@ -335,6 +357,7 @@ function SubgroupColumn({
             <SubToolLink
               item={item}
               Icon={subIcons[item.name] ?? getIcon("Sparkles")}
+              accent={group.accent}
               href={`/tools/${categorySlug}#${toAnchor(item.name)}`}
               onClick={onLinkClick}
             />
@@ -348,11 +371,13 @@ function SubgroupColumn({
 function SubToolLink({
   item,
   Icon,
+  accent,
   href,
   onClick,
 }: {
   item: SubTool;
   Icon: React.ComponentType<{ className?: string }>;
+  accent: AccentColor;
   href: string;
   onClick: () => void;
 }) {
@@ -363,10 +388,25 @@ function SubToolLink({
       onClick={onClick}
       className={cn(
         "text-foreground/85 hover:bg-muted hover:text-foreground",
-        "inline-flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-xs transition-colors"
+        "inline-flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-xs transition-colors"
       )}
     >
-      <Icon className="text-muted-foreground h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+      {/*
+        Colored icon tile — matches the iLovePDF mega-menu pattern.
+        A 28px rounded square with a saturated background in the
+        subgroup's accent color and a 14px white Lucide icon
+        centered inside. Each item in a column shares the same
+        color, which makes the column read as a unit at a glance.
+      */}
+      <span
+        className={cn(
+          "inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md transition-colors",
+          ACCENT_TILE_CLASSES[accent]
+        )}
+        aria-hidden="true"
+      >
+        <Icon className="h-3.5 w-3.5" />
+      </span>
       <span className="truncate">{item.name}</span>
     </Link>
   );
@@ -388,6 +428,7 @@ function FallbackList({
           <SubToolLink
             item={{ name, icon: "Sparkles" }}
             Icon={getIcon("Sparkles")}
+            accent="blue"
             href={`/tools/${categorySlug}#${toAnchor(name)}`}
             onClick={onLinkClick}
           />

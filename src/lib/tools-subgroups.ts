@@ -32,9 +32,44 @@ export type SubTool = {
   icon: string;
 };
 
+/**
+ * Accent palette for sub-tool icon tiles. Each subgroup picks
+ * one of these, which determines the background color of the
+ * small icon tile next to every item in that column. The colors
+ * mirror the iLovePDF mega-menu pattern the user referenced:
+ * action types share a color (red = organize, green = optimize,
+ * blue = convert, purple = edit, etc.) so the column reads as
+ * a unit at a glance.
+ *
+ * Why a typed enum instead of free-form Tailwind classes?
+ *  - Constrains the palette so we don't end up with 30
+ *    one-off colors.
+ *  - Lets us centrally tweak (e.g. switch from bg-blue-500 to
+ *    bg-blue-600) by editing one map.
+ *  - Lets `Subgroup.accent` be a discriminated field that the
+ *    mega-menu code can validate.
+ */
+export type AccentColor =
+  | "red"
+  | "green"
+  | "blue"
+  | "indigo"
+  | "purple"
+  | "orange"
+  | "pink"
+  | "teal"
+  | "amber"
+  | "cyan";
+
 export type Subgroup = {
   /** Column header, e.g. "Organize PDF". Uppercased in the UI. */
   title: string;
+  /**
+   * Accent color for the icon tiles in this column. Maps to a
+   * Tailwind class in the mega-menu code via a static lookup
+   * (so Tailwind's JIT sees all class names at build time).
+   */
+  accent: AccentColor;
   items: readonly SubTool[];
 };
 
@@ -45,6 +80,7 @@ export const TOOLS_SUBGROUPS: Record<string, readonly Subgroup[]> = {
   pdf: [
     {
       title: "Organize PDF",
+      accent: "red",
       items: [
         { name: "Merge PDF", icon: "Combine" },
         { name: "Split PDF", icon: "Split" },
@@ -56,6 +92,7 @@ export const TOOLS_SUBGROUPS: Record<string, readonly Subgroup[]> = {
     },
     {
       title: "Optimize PDF",
+      accent: "green",
       items: [
         { name: "Compress PDF", icon: "Minimize2" },
         { name: "Repair PDF", icon: "Wrench" },
@@ -63,6 +100,7 @@ export const TOOLS_SUBGROUPS: Record<string, readonly Subgroup[]> = {
     },
     {
       title: "Convert to PDF",
+      accent: "blue",
       items: [
         { name: "JPG to PDF", icon: "ImagePlus" },
         { name: "Word to PDF", icon: "FileText" },
@@ -73,6 +111,7 @@ export const TOOLS_SUBGROUPS: Record<string, readonly Subgroup[]> = {
     },
     {
       title: "Convert from PDF",
+      accent: "indigo",
       items: [
         { name: "PDF to JPG", icon: "ImageMinus" },
         { name: "PDF to Word", icon: "FileText" },
@@ -82,6 +121,7 @@ export const TOOLS_SUBGROUPS: Record<string, readonly Subgroup[]> = {
     },
     {
       title: "Edit PDF",
+      accent: "purple",
       items: [
         { name: "Edit PDF", icon: "Edit3" },
         { name: "Rotate PDF", icon: "RotateCw" },
@@ -92,6 +132,7 @@ export const TOOLS_SUBGROUPS: Record<string, readonly Subgroup[]> = {
     },
     {
       title: "PDF Security",
+      accent: "orange",
       items: [
         { name: "Unlock PDF", icon: "LockOpen" },
         { name: "Protect PDF", icon: "Lock" },
@@ -102,6 +143,7 @@ export const TOOLS_SUBGROUPS: Record<string, readonly Subgroup[]> = {
     },
     {
       title: "AI for PDF",
+      accent: "pink",
       items: [
         { name: "AI Summarizer", icon: "Sparkles" },
         { name: "Translate PDF", icon: "Languages" },
@@ -115,6 +157,7 @@ export const TOOLS_SUBGROUPS: Record<string, readonly Subgroup[]> = {
   image: [
     {
       title: "Edit Image",
+      accent: "blue",
       items: [
         { name: "Resize Image", icon: "Maximize2" },
         { name: "Crop Image", icon: "Crop" },
@@ -124,6 +167,7 @@ export const TOOLS_SUBGROUPS: Record<string, readonly Subgroup[]> = {
     },
     {
       title: "Convert Format",
+      accent: "green",
       items: [
         { name: "Convert to WebP", icon: "ArrowLeftRight" },
         { name: "Convert to PNG", icon: "ArrowLeftRight" },
@@ -132,6 +176,7 @@ export const TOOLS_SUBGROUPS: Record<string, readonly Subgroup[]> = {
     },
     {
       title: "AI Image Tools",
+      accent: "purple",
       items: [
         { name: "Background Remover", icon: "Eraser" },
         { name: "Image Upscaler", icon: "ZoomIn" },
@@ -140,6 +185,7 @@ export const TOOLS_SUBGROUPS: Record<string, readonly Subgroup[]> = {
     },
     {
       title: "Effects",
+      accent: "orange",
       items: [
         { name: "Add Watermark", icon: "Stamp" },
         { name: "Crop to Circle", icon: "Circle" },
@@ -153,6 +199,7 @@ export const TOOLS_SUBGROUPS: Record<string, readonly Subgroup[]> = {
   video: [
     {
       title: "Edit Video",
+      accent: "red",
       items: [
         { name: "Trim Video", icon: "Scissors" },
         { name: "Merge Clips", icon: "Combine" },
@@ -162,6 +209,7 @@ export const TOOLS_SUBGROUPS: Record<string, readonly Subgroup[]> = {
     },
     {
       title: "Convert Format",
+      accent: "blue",
       items: [
         { name: "Convert to GIF", icon: "Image" },
         { name: "Convert to MP4", icon: "Film" },
@@ -170,6 +218,7 @@ export const TOOLS_SUBGROUPS: Record<string, readonly Subgroup[]> = {
     },
     {
       title: "AI Video Tools",
+      accent: "purple",
       items: [
         { name: "Video to Text", icon: "FileText" },
         { name: "Generate Subtitles", icon: "Captions" },
@@ -184,6 +233,7 @@ export const TOOLS_SUBGROUPS: Record<string, readonly Subgroup[]> = {
   ai: [
     {
       title: "Writing",
+      accent: "indigo",
       items: [
         { name: "AI Writer", icon: "Sparkles" },
         { name: "AI Summarizer", icon: "FileText" },
@@ -194,6 +244,7 @@ export const TOOLS_SUBGROUPS: Record<string, readonly Subgroup[]> = {
     },
     {
       title: "Image",
+      accent: "pink",
       items: [
         { name: "AI Image Generator", icon: "ImagePlus" },
         { name: "Background Remover", icon: "Eraser" },
@@ -202,6 +253,7 @@ export const TOOLS_SUBGROUPS: Record<string, readonly Subgroup[]> = {
     },
     {
       title: "Career & Learning",
+      accent: "teal",
       items: [
         { name: "AI Resume Builder", icon: "Briefcase" },
         { name: "AI Tutor", icon: "GraduationCap" },
@@ -215,6 +267,7 @@ export const TOOLS_SUBGROUPS: Record<string, readonly Subgroup[]> = {
   calculators: [
     {
       title: "Finance",
+      accent: "green",
       items: [
         { name: "Mortgage Calculator", icon: "Home" },
         { name: "Loan Amortization", icon: "TrendingUp" },
@@ -223,6 +276,7 @@ export const TOOLS_SUBGROUPS: Record<string, readonly Subgroup[]> = {
     },
     {
       title: "Health",
+      accent: "red",
       items: [
         { name: "BMI Calculator", icon: "Heart" },
         { name: "Calorie Counter", icon: "Apple" },
@@ -230,6 +284,7 @@ export const TOOLS_SUBGROUPS: Record<string, readonly Subgroup[]> = {
     },
     {
       title: "Math",
+      accent: "blue",
       items: [
         { name: "Percentage Change", icon: "Percent" },
         { name: "Scientific Calculator", icon: "Calculator" },
@@ -243,6 +298,7 @@ export const TOOLS_SUBGROUPS: Record<string, readonly Subgroup[]> = {
   developer: [
     {
       title: "Format & Validate",
+      accent: "blue",
       items: [
         { name: "JSON Formatter", icon: "Braces" },
         { name: "YAML Validator", icon: "CheckCircle2" },
@@ -251,6 +307,7 @@ export const TOOLS_SUBGROUPS: Record<string, readonly Subgroup[]> = {
     },
     {
       title: "Encode & Decode",
+      accent: "purple",
       items: [
         { name: "Base64 Encoder", icon: "Binary" },
         { name: "JWT Decoder", icon: "Key" },
@@ -259,6 +316,7 @@ export const TOOLS_SUBGROUPS: Record<string, readonly Subgroup[]> = {
     },
     {
       title: "Test",
+      accent: "orange",
       items: [{ name: "Regex Tester", icon: "Regex" }],
     },
   ],
@@ -269,6 +327,7 @@ export const TOOLS_SUBGROUPS: Record<string, readonly Subgroup[]> = {
   seo: [
     {
       title: "Generate",
+      accent: "blue",
       items: [
         { name: "Meta Tag Generator", icon: "Tag" },
         { name: "XML Sitemap", icon: "Map" },
@@ -277,6 +336,7 @@ export const TOOLS_SUBGROUPS: Record<string, readonly Subgroup[]> = {
     },
     {
       title: "Analyze",
+      accent: "purple",
       items: [
         { name: "Keyword Density", icon: "BarChart3" },
         { name: "SERP Preview", icon: "Eye" },
@@ -285,6 +345,7 @@ export const TOOLS_SUBGROUPS: Record<string, readonly Subgroup[]> = {
     },
     {
       title: "Audit",
+      accent: "teal",
       items: [{ name: "Backlink Checker", icon: "Link" }],
     },
   ],
@@ -295,6 +356,7 @@ export const TOOLS_SUBGROUPS: Record<string, readonly Subgroup[]> = {
   writing: [
     {
       title: "Edit & Polish",
+      accent: "green",
       items: [
         { name: "Grammar Checker", icon: "CheckCircle2" },
         { name: "Tone Rewriter", icon: "MessageSquare" },
@@ -303,6 +365,7 @@ export const TOOLS_SUBGROUPS: Record<string, readonly Subgroup[]> = {
     },
     {
       title: "Analyze",
+      accent: "blue",
       items: [
         { name: "Word Counter", icon: "Hash" },
         { name: "Readability Score", icon: "BarChart3" },
@@ -311,6 +374,7 @@ export const TOOLS_SUBGROUPS: Record<string, readonly Subgroup[]> = {
     },
     {
       title: "Generate",
+      accent: "amber",
       items: [{ name: "Lorem Ipsum Generator", icon: "Pilcrow" }],
     },
   ],
