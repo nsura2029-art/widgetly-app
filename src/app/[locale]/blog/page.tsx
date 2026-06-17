@@ -47,7 +47,7 @@ export default function BlogIndexPage() {
           </p>
         </header>
 
-        <ul className="mt-14 grid gap-6 sm:grid-cols-2">
+        <ul className="mt-10 grid gap-6 sm:grid-cols-2">
           {BLOG_POSTS.map((post) => (
             <li key={post.slug}>
               <BlogCard post={post} />
