@@ -22,7 +22,7 @@ export function Features() {
   return (
     <section
       id="features"
-      className="relative py-8 sm:py-12 lg:py-14"
+      className="relative py-6 sm:py-8 lg:py-10"
       aria-labelledby="features-title"
     >
       <div className="container">

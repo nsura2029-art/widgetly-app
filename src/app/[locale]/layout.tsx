@@ -164,7 +164,7 @@ export default async function LocaleLayout({
             </a>
             <ClientHeader />
 
-            <main id="main" className="pt-16">
+            <main id="main" className="pt-6">
               <BreadcrumbNav />
               {children}
             </main>
