@@ -90,7 +90,10 @@ function loadEnvFile() {
     const path = resolve(process.cwd(), file);
     if (existsSync(path)) {
       console.log(`[setup-secrets] reading ${path}`);
-      return parseEnv(readFileSync(path));
+      // utf8 encoding — readFileSync without an encoding returns a
+      // Buffer, and Buffer.split doesn't exist (it's not the string
+      // method).
+      return parseEnv(readFileSync(path, "utf8"));
     }
   }
   console.log("[setup-secrets] no .env.local or .env found, falling back to process.env");
