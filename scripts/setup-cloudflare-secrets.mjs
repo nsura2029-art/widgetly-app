@@ -101,15 +101,17 @@ function pushSecret(name, value) {
   if (!value) return "skip (empty)";
   if (DRY_RUN) return "dry-run";
 
-  const result = spawnSync(
-    "wrangler",
-    ["secret", "put", name, "--text", value],
-    {
-      stdio: ["ignore", "pipe", "pipe"],
-      encoding: "utf8",
-      env: { ...process.env },
-    }
-  );
+  // Pipe the value via stdin. wrangler reads stdin in non-interactive
+  // mode (it's a TTY check). Don't use --text — that flag doesn't
+  // exist on wrangler 4.100.0; it was introduced later. If you upgrade
+  // wrangler and want to switch to --text for robustness, also update
+  // .github/workflows/deploy.yml to match.
+  const result = spawnSync("wrangler", ["secret", "put", name], {
+    input: value,
+    stdio: ["pipe", "pipe", "pipe"],
+    encoding: "utf8",
+    env: { ...process.env },
+  });
 
   if (result.status !== 0) {
     const stderr = result.stderr?.trim() ?? "";
