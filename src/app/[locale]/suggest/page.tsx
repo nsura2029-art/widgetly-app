@@ -4,8 +4,8 @@ import { breadcrumbJsonLd } from "@/lib/seo-schemas";
 import { SITE_CONFIG } from "@/lib/constants";
 import { SUGGESTIONS, statusLabel } from "@/lib/suggestions-seed";
 import { SuggestClient } from "./suggest-client";
-import { isSupabaseConfigured } from "@/lib/supabase/server";
-import { readTopSuggestions } from "@/lib/supabase/suggestions";
+import { isD1Configured } from "@/lib/d1/server";
+import { readTopSuggestions } from "@/lib/d1/suggestions";
 
 export const metadata: Metadata = buildMetadata({
   title: "Suggest a Tool",
@@ -44,7 +44,7 @@ const jsonLd = breadcrumbJsonLd([
  * pre-materialized view; latency is sub-100ms in practice.
  */
 async function getTopSuggestions(limit = 4) {
-  if (isSupabaseConfigured()) {
+  if (isD1Configured()) {
     const live = await readTopSuggestions(limit);
     if (live.length > 0) {
       return live.map((s) => ({

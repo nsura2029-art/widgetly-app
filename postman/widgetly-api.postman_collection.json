@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "widgetly-api-2026-06",
     "name": "Widgetly API",
-    "description": "Public HTTP API for the Widgetly platform.\n\nEndpoints:\n  - GET    /api/openapi.json\n  - GET    /api/locale\n  - POST   /api/locale         (set user locale)\n  - DELETE /api/locale         (reset to default)\n  - POST   /api/waitlist       (join launch waitlist)\n  - POST   /api/suggest        (propose a tool to build)\n  - POST   /api/contact        (contact form)\n  - GET    /api/diag/supabase  (dev-only, 404 in prod)\n  - GET    /api/diag/consent   (dev-only, 404 in prod)\n\nAll requests accept JSON and return JSON. Base URL is the {{baseUrl}} variable on the active environment — point it at prod (https://widgetly.tech), a preview deploy, or http://localhost:8787 when running `pnpm preview` locally.\n\nThe OpenAPI spec served at GET /api/openapi.json is the authoritative source of truth for request/response shapes; this collection mirrors those shapes so Postman can validate them via the built-in test runner. If the API and this collection drift, update both at once.\n",
+    "description": "Public HTTP API for the Widgetly platform.\n\nEndpoints:\n  - GET    /api/openapi.json\n  - GET    /api/locale\n  - POST   /api/locale         (set user locale)\n  - DELETE /api/locale         (reset to default)\n  - POST   /api/waitlist       (join launch waitlist)\n  - POST   /api/suggest        (propose a tool to build)\n  - POST   /api/contact        (contact form)\n  - GET    /api/diag/d1       (dev-only, 404 in prod)\n  - GET    /api/diag/consent   (dev-only, 404 in prod)\n\nAll requests accept JSON and return JSON. Base URL is the {{baseUrl}} variable on the active environment — point it at prod (https://widgetly.tech), a preview deploy, or http://localhost:8787 when running `pnpm preview` locally.\n\nThe OpenAPI spec served at GET /api/openapi.json is the authoritative source of truth for request/response shapes; this collection mirrors those shapes so Postman can validate them via the built-in test runner. If the API and this collection drift, update both at once.\n",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
     "version": {
       "major": 1,
@@ -550,16 +550,16 @@
       "name": "Diagnostics (dev-only — returns 404 in prod)",
       "item": [
         {
-          "name": "GET /api/diag/supabase",
+          "name": "GET /api/diag/d1",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/diag/supabase",
+              "raw": "{{baseUrl}}/api/diag/d1",
               "host": ["{{baseUrl}}"],
-              "path": ["api", "diag", "supabase"]
+              "path": ["api", "diag", "d1"]
             },
-            "description": "Dev-only diagnostic endpoint. Returns whether SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are bound, the URL host (never the full URL), the key shape, and the result of a live `waitlist` head-count ping. **Returns 404 in production** (NODE_ENV guard inside the route). Useful when running `pnpm preview` locally to confirm your `.env.local` is being read correctly."
+            "description": "Dev-only diagnostic endpoint. Returns whether the D1 binding is present, plus a cheap COUNT(*) ping on the `waitlist` table to confirm migrations have been applied. **Returns 404 in production** (NODE_ENV guard inside the route). Useful when running `pnpm preview` locally to confirm the wrangler D1 binding is wired up."
           },
           "event": [
             {
@@ -569,9 +569,10 @@
                 "exec": [
                   "if (pm.response.status === 200) {",
                   "  const body = pm.response.json();",
-                  "  pm.test('supabase_configured is boolean', () => pm.expect(body.supabase_configured).to.be.a('boolean'));",
-                  "  pm.test('url_host is set when configured', () => {",
-                  "    if (body.supabase_configured) pm.expect(body.url_host).to.be.a('string');",
+                  "  pm.test('d1_configured is boolean', () => pm.expect(body.config.d1_configured).to.be.a('boolean'));",
+                  "  pm.test('ping.ok is boolean', () => pm.expect(body.ping.ok).to.be.a('boolean'));",
+                  "  pm.test('ping.count is a number when ok', () => {",
+                  "    if (body.ping.ok) pm.expect(body.ping.count).to.be.a('number');",
                   "  });",
                   "} else {",
                   "  pm.test('status is 404 in production (NODE_ENV guard)', () => pm.response.to.have.status(404));",

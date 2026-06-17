@@ -45,8 +45,9 @@
  *   - WAITLIST_KV                (set in wrangler.toml, not as a secret)
  */
 import { readFile } from "node:fs/promises";
-import { existsSync, readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { existsSync, readFileSync, statSync } from "node:fs";
+import { resolve, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
 
 const SECRETS_TO_PUSH = [
@@ -90,31 +91,83 @@ function loadEnvFile() {
     const path = resolve(process.cwd(), file);
     if (existsSync(path)) {
       console.log(`[setup-secrets] reading ${path}`);
-      return parseEnv(readFileSync(path));
+      // utf8 encoding — readFileSync without an encoding returns a
+      // Buffer, and Buffer.split doesn't exist (it's not the string
+      // method).
+      return parseEnv(readFileSync(path, "utf8"));
     }
   }
   console.log("[setup-secrets] no .env.local or .env found, falling back to process.env");
   return { ...process.env };
 }
 
+/**
+ * Resolve the absolute path to the local wrangler binary.
+ *
+ * Why not just `spawnSync("wrangler", ...)`?
+ *  - `wrangler` isn't guaranteed to be on the script's PATH. pnpm only
+ *    puts `node_modules/.bin/` on PATH for its own subcommands, not
+ *    for child processes the user runs (e.g. `pnpm setup:secrets`).
+ *  - On Windows the binary is `wrangler.cmd`, not `wrangler`. Sourcing
+ *    it from PATH without the extension fails silently.
+ *  - On macOS/Linux it's a symlink at `node_modules/.bin/wrangler`
+ *    pointing to the JS entry. Node can spawn that directly.
+ *
+ * We look in `node_modules/.bin/` relative to CWD first (the common
+ * case — wrangler is a devDep), then fall back to whatever's on PATH
+ * so the script still works if someone has wrangler installed
+ * globally.
+ */
+function resolveWranglerBin() {
+  const candidates = [];
+  if (process.platform === "win32") {
+    candidates.push("wrangler.cmd", "wrangler.exe", "wrangler");
+  } else {
+    candidates.push("wrangler");
+  }
+  const localBinDir = resolve(process.cwd(), "node_modules", ".bin");
+  for (const name of candidates) {
+    const local = resolve(localBinDir, name);
+    if (existsSync(local)) return local;
+  }
+  // Fall back to PATH lookup — Node will resolve it via PATHEXT on
+  // Windows automatically.
+  return "wrangler";
+}
+
+const WRANGLER_BIN = resolveWranglerBin();
+
 function pushSecret(name, value) {
   if (!value) return "skip (empty)";
   if (DRY_RUN) return "dry-run";
 
-  const result = spawnSync(
-    "wrangler",
-    ["secret", "put", name, "--text", value],
-    {
-      stdio: ["ignore", "pipe", "pipe"],
-      encoding: "utf8",
-      env: { ...process.env },
-    }
-  );
+  // Pipe the value via stdin. wrangler reads stdin in non-interactive
+  // mode (it's a TTY check). Don't use --text — that flag doesn't
+  // exist on wrangler 4.100.0; it was introduced later. If you upgrade
+  // wrangler and want to switch to --text for robustness, also update
+  // .github/workflows/deploy.yml to match.
+  const result = spawnSync(WRANGLER_BIN, ["secret", "put", name], {
+    input: value,
+    stdio: ["pipe", "pipe", "pipe"],
+    encoding: "utf8",
+    env: { ...process.env },
+    shell: process.platform === "win32", // .cmd files need a shell on Windows
+  });
 
+  if (result.error) {
+    // Spawn-level error (binary not found, permission denied, etc.).
+    // result.status will be null in this case, which is what the user
+    // was seeing as "exit null".
+    throw new Error(
+      `could not spawn wrangler at ${WRANGLER_BIN}: ${result.error.message}\n` +
+        `If wrangler is missing, run \`pnpm install\` first.`
+    );
+  }
   if (result.status !== 0) {
     const stderr = result.stderr?.trim() ?? "";
+    const stdout = result.stdout?.trim() ?? "";
     throw new Error(
-      `wrangler secret put ${name} failed (exit ${result.status}): ${stderr}`
+      `wrangler secret put ${name} failed (exit ${result.status}): ${stderr || stdout}`
     );
   }
   return "ok";
@@ -122,6 +175,11 @@ function pushSecret(name, value) {
 
 async function main() {
   const env = loadEnvFile();
+
+  // Surface the wrangler binary path so cross-platform users can see
+  // what we resolved. If the path is wrong, the error message from
+  // pushSecret will be actionable.
+  console.log(`[setup-secrets] wrangler: ${WRANGLER_BIN}`);
 
   // Auth check — we need CLOUDFLARE_ACCOUNT_ID + CLOUDFLARE_API_TOKEN
   // for wrangler to authenticate. They live in the same .env.local.
