@@ -45,15 +45,21 @@ Owns the SEO surface of Widgetly: how the site is crawled, indexed, ranked, and 
 - Per-page title is set via `buildMetadata({ title })`. Don't append ` | Widgetly` manually; the layout's title template (`%s | Widgetly`) handles it.
 - OG/Twitter titles are appended by `buildMetadata` itself (those don't use the layout template).
 
-### JSON-LD
+### JSON-LD scoping
 
-- WebSite + SearchAction on home.
-- Organization + sameAs on home (only emit `sameAs` URLs that actually resolve).
-- SoftwareApplication on home (the platform).
-- WebApplication on every per-tool page.
-- WebPage + BreadcrumbList + ItemList on every per-category page.
-- FAQPage on any page with a visible FAQ section.
+- **WebSite + SearchAction** — emitted globally by the root [locale] layout. Site-wide identity, doesn't conflict with per-page schemas.
+- **Organization + sameAs** — emitted globally by the root layout. Site-wide identity. Only emit `sameAs` URLs that actually resolve.
+- **SoftwareApplication** — emitted **on the home page only**. Describes the platform as a whole. Per-tool pages already emit WebApplication for the specific tool — emitting both would be redundant and Google would have to pick one.
+- **WebApplication** — emitted **on every per-tool page** (powers rich results like "Try {tool name}").
+- **WebPage + BreadcrumbList + ItemList** — emitted **on every per-category page**.
+- **FAQPage** — emitted **on the home page only** (where the visible FAQ section is). Google guidelines require FAQPage schema to mirror visible FAQ content — emitting it on pages without a FAQ section is structured data spam and risks manual action.
 - All JSON-LD is server-rendered; no user input reaches the JSON string.
+
+### Domain & canonical URLs
+
+- **Canonical domain is `widgetly.tech`** (set in `SITE_CONFIG.url`). The legacy `widgetly.app` redirects to widgetly.tech at the Cloudflare edge, but every emitted URL (sitemap, canonical, JSON-LD `url` fields, OG, Twitter cards) must use widgetly.tech directly. Bouncing between domains during crawl wastes crawl budget and dilutes link equity.
+- **`SITE_CONFIG.email`** must match the canonical domain (`hello@widgetly.tech`). Used in `Organization.contactPoint`.
+- When updating domains: change `SITE_CONFIG.url` + `SITE_CONFIG.email` in one commit, then redeploy. Verify the live sitemap at `/en/sitemap.xml` and confirm `<loc>` URLs use the new domain before declaring done.
 
 ### Sitemap
 
