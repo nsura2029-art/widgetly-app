@@ -34,14 +34,14 @@ export default function BlogIndexPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(ldBlog) }}
       />
       <PageShell width="wide">
-        <header className="mx-auto max-w-2xl text-center">
+        <header>
           <span className="border-border/80 text-muted shadow-soft inline-flex items-center rounded-full border bg-white px-3 py-1 text-xs font-medium">
             Widgetly Blog
           </span>
           <h1 className="text-display-sm text-foreground sm:text-display-md mt-4 font-semibold tracking-tight">
             Product updates, guides, and curated best-of lists
           </h1>
-          <p className="text-muted mt-4 text-base sm:text-lg">
+          <p className="text-muted mt-4 max-w-2xl text-base sm:text-lg">
             Writing on AI tools, productivity, PDF, developer utilities, and everything in between.
             New posts weekly.
           </p>
