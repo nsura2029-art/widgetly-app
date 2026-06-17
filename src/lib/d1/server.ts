@@ -44,6 +44,16 @@ interface D1Database {
   batch<T = unknown>(statements: D1PreparedStatement[]): Promise<T[]>;
 }
 
+// OpenNext exposes Cloudflare bindings (env, cf, ctx) on the worker
+// isolate via this private symbol. Production worker.js sets it from
+// the `fetch(request, env, ctx)` handler; in `next dev` it's set by
+// `initOpenNextCloudflareForDev()` (already called in next.config.ts).
+//
+// We deliberately don't use `globalThis.DB` directly — Cloudflare's
+// `env` object isn't hung off globalThis; OpenNext exposes it via
+// this symbol so the bindings reach usercode without us needing to
+// thread them through the Next.js request lifecycle.
+import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { log } from "@/lib/log";
 
 /**
@@ -55,23 +65,35 @@ import { log } from "@/lib/log";
  * D1 via Miniflare. In CI we use `--remote` to point at the deployed
  * D1 for migration application.
  */
+/**
+ * Returns true iff the D1 binding (`DB`) is present on the current
+ * isolate. D1 is configured at deploy time via wrangler.toml
+ * `[[d1_databases]]`; there's no runtime toggle.
+ *
+ * Locally, `wrangler dev` (and our `pnpm preview`) wires up a local
+ * D1 via Miniflare. In CI we use `--remote` to point at the deployed
+ * D1 for migration application.
+ */
 export function isD1Configured(): boolean {
-  return Boolean((globalThis as unknown as { DB?: D1Database }).DB);
+  try {
+    const { env } = getCloudflareContext();
+    return Boolean((env as { DB?: D1Database })?.DB);
+  } catch {
+    return false;
+  }
 }
 
 /**
  * Returns the D1 binding for the current isolate. Throws if the
  * binding isn't present — caller should gate on `isD1Configured()`
  * first.
- *
- * No caching needed: the binding is a stable reference per isolate,
- * and reading it from globalThis on every call is essentially free.
  */
 export function getD1(): D1Database {
-  const db = (globalThis as unknown as { DB?: D1Database }).DB;
+  const { env } = getCloudflareContext();
+  const db = (env as { DB?: D1Database })?.DB;
   if (!db) {
     log.warn("d1.init", "binding missing", {
-      hint: "wrangler dev / wrangler deploy sets globalThis.DB via the [[d1_databases]] binding in wrangler.toml",
+      hint: "OpenNext sets globalThis[Symbol.for('__cloudflare-context__')].env from the worker fetch handler; the DB binding lives there",
     });
     throw new Error(
       "D1 binding missing. Configure [[d1_databases]] in wrangler.toml " +
