@@ -268,68 +268,82 @@ function MegaPanel({
   const subgroups = getSubgroups(category.slug);
 
   return (
-    // Outer wrapper is `fixed top-16 left-0 right-0 z-30` so the
-    // panel parks immediately below the sticky banner on screen.
-    // The actual menu content is inside, max-width container.
-    <div
-      onMouseEnter={onMouseEnter}
-      onMouseLeave={onMouseLeave}
-      className={cn(
-        "animate-fade-in fixed top-16 right-0 left-0 z-30",
-        "border-border/60 bg-popover/98 supports-[backdrop-filter]:bg-popover/85",
-        "border-b shadow-2xl backdrop-blur"
-      )}
-    >
-      <div id={id} role="menu" aria-label={category.name} className="container py-6">
-        <div className="mb-5 flex items-center justify-between gap-4 border-b pb-4">
-          <div className="flex items-center gap-2">
-            <span className="bg-primary/10 text-primary inline-flex h-7 w-7 items-center justify-center rounded-md">
-              <Icon className="h-4 w-4" aria-hidden="true" />
-            </span>
-            <span className="text-foreground text-sm font-semibold">{category.name}</span>
-            <span className="text-muted-foreground text-xs">{countLabel}</span>
-          </div>
-          <Link
-            href={`/tools/${category.slug}`}
-            role="menuitem"
-            onClick={onLinkClick}
-            className="text-primary hover:text-primary/80 inline-flex items-center gap-1 text-xs font-medium"
-          >
-            {browseLabel}
-          </Link>
-        </div>
-
-        {subgroups ? (
-          <div
-            className="grid gap-x-6 gap-y-6"
-            style={{
-              // Auto-fit columns: minimum 200px wide each, max as
-              // many as fit. On a 1280px container that's
-              // ~6 columns; on 1920px monitor, ~9 columns.
-              gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-            }}
-          >
-            {subgroups.map((group) => (
-              <SubgroupColumn
-                key={group.title}
-                group={group}
-                categorySlug={category.slug}
-                subIcons={subIcons}
-                onLinkClick={onLinkClick}
-              />
-            ))}
-          </div>
-        ) : (
-          // Fallback for any featured category that doesn't have
-          // explicit sub-groupings defined yet — render the flat
-          // `examples` list in a single column with category icon
-          // as a placeholder for each item.
-          <FallbackList
-            examples={category.examples}
-            categorySlug={category.slug}
-            onLinkClick={onLinkClick}
-          />
+    // Outer wrapper spans full viewport width and handles centering
+    // + pointer-events passthrough. The actual visible panel (with
+    // background, border, shadow) is the inner div, which is sized
+    // to its content via `w-fit max-w-[1280px]`. So when a category
+    // has only 2-3 subgroups, the panel shrinks to fit those columns
+    // instead of stretching across the whole viewport.
+    <div className="pointer-events-none fixed inset-x-0 top-16 z-30 flex justify-center">
+      <div
+        onMouseEnter={onMouseEnter}
+        onMouseLeave={onMouseLeave}
+        className={cn(
+          "animate-fade-in pointer-events-auto w-fit max-w-[1280px]",
+          "border-border/60 bg-popover/98 supports-[backdrop-filter]:bg-popover/85",
+          "rounded-b-xl border shadow-2xl backdrop-blur"
         )}
+      >
+        <div id={id} role="menu" aria-label={category.name} className="px-6 py-6">
+          <div className="mb-5 flex items-center justify-between gap-4 border-b pb-4">
+            <div className="flex items-center gap-2">
+              <span className="bg-primary/10 text-primary inline-flex h-7 w-7 items-center justify-center rounded-md">
+                <Icon className="h-4 w-4" aria-hidden="true" />
+              </span>
+              <span className="text-foreground text-sm font-semibold">{category.name}</span>
+              <span className="text-muted-foreground text-xs">{countLabel}</span>
+            </div>
+            <Link
+              href={`/tools/${category.slug}`}
+              role="menuitem"
+              onClick={onLinkClick}
+              className="text-primary hover:text-primary/80 inline-flex items-center gap-1 text-xs font-medium"
+            >
+              {browseLabel}
+            </Link>
+          </div>
+
+          {/*
+            Column layout: flex with fixed-width columns (200px) and
+            consistent gap-x-6 / gap-y-8. flex-wrap lets columns wrap
+            to a second row when the panel max-width is reached.
+
+            Why fixed-width columns instead of `grid auto-fit minmax`?
+              - `auto-fit` stretches every column to fill available
+                space, which on a 7-subgroup category at 1280px gives
+                6 thin columns (180px each). On a 3-subgroup category,
+                the 3 columns stretch to 400px each — too wide, with
+                dead space on the right.
+              - Fixed 200px columns are readable at any subgroup count.
+                3 subgroups = 660px panel (centered on screen).
+                7 subgroups wrap to 2 rows of 5+2.
+                gap-x-6 is constant regardless of how many columns.
+          */}
+          {subgroups ? (
+            <div className="flex flex-wrap items-start gap-x-6 gap-y-8">
+              {subgroups.map((group) => (
+                <div key={group.title} className="w-[200px] shrink-0">
+                  <SubgroupColumn
+                    group={group}
+                    categorySlug={category.slug}
+                    subIcons={subIcons}
+                    onLinkClick={onLinkClick}
+                  />
+                </div>
+              ))}
+            </div>
+          ) : (
+            // Fallback for any featured category that doesn't have
+            // explicit sub-groupings defined yet — render the flat
+            // `examples` list in a single column with category icon
+            // as a placeholder for each item.
+            <FallbackList
+              examples={category.examples}
+              categorySlug={category.slug}
+              onLinkClick={onLinkClick}
+            />
+          )}
+        </div>
       </div>
     </div>
   );
