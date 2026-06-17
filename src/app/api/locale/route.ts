@@ -22,10 +22,17 @@ import {
   type LocaleCode,
 } from "@/i18n/config";
 
-// Must be `edge` to access the Cloudflare KV binding at runtime.
-// The OpenNext adapter for Cloudflare injects the binding into
-// `globalThis` so we can read it from the route handler.
-export const runtime = "edge";
+// Node.js runtime. We previously used `edge` here to read the
+// Cloudflare KV binding via `globalThis.LOCALE_KV`, but Next.js 16's
+// Turbopack bundler fails to emit a separate server entrypoint for
+// edge-runtime API routes (every edge route gets the sentinel
+// "app-edge-has-no-entrypoint" in app-paths-manifest.json), which
+// makes the OpenNext bundle crash at runtime with
+// `TypeError: Cannot read properties of undefined (reading 'default')`
+// in `loadComponentsImpl`. The KV write is null-guarded below, so
+// switching to `nodejs` just makes the KV write a no-op when the
+// binding isn't present — cookies still drive the render path.
+export const runtime = "nodejs";
 
 interface KVNamespace {
   put(k: string, v: string, opts?: { expirationTtl?: number }): Promise<void>;
