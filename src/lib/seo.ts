@@ -53,6 +53,17 @@ export function buildMetadata({
   publishedTime,
   noIndex = false,
 }: SeoOptions = {}): Metadata {
+  // The [locale] layout applies a title template (`%s | Widgetly`)
+  // to every page's <title>. If we also append the brand here,
+  // the rendered title becomes "X | Widgetly | Widgetly".
+  //
+  // For <title>: pass the raw title (or site name when missing);
+  // the layout template appends the brand once.
+  //
+  // For OG / Twitter: those don't use the layout template, so we
+  // append the brand explicitly to make social-share cards
+  // self-identifying.
+  const pageTitle = title ?? `${SITE_CONFIG.name} — ${SITE_CONFIG.tagline}`;
   const fullTitle = title
     ? `${title} | ${SITE_CONFIG.name}`
     : `${SITE_CONFIG.name} — ${SITE_CONFIG.tagline}`;
@@ -66,7 +77,9 @@ export function buildMetadata({
   const allKeywords = [...(keywords ?? []), ...SITE_CONFIG.keywords].join(", ");
 
   return {
-    title: fullTitle,
+    // Use pageTitle (no appended brand) — the [locale] layout's
+    // title template applies ` | Widgetly` once.
+    title: pageTitle,
     description: desc,
     keywords: allKeywords,
     authors: [{ name: SITE_CONFIG.name, url: SITE_CONFIG.url }],
