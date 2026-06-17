@@ -280,7 +280,7 @@ function MegaPanel({
         "border-b shadow-2xl backdrop-blur"
       )}
     >
-      <div id={id} role="menu" aria-label={category.name} className="container max-w-[120rem] py-6">
+      <div id={id} role="menu" aria-label={category.name} className="container py-6">
         <div className="mb-5 flex items-center justify-between gap-4 border-b pb-4">
           <div className="flex items-center gap-2">
             <span className="bg-primary/10 text-primary inline-flex h-7 w-7 items-center justify-center rounded-md">
