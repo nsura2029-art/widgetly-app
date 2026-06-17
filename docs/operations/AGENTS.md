@@ -2,6 +2,8 @@
 
 Owns pnpm scripts, common command sequences, deploy workflow, and troubleshooting.
 
+> **DOX scope.** This is a child of the root [`AGENTS.md`](../../AGENTS.md). **Read the root first** for the Core DOX contract (Read Before Editing, Update After Editing, Closeout). The root's Child DOX Index lists this file as the owner of pnpm scripts and operational workflows. The "Ownership" section below enumerates which surfaces this child contract governs. When you add or change a script or workflow, update this file.
+
 ---
 
 ## Purpose

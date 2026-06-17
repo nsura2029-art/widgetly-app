@@ -2,6 +2,8 @@
 
 Owns the Cloudflare D1 persistence layer for Widgetly: schema, migrations, query helpers, and operational CLI.
 
+> **DOX scope.** This is a child of the root [`AGENTS.md`](../../AGENTS.md). **Read the root first** for the Core DOX contract (Read Before Editing, Update After Editing, Closeout). The root's Child DOX Index lists this file as the owner of the D1 surface. The "Ownership" section below enumerates which files, scripts, and operations this child contract governs. When you change schema, migrations, or query helpers, update this file.
+
 ---
 
 ## Purpose

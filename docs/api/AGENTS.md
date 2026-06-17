@@ -2,6 +2,8 @@
 
 Owns every route under `src/app/api/`: endpoints, request/response shapes, error codes, runtime notes.
 
+> **DOX scope.** This is a child of the root [`AGENTS.md`](../../AGENTS.md). **Read the root first** for the Core DOX contract (Read Before Editing, Update After Editing, Closeout). The root's Child DOX Index lists this file as the owner of the API surface. The "Ownership" section below enumerates which routes and supporting files this child contract governs. When you add or change an endpoint, update this file's Endpoint reference + OpenAPI spec + Postman collection.
+
 ---
 
 ## Purpose

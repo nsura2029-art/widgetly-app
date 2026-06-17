@@ -2,6 +2,8 @@
 
 Owns how secrets are created, stored, rotated, and consumed across local dev, CI, and Cloudflare Workers.
 
+> **DOX scope.** This is a child of the root [`AGENTS.md`](../../AGENTS.md). **Read the root first** for the Core DOX contract (Read Before Editing, Update After Editing, Closeout). The root's Child DOX Index lists this file as the owner of the secrets lifecycle. The "Ownership" section below enumerates which files and tools this child contract governs. When you add, rotate, or remove any secret, update this file's Secret registry.
+
 ---
 
 ## Purpose
