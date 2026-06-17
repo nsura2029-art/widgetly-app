@@ -110,10 +110,11 @@ export function PageShell({
         //
         // Vertical padding is split: pt-* (smaller, breadcrumb already
         // provides visual separation) + pb-* (larger, breathing room
-        // before footer / next section). This was previously symmetric
-        // py-12 sm:py-16 md:py-20 which produced ~80px of dead space
-        // between the breadcrumb and the page content on desktop.
-        "container pt-6 pb-12 sm:pt-8 sm:pb-16 md:pt-10 md:pb-20",
+        // before footer / next section). Tuned to match the gap above
+        // the breadcrumb (pt-6 on the parent <main>) so the rhythm is
+        // consistent across the page: header | gap | breadcrumb |
+        // gap | content | ... | footer.
+        "container pt-6 pb-12 sm:pt-6 sm:pb-16 md:pt-6 md:pb-20",
         className
       )}
     >

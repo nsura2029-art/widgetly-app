@@ -25,7 +25,7 @@ export function SocialProof() {
   return (
     <section
       aria-labelledby="social-proof-title"
-      className="border-border/60 bg-muted/5 relative border-t py-6 sm:py-10 lg:py-12"
+      className="border-border/60 bg-muted/5 relative border-t py-6 sm:py-8 lg:py-10"
     >
       <div className="container">
         <FadeIn>
