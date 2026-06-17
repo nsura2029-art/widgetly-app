@@ -372,7 +372,7 @@ function SubgroupColumn({
               item={item}
               Icon={subIcons[item.name] ?? getIcon("Sparkles")}
               accent={group.accent}
-              href={`/tools/${categorySlug}#${toAnchor(item.name)}`}
+              href={`/tools/${categorySlug}/${toAnchor(item.name)}`}
               onClick={onLinkClick}
             />
           </li>
@@ -443,7 +443,7 @@ function FallbackList({
             item={{ name, icon: "Sparkles" }}
             Icon={getIcon("Sparkles")}
             accent="blue"
-            href={`/tools/${categorySlug}#${toAnchor(name)}`}
+            href={`/tools/${categorySlug}/${toAnchor(name)}`}
             onClick={onLinkClick}
           />
         </li>

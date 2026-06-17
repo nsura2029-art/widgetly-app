@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import { SITE_CONFIG } from "@/lib/constants";
 import { BLOG_POSTS } from "@/lib/blog";
 import { TOOLS_CATEGORIES } from "@/lib/tools-categories";
+import { getAllToolPages } from "@/lib/tools-pages";
 import { SUGGESTIONS } from "@/lib/suggestions-seed";
 
 // Force static export for sitemap when using `output: export`.
@@ -66,6 +67,17 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: now,
       changeFrequency: "monthly" as const,
       priority: 0.8,
+    })),
+    // Per-tool programmatic-SEO pages — one URL per sub-tool
+    // across every category. Each page has unique title/H1/meta
+    // and WebApplication JSON-LD. Priority 0.7 (below category
+    // pages at 0.8) because Google tends to crawl the hub pages
+    // first and discover the leaves via internal links.
+    ...getAllToolPages().map((t) => ({
+      url: `${base}/tools/${t.categorySlug}/${t.slug}`,
+      lastModified: now,
+      changeFrequency: "monthly" as const,
+      priority: 0.7,
     })),
     {
       url: `${base}/help`,
