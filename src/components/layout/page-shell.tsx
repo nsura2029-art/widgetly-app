@@ -37,9 +37,11 @@ import { cn } from "@/lib/utils";
  *  - The layout already reserves `pt-16` to clear the sticky header. The
  *    breadcrumb lives between the header and <main>, so it scrolls under
  *    the sticky header normally.
- *  - Vertical padding is responsive: `py-12` on mobile, `py-20` from
- *    `md:` up. This matches the rhythm the marketing/landing sections
- *    were tuned to.
+ *  - Vertical padding is asymmetric: smaller on top (the breadcrumb
+ *    band already provides the visual break — adding 80px more felt
+ *    like dead space), larger on the bottom for separation before the
+ *    footer / next section. Tuned to feel tight under the breadcrumb
+ *    and breathing before what comes next.
  */
 export type PageShellWidth = "default" | "wide" | "narrow" | "full";
 
@@ -105,7 +107,13 @@ export function PageShell({
       className={cn(
         // Tailwind v4's `.container` is 100% width with horizontal padding
         // that scales with the viewport (1rem -> 2rem). It caps at 80rem.
-        "container py-12 sm:py-16 md:py-20",
+        //
+        // Vertical padding is split: pt-* (smaller, breadcrumb already
+        // provides visual separation) + pb-* (larger, breathing room
+        // before footer / next section). This was previously symmetric
+        // py-12 sm:py-16 md:py-20 which produced ~80px of dead space
+        // between the breadcrumb and the page content on desktop.
+        "container pt-6 pb-12 sm:pt-8 sm:pb-16 md:pt-10 md:pb-20",
         className
       )}
     >
