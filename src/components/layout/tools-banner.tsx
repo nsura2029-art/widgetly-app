@@ -7,6 +7,7 @@ import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { getIcon } from "@/lib/icons";
 import { TOOLS_CATEGORIES } from "@/lib/tools-categories";
+import { type Subgroup, type SubTool, getSubgroups } from "@/lib/tools-subgroups";
 import { cn } from "@/lib/utils";
 
 /**
@@ -36,10 +37,23 @@ const FEATURED_SLUGS = [
  * components inside render functions (each render would create
  * a new component identity, resetting state). Resolving once
  * here gives us stable references and avoids the warning.
+ *
+ * `SubIcon` is a map of sub-tool-name → icon component, used by
+ * the mega-menu panel. Each category only resolves icons for
+ * its own sub-tools.
  */
 const FEATURED = FEATURED_SLUGS.map((slug) => {
   const cat = TOOLS_CATEGORIES.find((c) => c.slug === slug)!;
-  return { ...cat, Icon: getIcon(cat.icon) };
+  const subgroups = getSubgroups(slug);
+  const subIcons: Record<string, ReturnType<typeof getIcon>> = {};
+  if (subgroups) {
+    for (const g of subgroups) {
+      for (const item of g.items) {
+        subIcons[item.name] = getIcon(item.icon);
+      }
+    }
+  }
+  return { ...cat, Icon: getIcon(cat.icon), subIcons };
 });
 
 /** Convert a sub-tool display name to an anchor id. Matches the
@@ -52,212 +66,333 @@ function toAnchor(name: string): string {
     .replace(/^-+|-+$/g, "");
 }
 
+const MEGA_PANEL_ID = "tools-mega-panel";
+
 /**
  * Sticky, themed band that sits below the page header and above
  * the page content. Replaces the per-page breadcrumb.
  *
  * Layout:
- *  - Background spans the full viewport width (same as header) so
- *    the band reads as a continuous global utility surface. The
- *    chip row is wrapped in a container so the chips themselves
- *    stay aligned with the rest of the page.
- *  - sticky top-16 z-40: parks the band directly under the sticky
- *    header. When the user scrolls, both bands are visible and
- *    the user can switch categories without scrolling back up.
+ *  - Background spans the full viewport width (same as header)
+ *    so the band reads as a continuous global utility surface.
+ *    The chip row inside is wrapped in a container so the chips
+ *    themselves stay aligned with the rest of the page.
+ *  - sticky top-16 z-40: parks the band directly under the
+ *    sticky header.
  *  - bg-primary-50: the brand theme color, very light. Distinct
- *    from the white header above (bg-background) and the white
- *    page content below, so the band reads as its own layer.
- *  - backdrop-blur: keeps the band feeling "frosted" over content
- *    that scrolls under it.
+ *    from the white header above and the white page content
+ *    below, so the band reads as its own layer.
+ *  - backdrop-blur: keeps the band feeling "frosted" over
+ *    content that scrolls under it.
  *
- * Hover dropdown (the key UX):
- *  - Each chip is a wrapper around the category link. On
- *    `mouseenter`, we open a panel anchored to that chip.
- *  - The panel previews up to 8 sub-tools (the `examples` array
- *    from TOOLS_CATEGORIES) plus a "Browse all N tools →" footer.
- *  - We close on `mouseleave` from either the chip or the panel,
- *    with a 120ms grace period so the user can traverse the gap
- *    between the chip and the panel without it snapping shut.
- *  - Keyboard: focus opens, Tab moves into the panel, Escape
- *    closes (handled by blurring the active element).
- *  - Click on the chip itself still navigates to
- *    `/tools/[slug]` (the category landing page).
+ * Interaction (mega menu, click-driven):
+ *  - Each chip is a `<button>` (not a link). Click toggles the
+ *    mega panel. Hover also opens it for desktop discovery.
+ *  - Mega panel renders full-width below the chip row, anchored
+ *    to the nav. It uses a multi-column grid (1col mobile →
+ *    5-7col desktop depending on category) of sub-groupings,
+ *    each with an uppercase title and a list of sub-tools
+ *    (icon + name).
+ *  - Click-outside (anywhere outside the panel) closes it.
+ *  - Esc closes it.
+ *  - 120ms close delay on mouseleave so the cursor can traverse
+ *    the gap between chip and panel without it snapping shut.
  *
- * Trade-offs:
- *  - We do NOT implement click-to-toggle. Hover-driven discovery
- *    is the dominant desktop pattern for these surfaces
- *    (smallpdf.com, cloudconvert.com, etc.) and matches what the
- *    user asked for. Mobile uses the same code path but the chip
- *    becomes tappable — that's acceptable because the dropdown
- *    just shows more links, all of which are also reachable via
- *    the underlying link.
+ * Accessibility:
+ *  - Chip is a button with aria-expanded + aria-controls.
+ *  - Panel has role="menu" with menuitem children.
+ *  - Backdrop click target is invisible but covers the rest of
+ *    the screen so users can click outside to close.
  */
 export function ToolsBanner() {
   const t = useTranslations("toolsBanner");
   const [openSlug, setOpenSlug] = React.useState<string | null>(null);
   const closeTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  const navRef = React.useRef<HTMLElement>(null);
 
-  function cancelClose() {
+  const cancelClose = React.useCallback(() => {
     if (closeTimer.current) {
       clearTimeout(closeTimer.current);
       closeTimer.current = null;
     }
-  }
+  }, []);
 
-  function open(slug: string) {
+  const open = React.useCallback(
+    (slug: string) => {
+      cancelClose();
+      setOpenSlug(slug);
+    },
+    [cancelClose]
+  );
+
+  const close = React.useCallback(() => {
     cancelClose();
-    setOpenSlug(slug);
-  }
+    setOpenSlug(null);
+  }, [cancelClose]);
 
-  function scheduleClose() {
+  const scheduleClose = React.useCallback(() => {
     cancelClose();
     closeTimer.current = setTimeout(() => setOpenSlug(null), 120);
-  }
+  }, [cancelClose]);
+
+  // Esc closes the panel.
+  React.useEffect(() => {
+    if (openSlug === null) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") close();
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [openSlug, close]);
+
+  const openCat = openSlug ? FEATURED.find((c) => c.slug === openSlug) : undefined;
 
   return (
-    <nav
-      aria-label={t("ariaLabel")}
-      onMouseLeave={scheduleClose}
-      className={cn(
-        // Full-bleed themed band, sticks under the header.
-        "bg-primary-50/85 supports-[backdrop-filter]:bg-primary-50/70",
-        "border-primary-100/80 sticky top-16 z-40 border-b backdrop-blur"
-      )}
-    >
-      {/* Container inside so the chip row stays aligned with the
-          rest of the page content (matches header alignment). */}
-      <div className="container flex items-center gap-1 overflow-x-auto py-2">
-        <span className="text-primary/70 hidden shrink-0 px-2 text-[11px] font-semibold tracking-wider uppercase sm:inline">
-          {t("label")}
-        </span>
-        {FEATURED.map((cat) => {
-          const Icon = cat.Icon;
-          const isOpen = openSlug === cat.slug;
-          return (
-            <div
-              key={cat.slug}
-              className="relative shrink-0"
-              onMouseEnter={() => open(cat.slug)}
-              onFocus={() => open(cat.slug)}
-              onBlur={(e) => {
-                // Only close if focus left the wrapper entirely
-                // (otherwise tabbing into the dropdown closes it).
-                if (!e.currentTarget.contains(e.relatedTarget as Node)) {
-                  scheduleClose();
-                }
-              }}
-            >
-              <Link
-                href={`/tools/${cat.slug}`}
-                aria-haspopup="menu"
-                aria-expanded={isOpen}
-                className={cn(
-                  "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-colors",
-                  isOpen
-                    ? "bg-background text-foreground shadow-sm"
-                    : "text-foreground/75 hover:bg-background hover:text-foreground"
-                )}
-              >
-                <Icon className="h-3.5 w-3.5" aria-hidden="true" />
-                <span className="whitespace-nowrap">{cat.name}</span>
-                <ChevronDown
-                  className={cn("h-3 w-3 opacity-50 transition-transform", isOpen && "rotate-180")}
-                  aria-hidden="true"
-                />
-              </Link>
+    <>
+      <nav
+        ref={navRef}
+        aria-label={t("ariaLabel")}
+        onMouseLeave={scheduleClose}
+        className={cn(
+          "bg-primary-50/85 supports-[backdrop-filter]:bg-primary-50/70",
+          "border-primary-100/80 sticky top-16 z-40 border-b backdrop-blur"
+        )}
+      >
+        <div className="container flex items-center gap-1 overflow-x-auto py-2">
+          <span className="text-primary/70 hidden shrink-0 px-2 text-[11px] font-semibold tracking-wider uppercase sm:inline">
+            {t("label")}
+          </span>
+          {FEATURED.map((cat) => {
+            const Icon = cat.Icon;
+            const isOpen = openSlug === cat.slug;
+            return (
+              <div key={cat.slug} className="relative shrink-0" onMouseEnter={() => open(cat.slug)}>
+                <button
+                  type="button"
+                  aria-haspopup="menu"
+                  aria-expanded={isOpen}
+                  aria-controls={MEGA_PANEL_ID}
+                  onClick={() => (isOpen ? close() : open(cat.slug))}
+                  className={cn(
+                    "inline-flex cursor-pointer items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-colors",
+                    isOpen
+                      ? "bg-background text-foreground shadow-sm"
+                      : "text-foreground/75 hover:bg-background hover:text-foreground"
+                  )}
+                >
+                  <Icon className="h-3.5 w-3.5" aria-hidden="true" />
+                  <span className="whitespace-nowrap">{cat.name}</span>
+                  <ChevronDown
+                    className={cn(
+                      "h-3 w-3 opacity-50 transition-transform",
+                      isOpen && "rotate-180"
+                    )}
+                    aria-hidden="true"
+                  />
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      </nav>
 
-              {isOpen ? (
-                <CategoryPanel
-                  category={cat}
-                  Icon={cat.Icon}
-                  browseLabel={t("browseAll", { count: cat.count })}
-                  countLabel={t("toolsCount", { count: cat.count })}
-                  onMouseEnter={cancelClose}
-                  onMouseLeave={scheduleClose}
-                  onLinkClick={() => setOpenSlug(null)}
-                />
-              ) : null}
-            </div>
-          );
-        })}
-      </div>
-    </nav>
+      {/* Mega menu panel — rendered as a sibling of the nav so it
+          sits above page content via the nav's z-40 stack. It's
+          only mounted while open. */}
+      {openCat ? (
+        <MegaPanel
+          id={MEGA_PANEL_ID}
+          category={openCat}
+          Icon={openCat.Icon}
+          subIcons={openCat.subIcons}
+          browseLabel={t("browseAll", { count: openCat.count })}
+          countLabel={t("toolsCount", { count: openCat.count })}
+          onLinkClick={close}
+          onMouseEnter={cancelClose}
+          onMouseLeave={scheduleClose}
+        />
+      ) : null}
+    </>
   );
 }
 
 /**
- * The dropdown panel anchored below a category chip. Kept as a
- * separate component so the JSX above stays readable.
+ * Full-width mega panel anchored to the banner. Positions itself
+ * just below the sticky banner via `top-16` (header height).
+ * Stretches full viewport width but uses `container` inside so
+ * the content aligns with the rest of the page.
  */
-function CategoryPanel({
+function MegaPanel({
+  id,
   category,
   Icon,
+  subIcons,
   browseLabel,
   countLabel,
+  onLinkClick,
   onMouseEnter,
   onMouseLeave,
-  onLinkClick,
 }: {
+  id: string;
   category: (typeof FEATURED)[number];
   Icon: React.ComponentType<{ className?: string }>;
+  subIcons: Record<string, ReturnType<typeof getIcon>>;
   browseLabel: string;
   countLabel: string;
+  onLinkClick: () => void;
   onMouseEnter: () => void;
   onMouseLeave: () => void;
-  onLinkClick: () => void;
 }) {
-  // Cap the preview at 8 sub-tools — enough to fill a 2-col grid
-  // without becoming a wall. The full list is one click away.
-  const examples = category.examples.slice(0, 8);
+  const subgroups = getSubgroups(category.slug);
 
   return (
+    // Outer wrapper is `fixed top-16 left-0 right-0 z-30` so the
+    // panel parks immediately below the sticky banner on screen.
+    // The actual menu content is inside, max-width container.
     <div
-      role="menu"
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
       className={cn(
-        "bg-popover text-popover-foreground border-border/60 animate-fade-in",
-        "absolute top-full left-0 z-50 mt-2 w-72 rounded-xl border p-3 shadow-xl"
+        "animate-fade-in fixed top-16 right-0 left-0 z-30",
+        "border-border/60 bg-popover/98 supports-[backdrop-filter]:bg-popover/85",
+        "border-b shadow-2xl backdrop-blur"
       )}
     >
-      <div className="mb-2 flex items-center justify-between gap-2 border-b pb-2">
-        <span className="text-foreground inline-flex items-center gap-1.5 text-xs font-semibold">
-          <Icon className="text-primary h-3.5 w-3.5" aria-hidden="true" />
-          {category.name}
-        </span>
-        <span className="text-muted-foreground text-[11px]">{countLabel}</span>
-      </div>
+      <div id={id} role="menu" aria-label={category.name} className="container max-w-[120rem] py-6">
+        <div className="mb-5 flex items-center justify-between gap-4 border-b pb-4">
+          <div className="flex items-center gap-2">
+            <span className="bg-primary/10 text-primary inline-flex h-7 w-7 items-center justify-center rounded-md">
+              <Icon className="h-4 w-4" aria-hidden="true" />
+            </span>
+            <span className="text-foreground text-sm font-semibold">{category.name}</span>
+            <span className="text-muted-foreground text-xs">{countLabel}</span>
+          </div>
+          <Link
+            href={`/tools/${category.slug}`}
+            role="menuitem"
+            onClick={onLinkClick}
+            className="text-primary hover:text-primary/80 inline-flex items-center gap-1 text-xs font-medium"
+          >
+            {browseLabel}
+          </Link>
+        </div>
 
-      <ul className="grid grid-cols-2 gap-x-1 gap-y-0.5">
-        {examples.map((tool) => (
-          <li key={tool}>
-            <Link
-              href={`/tools/${category.slug}#${toAnchor(tool)}`}
-              role="menuitem"
+        {subgroups ? (
+          <div
+            className="grid gap-x-6 gap-y-6"
+            style={{
+              // Auto-fit columns: minimum 200px wide each, max as
+              // many as fit. On a 1280px container that's
+              // ~6 columns; on 1920px monitor, ~9 columns.
+              gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+            }}
+          >
+            {subgroups.map((group) => (
+              <SubgroupColumn
+                key={group.title}
+                group={group}
+                categorySlug={category.slug}
+                subIcons={subIcons}
+                onLinkClick={onLinkClick}
+              />
+            ))}
+          </div>
+        ) : (
+          // Fallback for any featured category that doesn't have
+          // explicit sub-groupings defined yet — render the flat
+          // `examples` list in a single column with category icon
+          // as a placeholder for each item.
+          <FallbackList
+            examples={category.examples}
+            categorySlug={category.slug}
+            onLinkClick={onLinkClick}
+          />
+        )}
+      </div>
+    </div>
+  );
+}
+
+function SubgroupColumn({
+  group,
+  categorySlug,
+  subIcons,
+  onLinkClick,
+}: {
+  group: Subgroup;
+  categorySlug: string;
+  subIcons: Record<string, ReturnType<typeof getIcon>>;
+  onLinkClick: () => void;
+}) {
+  return (
+    <div>
+      <h3 className="text-muted-foreground mb-2 text-[11px] font-semibold tracking-wider uppercase">
+        {group.title}
+      </h3>
+      <ul className="space-y-0.5">
+        {group.items.map((item) => (
+          <li key={item.name}>
+            <SubToolLink
+              item={item}
+              Icon={subIcons[item.name] ?? getIcon("Sparkles")}
+              href={`/tools/${categorySlug}#${toAnchor(item.name)}`}
               onClick={onLinkClick}
-              className={cn(
-                "text-foreground/85 hover:bg-muted hover:text-foreground",
-                "block truncate rounded-md px-2 py-1 text-xs transition-colors"
-              )}
-              title={tool}
-            >
-              {tool}
-            </Link>
+            />
           </li>
         ))}
       </ul>
-
-      <Link
-        href={`/tools/${category.slug}`}
-        role="menuitem"
-        onClick={onLinkClick}
-        className={cn(
-          "text-primary hover:text-primary/80",
-          "mt-2 inline-flex items-center gap-1 border-t pt-2 text-xs font-medium"
-        )}
-      >
-        {browseLabel}
-      </Link>
     </div>
+  );
+}
+
+function SubToolLink({
+  item,
+  Icon,
+  href,
+  onClick,
+}: {
+  item: SubTool;
+  Icon: React.ComponentType<{ className?: string }>;
+  href: string;
+  onClick: () => void;
+}) {
+  return (
+    <Link
+      href={href}
+      role="menuitem"
+      onClick={onClick}
+      className={cn(
+        "text-foreground/85 hover:bg-muted hover:text-foreground",
+        "inline-flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-xs transition-colors"
+      )}
+    >
+      <Icon className="text-muted-foreground h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+      <span className="truncate">{item.name}</span>
+    </Link>
+  );
+}
+
+function FallbackList({
+  examples,
+  categorySlug,
+  onLinkClick,
+}: {
+  examples: readonly string[];
+  categorySlug: string;
+  onLinkClick: () => void;
+}) {
+  return (
+    <ul className="grid grid-cols-2 gap-x-6 gap-y-0.5 md:grid-cols-3">
+      {examples.map((name) => (
+        <li key={name}>
+          <SubToolLink
+            item={{ name, icon: "Sparkles" }}
+            Icon={getIcon("Sparkles")}
+            href={`/tools/${categorySlug}#${toAnchor(name)}`}
+            onClick={onLinkClick}
+          />
+        </li>
+      ))}
+    </ul>
   );
 }
