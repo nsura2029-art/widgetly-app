@@ -7,7 +7,7 @@ import { Inter } from "next/font/google";
 import { routing } from "../../../next-intl.config";
 import { isSupportedLocale, getDirection } from "@/i18n/config";
 import ClientHeader from "@/components/layout/client-header";
-import { BreadcrumbNav } from "@/components/layout/breadcrumb-nav";
+import { ToolsBanner } from "@/components/layout/tools-banner";
 import { Footer } from "@/components/layout/footer";
 import { ConsentProvider } from "@/lib/consent/useConsent";
 import { ConsentBanner } from "@/components/consent/ConsentBanner";
@@ -165,7 +165,7 @@ export default async function LocaleLayout({
             <ClientHeader />
 
             <main id="main" className="pt-6">
-              <BreadcrumbNav />
+              <ToolsBanner />
               {children}
             </main>
             <Footer />
