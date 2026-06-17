@@ -47,3 +47,26 @@ enabled = true
 # LOCALE_KV        — KV binding (locale preference persistence)
 # ANALYTICS_TOKEN  — Cloudflare Web Analytics token (set in dashboard)
 # ---------------------------------------------------------------------------
+
+# ---------------------------------------------------------------------------
+# D1: waitlist + tool suggestions persistence.
+#
+# Replaces the previous Supabase integration. D1 lives inside Cloudflare's
+# edge network, so writes are 5-20ms vs the 100-300ms round-trip to
+# Supabase we had before.
+#
+# Setup (one-time, on your local machine):
+#   1. pnpm exec wrangler d1 create widgetly
+#      → prints a database_id; paste it below.
+#   2. pnpm db:migrate:remote
+#      → applies migrations/0001_init.sql to the deployed D1.
+#
+# Migrations are SQL files in /migrations. Add a new NNNN_*.sql file and
+# run `pnpm db:migrate:remote` to apply. Never edit applied migrations.
+#
+# The binding `DB` is what the code reads via (globalThis as { DB?: D1Database }).DB.
+# ---------------------------------------------------------------------------
+[[d1_databases]]
+binding = "DB"
+database_name = "widgetly"
+database_id = "REPLACE_AFTER_wrangler_d1_create_widgetly"
