@@ -52,5 +52,22 @@ next-env.d.ts
 #  never commit them -- they have no value in the repo history)
 tmp/
 
+# ---------------------------------------------------------------------------
+# Swagger UI vendor assets (regenerated from node_modules/swagger-ui-dist/
+# by scripts/sync-swagger-assets.mjs on every `prebuild`). Tracking them in
+# git produces a 99k-line noise diff every time someone runs pnpm build,
+# because the committed copy is pretty-printed and the canonical copy from
+# node_modules is minified (same bytes, different line breaks).
+#
+# Two custom files in this directory are re-included below and DO need to
+# be tracked:
+#   - widgetly-initializer.js (loaded by /[locale]/docs/page.tsx)
+#   - swagger-initializer.js (legacy petstore example — kept around for
+#     reference; not loaded by the docs page)
+# ---------------------------------------------------------------------------
+public/api-docs/*
+!/public/api-docs/widgetly-initializer.js
+!/public/api-docs/swagger-initializer.js
+
 # os
 Thumbs.db
