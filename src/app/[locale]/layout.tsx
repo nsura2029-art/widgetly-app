@@ -13,8 +13,7 @@ import { ConsentProvider } from "@/lib/consent/useConsent";
 import { ConsentBanner } from "@/components/consent/ConsentBanner";
 import { regionFromCountry, regionFromLocale } from "@/lib/consent/region";
 
-import { websiteJsonLd, organizationJsonLd, softwareApplicationJsonLd, faqJsonLd } from "@/lib/seo";
-import { FAQS } from "@/lib/constants";
+import { websiteJsonLd, organizationJsonLd } from "@/lib/seo";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -119,11 +118,26 @@ export default async function LocaleLayout({
   }
 
   // JSON-LD entities (these are locale-agnostic for now, but could
-  // be parameterized in the future)
+  // be parameterized in the future).
+  //
+  // FAQPage + SoftwareApplication are NOT emitted here. They're
+  // page-specific and live where they're actually meaningful:
+  //   - FAQPage: on the home page (the only page with a visible
+  //     FAQ section). Per Google guidelines, FAQPage schema must
+  //     match visible FAQ content; emitting it on every page
+  //     would be misleading and could be flagged as structured
+  //     data spam.
+  //   - SoftwareApplication: on the home page (the platform as a
+  //     whole). Per-tool pages already emit WebApplication via
+  //     tools/[category]/[tool]/page.tsx — emitting both
+  //     SoftwareApplication (platform) and WebApplication (tool)
+  //     on tool pages would be redundant.
+  //
+  // We DO emit WebSite (with SearchAction for sitelinks) and
+  // Organization globally because they're site-wide identity
+  // signals that don't conflict with per-page schemas.
   const jsonLdWebSite = websiteJsonLd();
   const jsonLdOrg = organizationJsonLd();
-  const jsonLdApp = softwareApplicationJsonLd();
-  const jsonLdFaq = faqJsonLd(FAQS);
 
   return (
     <html lang={locale} dir={dir} className={inter.variable} suppressHydrationWarning>
@@ -143,14 +157,6 @@ export default async function LocaleLayout({
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdOrg) }}
-        />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdApp) }}
-        />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdFaq) }}
         />
       </head>
       <body className="bg-background min-h-screen font-sans antialiased">

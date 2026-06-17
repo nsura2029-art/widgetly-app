@@ -11,7 +11,7 @@ export const SITE_CONFIG = {
     "Widgetly is the all-in-one AI tools platform: 500+ free online tools, calculators, converters, generators, PDF editors, and AI assistants — all in one fast, private, mobile-first platform.",
   longDescription:
     "Widgetly brings together hundreds of powerful tools, calculators, generators, converters, PDF utilities, and AI assistants into a single intelligent platform. Built for students, teachers, professionals, creators, developers, marketers, and businesses, Widgetly helps you work better and faster — for free.",
-  url: "https://widgetly.app",
+  url: "https://widgetly.tech",
   ogImage: "/og-image.svg",
   locale: "en_US",
   twitterHandle: "@widgetlyapp",
@@ -26,7 +26,7 @@ export const SITE_CONFIG = {
   github: "https://github.com/widgetly/widgetly",
   twitter: (typeof process !== "undefined" && process.env?.NEXT_PUBLIC_TWITTER_HANDLE) || undefined,
   discord: (typeof process !== "undefined" && process.env?.NEXT_PUBLIC_DISCORD_INVITE) || undefined,
-  email: "hello@widgetly.app",
+  email: "hello@widgetly.tech",
   keywords: [
     "AI tools",
     "online tools",
