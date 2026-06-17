@@ -124,7 +124,12 @@ export default function ClientHeader() {
             </Link>
           </Button>
           <Button asChild size="sm" className="h-9 rounded-lg">
-            <a href="#waitlist">{t("header.actions.joinWaitlist")}</a>
+            {/* Link to "/#waitlist" (not bare "#waitlist") so it works
+                from any page. Next.js handles both same-page scroll and
+                cross-page navigation+scroll correctly. The bare anchor
+                would just append the hash to the current URL (e.g.
+                /blog → /blog#waitlist) and find no target. */}
+            <Link href="/#waitlist">{t("header.actions.joinWaitlist")}</Link>
           </Button>
         </div>
 
@@ -184,12 +189,13 @@ export default function ClientHeader() {
               <Lightbulb className="h-4 w-4" aria-hidden="true" />
               {t("header.actions.suggestTool")}
             </Link>
-            <a
-              href="#waitlist"
+            <Link
+              href="/#waitlist"
+              onClick={() => setOpen(false)}
               className="bg-brand-gradient shadow-glow-sm hover:shadow-glow inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl px-5 text-sm font-medium text-white transition-all hover:brightness-110"
             >
               {t("header.actions.joinWaitlist")}
-            </a>
+            </Link>
           </div>
         </div>
       </div>
