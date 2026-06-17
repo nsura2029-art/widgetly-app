@@ -4,6 +4,51 @@ DOX hierarchy for the `widgetly-app` repository.
 
 ---
 
+## Core DOX contract
+
+**These instructions are binding for every agent (human or AI) that edits this repository.** If you only read one section of this document, read this one.
+
+### Read Before Editing
+
+1. **Read this root `AGENTS.md`.** It holds project-wide rules and the Child DOX Index.
+2. **Identify every file or folder you expect to touch.** Don't start editing before you know the full surface area.
+3. **Walk from the repository root to each target path.** Note every `AGENTS.md` along the way.
+4. **Read every `AGENTS.md` found along each route.** Use the closest one as the local contract; parent docs hold repo-wide rules.
+5. **If a parent `AGENTS.md` lists a child whose scope contains the target, read that child and continue from there.**
+6. **If docs conflict, the closer doc controls local work details — but no child doc may weaken DOX itself.**
+7. **Do not rely on memory.** Re-read the applicable DOX chain in the current session before editing. The docs may have changed since last time you looked.
+
+### Update After Editing
+
+Every meaningful change requires a DOX pass before the task is done. Update the closest owning `AGENTS.md` when a change affects any of:
+
+- **Purpose, scope, ownership, or responsibilities** of a subtree
+- **Durable structure, contracts, workflows, or operating rules** (e.g., a new `pnpm` script, a new env var, a new API route)
+- **Required inputs, outputs, permissions, constraints, side effects, or artifacts**
+- **User preferences** about behavior, communication, process, organization, or quality
+- **AGENTS.md itself** — creation, deletion, move, rename, or Child DOX Index contents
+
+Update **parent** docs when parent-level structure, ownership, workflow, or child index changes. Update **child** docs when parent changes alter local rules. Remove stale or contradictory text immediately.
+
+**Small edits that do not change behavior or contracts may leave docs unchanged, but the DOX pass still must happen.**
+
+### Closeout
+
+Before reporting a task complete:
+
+1. Re-check changed paths against the DOX chain (root → target).
+2. Update nearest owning docs and any affected parents or children.
+3. Refresh every affected Child DOX Index.
+4. Remove stale or contradictory text.
+5. Run existing verification (see "Verification" below) where relevant.
+6. Report any docs intentionally left unchanged and why.
+
+### Scope exclusions
+
+Do not create or update DOX docs for changes confined to ignored runtime or user-state folders (`usr/`, `tmp/`, `.next/`, `.open-next/`, `node_modules/`, `.wrangler/`) unless the user explicitly asks for those folders to be documented.
+
+---
+
 ## Purpose
 
 Widgetly is a single-page application that surfaces a curated catalog of online tools (PDF, Image, Video, AI, Calculators, Developer, SEO, Writing, Converters, Business, Education). Each tool ships with its own landing page generated from structured data — programmatic SEO.
