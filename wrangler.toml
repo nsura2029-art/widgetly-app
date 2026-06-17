@@ -69,4 +69,4 @@ enabled = true
 [[d1_databases]]
 binding = "DB"
 database_name = "widgetly"
-database_id = "REPLACE_AFTER_wrangler_d1_create_widgetly"
+database_id = "64cbb0d4-af76-46cf-a742-cf78902f1dc3"
