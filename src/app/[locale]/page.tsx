@@ -1,4 +1,6 @@
 import { setRequestLocale } from "next-intl/server";
+import { FAQS } from "@/lib/constants";
+import { softwareApplicationJsonLd, faqJsonLd } from "@/lib/seo";
 import { Hero } from "@/components/landing/hero";
 import { Features } from "@/components/landing/features";
 import { Categories } from "@/components/landing/categories";
@@ -44,8 +46,25 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
   // eslint-disable-next-line react-hooks/purity
   const mascotSeed = Math.floor(Math.random() * 1_000_000);
 
+  // JSON-LD for the home page only — moved out of the root layout
+  // so they only appear where the visible content matches the
+  // schema. See [locale]/layout.tsx for the rationale.
+  const jsonLdApp = softwareApplicationJsonLd();
+  const jsonLdFaq = faqJsonLd(FAQS);
+
   return (
     <>
+      {/* SoftwareApplication (the platform) + FAQPage (matches the
+          visible FAQ section below). WebSite + Organization are
+          emitted by the root layout. */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdApp) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdFaq) }}
+      />
       <Hero mascotSeed={mascotSeed} />
       <Features />
       <Categories />
