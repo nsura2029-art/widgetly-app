@@ -39,22 +39,35 @@ jobs:
       # running on every deploy. If you add a new secret (e.g. WAITLIST_WEBHOOK_URL)
       # to GH secrets, it'll get pushed to Cloudflare on the next push to main.
       #
+      # The `if` references env vars (not `secrets.X` directly) because GitHub
+      # Actions forbids the secrets context inside `if:` expressions — it's an
+      # anti-exfiltration guard. Empty/unset GH secrets become empty env vars
+      # in the runner, which is what we want to detect.
+      #
       # Mirror of `scripts/setup-cloudflare-secrets.mjs` — kept inline here so
       # the deploy workflow has no dependency on a local script file.
       # ---------------------------------------------------------------------------
       - name: Sync Supabase + webhook secrets to Cloudflare Worker
-        if: ${{ secrets.SUPABASE_URL != '' || secrets.SUPABASE_SERVICE_ROLE_KEY != '' || secrets.WAITLIST_WEBHOOK_URL != '' || secrets.SUGGEST_WEBHOOK_URL != '' || secrets.NEXT_PUBLIC_ANALYTICS_TOKEN != '' }}
+        if: ${{ env.SUPABASE_URL != '' || env.SUPABASE_SERVICE_ROLE_KEY != '' || env.WAITLIST_WEBHOOK_URL != '' || env.SUGGEST_WEBHOOK_URL != '' || env.NEXT_PUBLIC_ANALYTICS_TOKEN != '' }}
         run: |
           set -e
-          # Install wrangler CLI in this step (it's a devDep already, but
-          # making it explicit avoids surprises if the workflow runner's
-          # pnpm layout changes).
-          pnpm exec wrangler --version
-          [ -n "$SUPABASE_URL" ]              && echo "$SUPABASE_URL"              | pnpm exec wrangler secret put SUPABASE_URL              || true
-          [ -n "$SUPABASE_SERVICE_ROLE_KEY" ] && echo "$SUPABASE_SERVICE_ROLE_KEY" | pnpm exec wrangler secret put SUPABASE_SERVICE_ROLE_KEY || true
-          [ -n "$WAITLIST_WEBHOOK_URL" ]      && echo "$WAITLIST_WEBHOOK_URL"      | pnpm exec wrangler secret put WAITLIST_WEBHOOK_URL      || true
-          [ -n "$SUGGEST_WEBHOOK_URL" ]       && echo "$SUGGEST_WEBHOOK_URL"       | pnpm exec wrangler secret put SUGGEST_WEBHOOK_URL       || true
-          [ -n "$NEXT_PUBLIC_ANALYTICS_TOKEN" ] && echo "$NEXT_PUBLIC_ANALYTICS_TOKEN" | pnpm exec wrangler secret put NEXT_PUBLIC_ANALYTICS_TOKEN || true
+          # Explicit verbose log so the CI output makes it obvious which
+          # secrets are present (and which were skipped because the GH
+          # secret wasn't set). Empty values are skipped below.
+          echo "secrets present in this run:"
+          for n in SUPABASE_URL SUPABASE_SERVICE_ROLE_KEY WAITLIST_WEBHOOK_URL SUGGEST_WEBHOOK_URL NEXT_PUBLIC_ANALYTICS_TOKEN; do
+            v=$(eval echo "\$$n")
+            if [ -n "$v" ]; then echo "  $n: set (length ${#v})"; else echo "  $n: (not set, skipping)"; fi
+          done
+          # Use --text rather than stdin to avoid any shell-quote edge
+          # cases with multi-line secrets (Supabase keys are single-line
+          # JWTs but webhook URLs can contain query params that might
+          # confuse a naive echo | wrangler pipe on some shells).
+          [ -n "$SUPABASE_URL" ]              && pnpm exec wrangler secret put SUPABASE_URL              --text "$SUPABASE_URL"              || true
+          [ -n "$SUPABASE_SERVICE_ROLE_KEY" ] && pnpm exec wrangler secret put SUPABASE_SERVICE_ROLE_KEY --text "$SUPABASE_SERVICE_ROLE_KEY" || true
+          [ -n "$WAITLIST_WEBHOOK_URL" ]      && pnpm exec wrangler secret put WAITLIST_WEBHOOK_URL      --text "$WAITLIST_WEBHOOK_URL"      || true
+          [ -n "$SUGGEST_WEBHOOK_URL" ]       && pnpm exec wrangler secret put SUGGEST_WEBHOOK_URL       --text "$SUGGEST_WEBHOOK_URL"       || true
+          [ -n "$NEXT_PUBLIC_ANALYTICS_TOKEN" ] && pnpm exec wrangler secret put NEXT_PUBLIC_ANALYTICS_TOKEN --text "$NEXT_PUBLIC_ANALYTICS_TOKEN" || true
           echo "secrets sync complete"
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}

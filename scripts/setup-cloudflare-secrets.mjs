@@ -144,6 +144,18 @@ async function main() {
   let skipped = 0;
   let failed = 0;
 
+  // Show what we see in the env, before we try to push anything.
+  // Helpful when debugging "why didn't this work" — if SUPABASE_URL
+  // isn't in .env.local you'll see "(not set)" here instead of a
+  // confusing wrangler auth error later.
+  console.log("[setup-secrets] values seen:");
+  for (const name of SECRETS_TO_PUSH) {
+    const v = env[name];
+    const display = v ? `set (length ${v.length})` : "(not set, skipping)";
+    console.log(`  ${name.padEnd(28)} ${display}`);
+  }
+  console.log("");
+
   for (const name of SECRETS_TO_PUSH) {
     const value = env[name];
     try {
