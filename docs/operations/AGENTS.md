@@ -251,14 +251,15 @@ curl -X POST "https://api.indexnow.org/indexnow" \
 
 ## Verification
 
-| Check           | Command                                                                      | Pass criterion                  |
-| --------------- | ---------------------------------------------------------------------------- | ------------------------------- |
-| Scripts present | `cat package.json \| jq .scripts`                                            | shows expected list             |
-| pnpm resolves   | `pnpm --version`                                                             | ≥ 9.15.9                        |
-| Type-check      | `pnpm type-check`                                                            | exit 0                          |
-| Lint (scoped)   | `NODE_OPTIONS="--max-old-space-size=8192" npx eslint <path>`                 | exit 0                          |
-| Build           | `pnpm exec opennextjs-cloudflare build`                                      | produces `.open-next/worker.js` |
-| Deploy          | `gh workflow run deploy.yml --ref develop` (or sandbox-side curl equivalent) | run completes `success`         |
+| Check             | Command                                                                      | Pass criterion                  |
+| ----------------- | ---------------------------------------------------------------------------- | ------------------------------- |
+| Scripts present   | `cat package.json \| jq .scripts`                                            | shows expected list             |
+| pnpm resolves     | `pnpm --version`                                                             | ≥ 9.15.9                        |
+| Type-check        | `pnpm type-check`                                                            | exit 0                          |
+| Lint (scoped)     | `NODE_OPTIONS="--max-old-space-size=8192" npx eslint <path>`                 | exit 0                          |
+| Build             | `pnpm exec opennextjs-cloudflare build`                                      | produces `.open-next/worker.js` |
+| Deploy            | `gh workflow run deploy.yml --ref develop` (or sandbox-side curl equivalent) | run completes `success`         |
+| **Cache healthy** | `bash scripts/verify-cache.sh`                                               | exit 0 (10/10 checks pass)      |
 
 > The full ship-cycle gate (local lint + type-check + test + build, plus
 > remote merge + deploy + live verify) lives in the root
@@ -266,6 +267,47 @@ curl -X POST "https://api.indexnow.org/indexnow" \
 > This table is the local subset. `pnpm ship` runs the local subset via
 > `scripts/ship.mjs`; that script is the same body the husky pre-push hook
 > calls — they cannot drift.
+
+### Cache verification (`scripts/verify-cache.sh`)
+
+The script runs 10 checks across the three caching layers:
+
+1. **OpenNext KV incremental cache** — `x-nextjs-cache: HIT` on the 2nd
+   request to the same URL. This is the headline check; if it fails,
+   the Worker is re-rendering HTML on every request and Error 1102
+   will return under load.
+2. **Static-file edge cache** — `cf-cache-status: HIT` on `/robots.txt`.
+3. **1102 sweep** — fetches 10 routes and confirms none contain
+   "Error 1102" / "exceeded resource limits" / `cf-error-code`.
+4. **TTFB profile** — 5 sequential requests with returning-user
+   cookies. p50 should be < 500 ms.
+5. **Tool page spot-check** — samples 5 tool URLs from the sitemap
+   and confirms they return 200.
+
+Run anytime to sanity-check the cache after a config change:
+
+```bash
+bash scripts/verify-cache.sh
+```
+
+Exit code is `0` if all checks pass, `1` otherwise. Override the host:
+
+```bash
+bash scripts/verify-cache.sh https://staging.widgetly.tech
+```
+
+For **manual probes by route, region, or traffic pattern** — or to
+gather a Cloudflare support escalation packet — see
+[`cache-test.md`](./cache-test.md).
+
+### Manual cache probes
+
+| Probe                      | Command                                                                                                                                                                                |
+| -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| KV cache status            | `curl -sI https://widgetly.tech/en/tools/pdf/split-pdf \| grep -iE 'x-nextjs-cache\|cache-control'`                                                                                    |
+| Edge cache status (static) | `curl -sI https://widgetly.tech/robots.txt \| grep -i cf-cache-status`                                                                                                                 |
+| 1102 sweep                 | `bash -c 'for p in / /en /es /fr /en/tools/pdf/split-pdf; do curl -s "https://widgetly.tech$p" \| grep -qi "1102\|exceeded resource" && echo "1102 on $p" \|\| echo "ok on $p"; done'` |
+| KV namespace contents      | Cloudflare dashboard → Workers → KV → NEXT_INC_CACHE_KV → should have one key per prerendered route                                                                                    |
 
 ---
 
@@ -371,8 +413,9 @@ curl -X POST "https://api.indexnow.org/indexnow" \
 
 ## Child DOX Index
 
-| Subtree                                      | Owns                                                                                                            | AGENTS.md                                                                    |
-| -------------------------------------------- | --------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| `docs/operations/cloudflare-optimization.md` | Cloudflare plan/tier analysis, edge-cache strategy, Error 1102 fix roadmap, Free vs Paid vs Pro feature matrix. | [`docs/operations/cloudflare-optimization.md`](./cloudflare-optimization.md) |
+| Subtree                                      | Owns                                                                                                                                                                                                                                                        | AGENTS.md                                                                    |
+| -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| `docs/operations/cloudflare-optimization.md` | Cloudflare plan/tier analysis, edge-cache strategy, Error 1102 fix roadmap, Free vs Paid vs Pro feature matrix. Architecture + design.                                                                                                                      | [`docs/operations/cloudflare-optimization.md`](./cloudflare-optimization.md) |
+| `docs/operations/cache-test.md`              | Manual cache testing runbook: probes by URL, by route type, by region (global rollout), by traffic pattern (burst/soak/cold), 1102/5xx sweeps, and a Cloudflare support escalation packet (account/zone/Worker/KV IDs, when to escalate, support channels). | [`docs/operations/cache-test.md`](./cache-test.md)                           |
 
 _Other than the above, Operations is a leaf domain — pnpm scripts and workflows live entirely in this AGENTS.md._

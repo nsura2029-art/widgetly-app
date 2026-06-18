@@ -31,8 +31,8 @@ enabled = true
 # via the wly_locale cookie). Anonymous identity is the key.
 #
 # Created via:
-#   pnpm wrangler kv:namespace create LOCALE_KV
-#   pnpm wrangler kv:namespace create LOCALE_KV --preview
+#   pnpm wrangler kv namespace create LOCALE_KV
+#   pnpm wrangler kv namespace create LOCALE_KV --preview
 # Paste the printed IDs into `id` / `preview_id` below.
 # ---------------------------------------------------------------------------
 # [[kv_namespaces]]
@@ -49,8 +49,8 @@ enabled = true
 # request, which is what was triggering the random Error 1102s.
 #
 # Created via:
-#   pnpm wrangler kv:namespace create NEXT_INC_CACHE_KV
-#   pnpm wrangler kv:namespace create NEXT_INC_CACHE_KV --preview
+#   pnpm wrangler kv namespace create NEXT_INC_CACHE_KV
+#   pnpm wrangler kv namespace create NEXT_INC_CACHE_KV --preview
 # Paste the printed IDs into `id` / `preview_id` below.
 #
 # KV is included in Workers Free (100K reads/day, 1K writes/day, 1 GB). Reads

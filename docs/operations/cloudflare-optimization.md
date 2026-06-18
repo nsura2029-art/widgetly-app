@@ -586,7 +586,11 @@ and read on each request.
   `[[kv_namespaces]]` block with `binding = "NEXT_INC_CACHE_KV"`.
 - [`open-next.config.ts`](../../open-next.config.ts) — changed
   `incrementalCache: "dummy"` to
-  `"cloudflare-kv-incremental-cache"`, and `tagCache` to the same.
+  `kvIncrementalCache` (imported from
+  `@opennextjs/cloudflare/overrides/incremental-cache/kv-incremental-cache`,
+  passed as a function reference because OpenNext's validator only accepts
+  `"dummy"` or a function). `tagCache: "dummy"` (we don't use tag-based
+  revalidation; deploy-time cache replacement is enough).
 
 ### Setup (one-time, per environment)
 
