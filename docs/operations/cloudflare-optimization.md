@@ -172,25 +172,80 @@ Pick **Eligible for cache** (not Bypass cache).
 
 **Step 4 — Add the settings you need** (each is `+ Add setting`):
 
-| Setting                                    | What to pick                                                                                                  | Notes                                                                                                                                        |
-| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Edge TTL**                               | Click `+ Add setting`, then in the dropdown pick **Use cache-control header if present, bypass cache if not** | This honors our `s-maxage=300, stale-while-revalidate=86400` from `next.config.ts`. Do NOT pick "Override" — that would discard our headers. |
-| **Browser TTL**                            | Click `+ Add setting`, set to **0** seconds                                                                   | Edge handles perf; browsers should always revalidate with the CDN.                                                                           |
-| **Cache key**                              | Leave **NOT** added (defaults are fine)                                                                       | Adding this exposes include/exclude fields. Defaults already exclude cookies.                                                                |
-| **Serve stale content while revalidating** | Click `+ Add setting`, toggle **ON**, set duration to **86400** seconds (1 day)                               | This is what enables SWR on the edge even if origin is slow.                                                                                 |
-| **Respect strong ETags**                   | Click `+ Add setting`, toggle **ON**                                                                          | More reliable revalidation.                                                                                                                  |
-| **Origin error page pass-through**         | Click `+ Add setting`, toggle **ON**                                                                          | So our custom 404 stays a 404, not Cloudflare's generic error.                                                                               |
+| Setting                                    | What to pick                                                                                                                                  | Notes                                                                                                                                                                                                                                                                                                                                                           |
+| ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Edge TTL**                               | Click `+ Add setting`, then in the dropdown pick **Status code TTL** (recommended). Configure the per-status-code mapping in the table below. | **Status code TTL** is the bulletproof choice — it maps each status-code range to an explicit TTL, so even if origin accidentally sends `Cache-Control` on a 5xx response, the rule prevents caching. The simpler mode **Use cache-control header if present, bypass cache if not** also works, but relies on origin never setting cacheable headers on errors. |
+| **Browser TTL**                            | Click `+ Add setting`, set to **0** seconds                                                                                                   | Edge handles perf; browsers should always revalidate with the CDN.                                                                                                                                                                                                                                                                                              |
+| **Cache key**                              | Leave **NOT** added (defaults are fine)                                                                                                       | Adding this exposes include/exclude fields. Defaults already exclude cookies.                                                                                                                                                                                                                                                                                   |
+| **Serve stale content while revalidating** | Click `+ Add setting`, toggle **ON**, set duration to **86400** seconds (1 day)                                                               | This is what enables SWR on the edge even if origin is slow.                                                                                                                                                                                                                                                                                                    |
+| **Respect strong ETags**                   | Click `+ Add setting`, toggle **ON**                                                                                                          | More reliable revalidation.                                                                                                                                                                                                                                                                                                                                     |
+| **Origin error page pass-through**         | Click `+ Add setting`, toggle **ON**                                                                                                          | So our custom 404 stays a 404, not Cloudflare's generic error.                                                                                                                                                                                                                                                                                                  |
+
+##### Edge TTL: Status code TTL — per-code mapping
+
+After picking **Status code TTL** in the Edge TTL dropdown, click
+**+ Add status code TTL** once per row. The fields are:
+
+- **Status code range** — pick from dropdown:
+  - `Equal to` (single code)
+  - `Greater than or equal to`
+  - `Less than or equal to`
+  - `From ... to` (range)
+- **Status codes** — numeric field(s) depending on the range picker
+- **TTL (seconds)** — positive int, `0` for no-cache, `-1` for no-store
+
+Use these rows (recommended):
+
+| Status code range                          | TTL (seconds) | Why                                                                                           |
+| ------------------------------------------ | ------------- | --------------------------------------------------------------------------------------------- |
+| `200` to `299` (success)                   | `86400`       | Cache successful responses for 1 day. Matches what we want long-term.                         |
+| `300` to `399` (redirects)                 | `86400`       | Cache redirects (e.g. `/` → `/en`) so they don't hit the Worker.                              |
+| `400` to `499` (client errors, except 404) | `60`          | Cache bad-request responses briefly so a misbehaving client doesn't pound the Worker.         |
+| `404` (not found)                          | `300`         | Cache 404s for 5 min — same as our HTML TTL — so a deleted tool page doesn't slam the Worker. |
+| `500` to `599` (server errors)             | `0`           | **Never cache 5xx.** Even a one-time Worker 1102 must not become a 5-minute global outage.    |
+
+You can skip the `400-499` and `404` rows if you want — the
+default (no entry for that range) means Cloudflare falls back to
+the mode's default behavior. The two critical rows are:
+
+- `200-299` → `86400` (cache successes)
+- `500-599` → `0` (never cache errors)
+
+The dropdown in the form asks for **range or single code** in a
+specific UI. To replicate the API example below, enter:
+
+- **Greater than or equal to** + `200`, **less than or equal to** `299` → `86400`
+- **Greater than or equal to** `500` → `0` (no-cache)
+
+API equivalent (for reference; the dashboard form does this for you):
+
+```json
+"edge_ttl": {
+  "mode": "respect_origin",
+  "status_code_ttl": [
+    { "status_code_range": { "from": 200, "to": 299 }, "value": 86400 },
+    { "status_code_range": { "from": 300, "to": 399 }, "value": 86400 },
+    { "status_code_range": { "from": 400, "to": 499 }, "value": 60 },
+    { "status_code_range": { "status_code": 404 }, "value": 300 },
+    { "status_code_range": { "from": 500 }, "value": 0 }
+  ]
+}
+```
+
+Note the `mode: "respect_origin"` — when a status-code range
+doesn't match a row, Cloudflare still respects the origin's
+Cache-Control header. This means our `next.config.ts` setting
+of `s-maxage=300` wins for 200s even though the rule says 86400,
+because `respect_origin` means "if origin said cache for 300s,
+cache for 300s, not 86400." If you want the rule's TTL to
+**override** origin, switch the mode to `override_origin`.
 
 **About "Eligible status codes"** — this is NOT a separate section
-on the form. Status-code filtering is handled implicitly:
-
-- The **Edge TTL mode** ("Use cache-control header if present")
-  only caches responses that the origin marked cacheable.
-- Our `next.config.ts` sets `Cache-Control: public, s-maxage=300`
-  on 200 responses only — 5xx never gets a cacheable header, so
-  they're never cached, regardless of what we'd "check."
-- That's exactly the behavior we want: never cache errors,
-  regardless of the dashboard UI.
+on the form. Status-code filtering is handled **by the Status
+code TTL section above** (the `200-299 → 86400`, `500-599 → 0`
+rows). Every status code that's not in your mapping falls back
+to the Edge TTL mode (we use `respect_origin`, so it falls back
+to honoring origin's Cache-Control).
 
 **Step 5 — Deploy**. Click the blue **Deploy** button at the
 bottom right.
