@@ -228,6 +228,23 @@ curl -X POST "https://api.indexnow.org/indexnow" \
 - Cause: usually a syntax error or import cycle. Check `.open-next/` output for stack traces.
 - Fix: run `pnpm type-check` first. If clean, check for circular imports in changed files.
 
+#### Cloudflare Error 1102: Worker exceeded resource limits
+
+- Symptom: live site shows "Error 1102 — Worker exceeded resource limits" with a Ray ID. Pages intermittently return the error instead of HTML.
+- Cause: the route is being SSR'd on every request (CPU/memory budget per request), and a traffic spike or slow render pushes the Worker over its budget.
+- Two common sources of accidental dynamic rendering in Next.js 15+:
+  1. **Explicit `export const dynamic = "force-dynamic"`** on a route. Set only when you have a real per-request data need (live API call, random per-visit value, etc.).
+  2. **Implicit**: `headers()` or `cookies()` called in a server component. These APIs force every page using them into dynamic rendering at the framework level — you cannot opt out.
+- Detection:
+  - Build log shows `├ ƒ /[route]` (ƒ = Dynamic) when it should be `├ ● /[route]` (● = Static, prerendered).
+  - Prerender manifest (`.next/prerender-manifest.json`) does NOT contain the route.
+  - Live TTFB on the affected page is significantly higher than other prerendered pages.
+- Fix:
+  1. Remove `headers()` / `cookies()` from server components wherever possible. Move the read to middleware (which sets a header or cookie), or to the client side via a fetch.
+  2. Remove `force-dynamic` if you don't actually need per-request variation. For random-per-visit values, generate them client-side after mount (or accept the same value for every visitor).
+  3. For routes that genuinely need to read request headers (e.g., region detection from cf-ipcountry), create a small dedicated API endpoint (e.g., `/api/region`) that's edge-cached. Call it client-side. The endpoint is the only dynamic route per page load — everything else stays static.
+- Verification: build log shows `●` for the affected route. Prerender manifest includes the route. TTFB drops to <50ms warm (served from edge cache, not Worker SSR).
+
 ---
 
 ## Verification
