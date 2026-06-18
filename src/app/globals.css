@@ -575,3 +575,36 @@
     animation: none !important;
   }
 }
+
+/* -----------------------------------------------------------------------
+ * Hash navigation offset
+ *
+ * Both the site header (h-16 = 64px) and the tools banner
+ * (sticky top-16, ~56px tall) are pinned to the top of the
+ * viewport. When a user navigates to `/#features` (either
+ * natively or via <ScrollToHash />), the browser scrolls the
+ * target element to the very top of the viewport — putting the
+ * section title behind the sticky chrome.
+ *
+ * `scroll-margin-top` tells the browser to leave this much
+ * space above the element when scrolling it into view. It works
+ * for both:
+ *   1. Native browser hash-scroll (initial load, hashchange)
+ *   2. `element.scrollIntoView()` calls (our <ScrollToHash />)
+ *
+ * Applied to any element with an `id` so it covers all current
+ * and future hash targets without per-section edits. `main[id]`
+ * is included so the "Skip to content" link also lands below
+ * the sticky chrome.
+ *
+ * Value: 7.5rem (120px)
+ *   - Header:  64px (h-16)
+ *   - Banner:  ~56px (py-2 + chip row)
+ *   - Total:   120px
+ *   - 7.5rem leaves a small visual gap below the banner before
+ *     the section title, which reads better than landing flush.
+ * ----------------------------------------------------------------------- */
+section[id],
+main[id] {
+  scroll-margin-top: 7.5rem;
+}
