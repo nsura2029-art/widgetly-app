@@ -374,13 +374,13 @@ cheaper than a half-shipped change.
 
 ## Child DOX Index
 
-| Subtree            | Owns                                                                                                      | AGENTS.md                                                  |
-| ------------------ | --------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
-| `docs/seo/`        | SEO surface — sitemap, robots, metadata, JSON-LD schema, programmatic SEO, manual outreach checklist      | [`docs/seo/AGENTS.md`](./docs/seo/AGENTS.md)               |
-| `docs/secrets/`    | Secrets management — local `.env.local`, Cloudflare Worker secrets, `pnpm setup:secrets`, rotation policy | [`docs/secrets/AGENTS.md`](./docs/secrets/AGENTS.md)       |
-| `docs/database/`   | Cloudflare D1 persistence — schema migrations, query helpers, wrangler CLI, backup/restore                | [`docs/database/AGENTS.md`](./docs/database/AGENTS.md)     |
-| `docs/operations/` | pnpm scripts, common command sequences, deploy workflow, troubleshooting                                  | [`docs/operations/AGENTS.md`](./docs/operations/AGENTS.md) |
-| `docs/api/`        | API routes — endpoints, request/response shapes, error codes, runtime notes                               | [`docs/api/AGENTS.md`](./docs/api/AGENTS.md)               |
+| Subtree            | Owns                                                                                                          | AGENTS.md                                                                                                                                                 |
+| ------------------ | ------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `docs/seo/`        | SEO surface — sitemap, robots, metadata, JSON-LD schema, programmatic SEO, manual outreach checklist          | [`docs/seo/AGENTS.md`](./docs/seo/AGENTS.md)                                                                                                              |
+| `docs/secrets/`    | Secrets management — local `.env.local`, Cloudflare Worker secrets, `pnpm setup:secrets`, rotation policy     | [`docs/secrets/AGENTS.md`](./docs/secrets/AGENTS.md)                                                                                                      |
+| `docs/database/`   | Cloudflare D1 persistence — schema migrations, query helpers, wrangler CLI, backup/restore                    | [`docs/database/AGENTS.md`](./docs/database/AGENTS.md)                                                                                                    |
+| `docs/operations/` | pnpm scripts, common command sequences, deploy workflow, troubleshooting, Cloudflare performance/caching plan | [`docs/operations/AGENTS.md`](./docs/operations/AGENTS.md) + [`docs/operations/cloudflare-optimization.md`](./docs/operations/cloudflare-optimization.md) |
+| `docs/api/`        | API routes — endpoints, request/response shapes, error codes, runtime notes                                   | [`docs/api/AGENTS.md`](./docs/api/AGENTS.md)                                                                                                              |
 
 ### Legacy docs (not yet migrated to DOX shape — superseded by their child AGENTS.md above where overlap exists)
 
@@ -390,3 +390,4 @@ cheaper than a half-shipped change.
 - `docs/LAUNCH_INDEXABILITY.md` — pre-launch SEO checklist (mostly covered by `docs/seo/AGENTS.md`)
 - `docs/i18n-translation.md` — translation workflow
 - `docs/API.md` — superseded by `docs/api/AGENTS.md`
+- `docs/operations/cloudflare-optimization.md` — Cloudflare plan/tier + edge-cache + 1102 fix (this branch)

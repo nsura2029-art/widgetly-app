@@ -1,8 +1,86 @@
+# Cache & security headers — Cloudflare Pages / Workers convention.
+#
+# Two layers of cache:
+#   1. _headers below sets Cache-Control at the response level. Cloudflare
+#      respects these on Workers and Pages.
+#   2. A Cloudflare Cache Rule (configured in the dashboard) backs this up
+#      and adds edge-caching for any HTML that doesn't set its own
+#      Cache-Control. See docs/operations/cloudflare-optimization.md § 4.
+
+# ---------------------------------------------------------------------------
+# Global security headers on every response.
+# ---------------------------------------------------------------------------
 /
   X-Content-Type-Options: nosniff
   X-Frame-Options: DENY
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: camera=(), microphone=(), geolocation=()
 
+# ---------------------------------------------------------------------------
+# Long-lived cache for hashed static assets (immutable — Next.js content-
+# hashes the URLs, so we never serve stale).
+# ---------------------------------------------------------------------------
+/_next/static/*
+  Cache-Control: public, max-age=31536000, immutable
+
 /fonts/*
   Cache-Control: public, max-age=31536000, immutable
+
+/icons/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/images/*
+  Cache-Control: public, max-age=2592000
+
+# ---------------------------------------------------------------------------
+# HTML routes: edge cache for 5 minutes, serve stale for 1 day while
+# revalidating in the background. Browsers get 0 — they should always
+# revalidate with the CDN so we don't pin users to a stale build.
+# ---------------------------------------------------------------------------
+/en
+  Cache-Control: public, s-maxage=300, stale-while-revalidate=86400
+/es
+  Cache-Control: public, s-maxage=300, stale-while-revalidate=86400
+/fr
+  Cache-Control: public, s-maxage=300, stale-while-revalidate=86400
+/en/*
+  Cache-Control: public, s-maxage=300, stale-while-revalidate=86400
+/es/*
+  Cache-Control: public, s-maxage=300, stale-while-revalidate=86400
+/fr/*
+  Cache-Control: public, s-maxage=300, stale-while-revalidate=86400
+
+# ---------------------------------------------------------------------------
+# API + diagnostics — never cache. These hit D1 / KV and must be live.
+# ---------------------------------------------------------------------------
+/api/*
+  Cache-Control: no-store, no-cache, must-revalidate
+  X-Robots-Tag: noindex
+/diag/*
+  Cache-Control: no-store, no-cache, must-revalidate
+  X-Robots-Tag: noindex
+
+# ---------------------------------------------------------------------------
+# sitemap.xml — cache 1 hour. Build-time prerender via Cloudflare Cache
+# Rule picks this up; the file itself doesn't change between deploys.
+# ---------------------------------------------------------------------------
+/sitemap.xml
+  Cache-Control: public, s-maxage=3600
+/en/sitemap.xml
+  Cache-Control: public, s-maxage=3600
+/es/sitemap.xml
+  Cache-Control: public, s-maxage=3600
+/fr/sitemap.xml
+  Cache-Control: public, s-maxage=3600
+
+# ---------------------------------------------------------------------------
+# robots.txt — short cache, it's tiny and rarely changes.
+# ---------------------------------------------------------------------------
+/robots.txt
+  Cache-Control: public, s-maxage=3600
+/en/robots.txt
+  Cache-Control: public, s-maxage=3600
+/es/robots.txt
+  Cache-Control: public, s-maxage=3600
+/fr/robots.txt
+  Cache-Control: public, s-maxage=3600
