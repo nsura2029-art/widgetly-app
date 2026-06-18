@@ -20,16 +20,24 @@ import { cn } from "@/lib/utils";
  * `hover:` is darker than `bg-` so hover feels like a press.
  */
 const ACCENT_TILE_CLASSES: Record<AccentColor, string> = {
+  // The 500/600 pairing is the standard "background darker on
+  // press" feedback. The shade varies a bit by color to make the
+  // palette feel cohesive rather than uniformly bright:
+  //   - red/orange/pink/amber: 500 base (warm, "energetic" actions)
+  //   - blue/indigo/cyan: 600 base (cooler, "structural" actions)
+  //   - green/teal/purple: 500 base (action verbs)
+  // This avoids the "candy" feel of using identical 500 shades
+  // for every group and gives the menu a more refined look.
   red: "bg-red-500 hover:bg-red-600 text-white",
   green: "bg-green-500 hover:bg-green-600 text-white",
-  blue: "bg-blue-500 hover:bg-blue-600 text-white",
-  indigo: "bg-indigo-500 hover:bg-indigo-600 text-white",
+  blue: "bg-blue-600 hover:bg-blue-700 text-white",
+  indigo: "bg-indigo-600 hover:bg-indigo-700 text-white",
   purple: "bg-purple-500 hover:bg-purple-600 text-white",
   orange: "bg-orange-500 hover:bg-orange-600 text-white",
   pink: "bg-pink-500 hover:bg-pink-600 text-white",
   teal: "bg-teal-500 hover:bg-teal-600 text-white",
   amber: "bg-amber-500 hover:bg-amber-600 text-white",
-  cyan: "bg-cyan-500 hover:bg-cyan-600 text-white",
+  cyan: "bg-cyan-600 hover:bg-cyan-700 text-white",
 };
 
 /**

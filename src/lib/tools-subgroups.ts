@@ -76,11 +76,22 @@ export type Subgroup = {
 export const TOOLS_SUBGROUPS: Record<string, readonly Subgroup[]> = {
   // ---------------------------------------------------------------------
   // PDF — 7 columns modeled on the iLovePDF layout the user referenced.
+  //
+  // Color philosophy: action-type mapping with a refined, modern feel
+  // (less candy-primary than the original iLovePDF palette).
+  //  - Organize = orange (warm, "combine" energy)
+  //  - Optimize = teal (fresh, growth)
+  //  - Convert to = blue (outbound, open)
+  //  - Convert from = cyan (inbound, lighter counterpart to blue)
+  //  - Edit = purple (creative)
+  //  - Security = red (locks/caution — was orange, which clashed
+  //    visually with the "convert to" blue)
+  //  - AI = pink (playful, AI vibe)
   // ---------------------------------------------------------------------
   pdf: [
     {
       title: "Organize PDF",
-      accent: "red",
+      accent: "orange",
       items: [
         { name: "Merge PDF", icon: "Combine" },
         { name: "Split PDF", icon: "Split" },
@@ -92,7 +103,7 @@ export const TOOLS_SUBGROUPS: Record<string, readonly Subgroup[]> = {
     },
     {
       title: "Optimize PDF",
-      accent: "green",
+      accent: "teal",
       items: [
         { name: "Compress PDF", icon: "Minimize2" },
         { name: "Repair PDF", icon: "Wrench" },
@@ -111,7 +122,7 @@ export const TOOLS_SUBGROUPS: Record<string, readonly Subgroup[]> = {
     },
     {
       title: "Convert from PDF",
-      accent: "indigo",
+      accent: "cyan",
       items: [
         { name: "PDF to JPG", icon: "ImageMinus" },
         { name: "PDF to Word", icon: "FileText" },
@@ -132,7 +143,7 @@ export const TOOLS_SUBGROUPS: Record<string, readonly Subgroup[]> = {
     },
     {
       title: "PDF Security",
-      accent: "orange",
+      accent: "red",
       items: [
         { name: "Unlock PDF", icon: "LockOpen" },
         { name: "Protect PDF", icon: "Lock" },
@@ -157,7 +168,7 @@ export const TOOLS_SUBGROUPS: Record<string, readonly Subgroup[]> = {
   image: [
     {
       title: "Edit Image",
-      accent: "blue",
+      accent: "cyan",
       items: [
         { name: "Resize Image", icon: "Maximize2" },
         { name: "Crop Image", icon: "Crop" },
@@ -167,7 +178,7 @@ export const TOOLS_SUBGROUPS: Record<string, readonly Subgroup[]> = {
     },
     {
       title: "Convert Format",
-      accent: "green",
+      accent: "teal",
       items: [
         { name: "Convert to WebP", icon: "ArrowLeftRight" },
         { name: "Convert to PNG", icon: "ArrowLeftRight" },
@@ -185,7 +196,7 @@ export const TOOLS_SUBGROUPS: Record<string, readonly Subgroup[]> = {
     },
     {
       title: "Effects",
-      accent: "orange",
+      accent: "amber",
       items: [
         { name: "Add Watermark", icon: "Stamp" },
         { name: "Crop to Circle", icon: "Circle" },
@@ -209,7 +220,7 @@ export const TOOLS_SUBGROUPS: Record<string, readonly Subgroup[]> = {
     },
     {
       title: "Convert Format",
-      accent: "blue",
+      accent: "cyan",
       items: [
         { name: "Convert to GIF", icon: "Image" },
         { name: "Convert to MP4", icon: "Film" },
@@ -218,7 +229,7 @@ export const TOOLS_SUBGROUPS: Record<string, readonly Subgroup[]> = {
     },
     {
       title: "AI Video Tools",
-      accent: "purple",
+      accent: "indigo",
       items: [
         { name: "Video to Text", icon: "FileText" },
         { name: "Generate Subtitles", icon: "Captions" },
@@ -233,7 +244,7 @@ export const TOOLS_SUBGROUPS: Record<string, readonly Subgroup[]> = {
   ai: [
     {
       title: "Writing",
-      accent: "indigo",
+      accent: "blue",
       items: [
         { name: "AI Writer", icon: "Sparkles" },
         { name: "AI Summarizer", icon: "FileText" },
@@ -284,7 +295,7 @@ export const TOOLS_SUBGROUPS: Record<string, readonly Subgroup[]> = {
     },
     {
       title: "Math",
-      accent: "blue",
+      accent: "indigo",
       items: [
         { name: "Percentage Change", icon: "Percent" },
         { name: "Scientific Calculator", icon: "Calculator" },
@@ -298,7 +309,7 @@ export const TOOLS_SUBGROUPS: Record<string, readonly Subgroup[]> = {
   developer: [
     {
       title: "Format & Validate",
-      accent: "blue",
+      accent: "cyan",
       items: [
         { name: "JSON Formatter", icon: "Braces" },
         { name: "YAML Validator", icon: "CheckCircle2" },
@@ -316,7 +327,7 @@ export const TOOLS_SUBGROUPS: Record<string, readonly Subgroup[]> = {
     },
     {
       title: "Test",
-      accent: "orange",
+      accent: "amber",
       items: [{ name: "Regex Tester", icon: "Regex" }],
     },
   ],
@@ -327,7 +338,7 @@ export const TOOLS_SUBGROUPS: Record<string, readonly Subgroup[]> = {
   seo: [
     {
       title: "Generate",
-      accent: "blue",
+      accent: "cyan",
       items: [
         { name: "Meta Tag Generator", icon: "Tag" },
         { name: "XML Sitemap", icon: "Map" },
@@ -336,7 +347,7 @@ export const TOOLS_SUBGROUPS: Record<string, readonly Subgroup[]> = {
     },
     {
       title: "Analyze",
-      accent: "purple",
+      accent: "indigo",
       items: [
         { name: "Keyword Density", icon: "BarChart3" },
         { name: "SERP Preview", icon: "Eye" },
@@ -356,7 +367,7 @@ export const TOOLS_SUBGROUPS: Record<string, readonly Subgroup[]> = {
   writing: [
     {
       title: "Edit & Polish",
-      accent: "green",
+      accent: "teal",
       items: [
         { name: "Grammar Checker", icon: "CheckCircle2" },
         { name: "Tone Rewriter", icon: "MessageSquare" },
