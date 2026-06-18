@@ -6,8 +6,8 @@ import { cn } from "@/lib/utils";
  *
  * Every non-landing page should render its body inside `<PageShell>` so the
  * horizontal alignment (Tailwind's `.container`, 1280px max) matches the
- * sticky header and the breadcrumb band — both of which also span the full
- * container width. The container is the single source of truth for
+ * sticky header, featured tools band, and breadcrumb band, all of which
+ * also span the full container width. The container is the single source of truth for
  * "what horizontal edge content sits at" on the site.
  *
  * The inner content is LEFT-ALIGNED at the container's left edge (no
@@ -34,9 +34,8 @@ import { cn } from "@/lib/utils";
  * Notes:
  *  - The root <main> is provided by the layout; do NOT wrap children in
  *    another <main>.
- *  - The layout already reserves `pt-16` to clear the sticky header. The
- *    breadcrumb lives between the header and <main>, so it scrolls under
- *    the sticky header normally.
+ *  - The locale layout owns the single root <main>; it renders the
+ *    featured tools band and global breadcrumb before page content.
  *  - Vertical padding is asymmetric: smaller on top (the breadcrumb
  *    band already provides the visual break — adding 80px more felt
  *    like dead space), larger on the bottom for separation before the
@@ -110,9 +109,9 @@ export function PageShell({
         //
         // Vertical padding is split: pt-* (smaller, breadcrumb already
         // provides visual separation) + pb-* (larger, breathing room
-        // before footer / next section). Tuned to match the gap above
-        // the breadcrumb (pt-6 on the parent <main>) so the rhythm is
-        // consistent across the page: header | gap | breadcrumb |
+        // before footer / next section). Tuned to match the sticky
+        // chrome above so the rhythm is consistent across the page:
+        // header | tools | breadcrumb |
         // gap | content | ... | footer.
         "container pt-6 pb-12 sm:pt-6 sm:pb-16 md:pt-6 md:pb-20",
         className
