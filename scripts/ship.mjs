@@ -79,25 +79,37 @@ function run(label, cmd, cmdArgs, opts = {}) {
 }
 
 const pm = (process.env.npm_command ?? "pnpm").trim() || "pnpm";
-const runner = existsSync(resolve(ROOT, "pnpm-lock.yaml")) ? "pnpm" : pm;
+// Always invoke pnpm through `corepack` so this works in environments
+// where pnpm is not on the bare PATH (e.g. the husky pre-push hook,
+// which inherits a minimal PATH that excludes the corepack shims at
+// /usr/local/lib/node_modules/corepack/shims/). `corepack` is bundled
+// with Node.js and lives in /usr/local/bin/, which IS in the standard
+// PATH on every dev machine and in every CI runner. Corepack reads
+// the `packageManager` field in package.json and dispatches to the
+// correct pnpm version transparently.
+//
+// Cost: one extra process hop per command (~5-15ms). Negligible vs.
+// the 30+ seconds lint + type-check take anyway.
+const runner = "corepack";
+const pnpmArgs = ["pnpm"];
 
-log("info", `runner=${runner} root=${ROOT}`);
+log("info", `runner=${runner} (via corepack) root=${ROOT}`);
 
 // Phase 2 — Test
-run("lint", runner, ["run", "lint"], {
+run("lint", runner, [...pnpmArgs, "run", "lint"], {
   env: { NODE_OPTIONS: "--max-old-space-size=8192" },
 });
-run("type-check", runner, ["run", "type-check"]);
+run("type-check", runner, [...pnpmArgs, "run", "type-check"]);
 
 if (hasScript("test")) {
-  run("test", runner, ["run", "test"]);
+  run("test", runner, [...pnpmArgs, "run", "test"]);
 } else {
   log("warn", "no `test` script defined — skipping (DOD checklist will note this)");
 }
 
 // Phase 3 — Build (opt-in by default; CI is the source of truth for prod builds)
 if (wantBuild) {
-  run("build", runner, ["exec", "opennextjs-cloudflare", "build"]);
+  run("build", runner, [...pnpmArgs, "exec", "opennextjs-cloudflare", "build"]);
   const workerJs = resolve(ROOT, ".open-next", "worker.js");
   if (!existsSync(workerJs)) {
     log("err", `build said success but ${workerJs} is missing`);
