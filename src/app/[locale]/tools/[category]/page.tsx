@@ -184,7 +184,7 @@ export default async function ToolsCategoryPage({ params }: { params: Promise<Pa
                     <span
                       className={cn(
                         "flex h-7 w-7 shrink-0 items-center justify-center rounded-md",
-                        ACCENT_CLASSES[cat.accent],
+                        ACCENT_CLASSES[cat.accent]
                       )}
                     >
                       <Icon className="h-3.5 w-3.5" aria-hidden="true" />
@@ -220,7 +220,7 @@ export default async function ToolsCategoryPage({ params }: { params: Promise<Pa
                 <span
                   className={cn(
                     "flex h-9 w-9 items-center justify-center rounded-lg",
-                    ACCENT_CLASSES[o.accent],
+                    ACCENT_CLASSES[o.accent]
                   )}
                 >
                   <OIcon className="h-4 w-4" aria-hidden="true" />

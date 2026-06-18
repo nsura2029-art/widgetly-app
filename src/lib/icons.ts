@@ -77,6 +77,23 @@ import {
   Heading,
   Volume2,
   Headphones,
+  // ---- Adobe parity icons (added 2026-06-18) ----
+  // Six icons for the 9 new PDF tools added for Adobe parity:
+  //   FilePlus      → Insert PDF Pages
+  //   FileImage     → PNG to PDF / PDF to PNG (raster file shape)
+  //   Camera        → HEIC to PDF (iPhone photo format)
+  //   Signature     → Fill & Sign (form-fill signature)
+  //   Send          → Request e-signatures (send a signing request)
+  //   MessageCircle → Chat with PDF (distinct from MessageSquare
+  //                   which is already used for Tone Rewriter in
+  //                   the Writing category — keeps the two chat-ish
+  //                   actions visually different)
+  FilePlus,
+  FileImage,
+  Camera,
+  Signature,
+  Send,
+  MessageCircle,
 } from "lucide-react";
 
 /**
@@ -162,6 +179,12 @@ const ICON_MAP = {
   Heading,
   Volume2,
   Headphones,
+  FilePlus,
+  FileImage,
+  Camera,
+  Signature,
+  Send,
+  MessageCircle,
 } satisfies Record<string, LucideIcon>;
 
 export type IconName = keyof typeof ICON_MAP;

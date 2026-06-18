@@ -152,8 +152,8 @@ export const CATEGORIES: readonly Category[] = [
   {
     slug: "pdf",
     longDescription:
-      "Free online PDF tools: merge, split, compress, convert to Word/Excel/JPG, edit, sign, protect. No upload limits, no watermarks, runs in your browser.",
-    count: 28,
+      "Free online PDF tools: merge, split, compress, convert to Word/Excel/JPG/PNG, edit, sign, fill forms, request e-signatures, OCR, protect. No upload limits, no watermarks, runs in your browser.",
+    count: 37,
     icon: "FileText",
     href: "/tools/pdf",
     accent: "primary",

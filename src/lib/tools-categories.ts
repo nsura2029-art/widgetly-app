@@ -49,10 +49,11 @@ export const TOOLS_CATEGORIES: readonly ToolsCategory[] = [
     slug: "pdf",
     name: "PDF Tools",
     headline: "Free online PDF tools",
-    pitch: "Merge, split, compress, convert, sign, redact — every PDF tool you need in one place.",
+    pitch:
+      "Merge, split, compress, convert, sign, redact, fill forms, request signatures, run OCR — every PDF tool you need in one place.",
     intro:
-      "Every PDF tool you'll actually use, in your browser. No upload limits, no watermarks, no sign-up. Merge, split, compress, convert to Word / Excel / JPG, sign, redact, protect — and the rest just works.",
-    count: 28,
+      "Every PDF tool you'll actually use, in your browser. No upload limits, no watermarks, no sign-up. Merge, split, compress, convert to Word / Excel / JPG / PNG, sign, fill forms, request e-signatures, redact, protect, OCR scanned pages, and run AI on any PDF — the rest just works.",
+    count: 37,
     icon: "FileText",
     accent: "primary",
     keywords: {
@@ -65,6 +66,10 @@ export const TOOLS_CATEGORIES: readonly ToolsCategory[] = [
         "compress pdf",
         "pdf to word",
         "pdf editor",
+        "fill and sign pdf",
+        "request e-signatures",
+        "ocr pdf",
+        "chat with pdf",
       ],
     },
     examples: [
@@ -73,7 +78,7 @@ export const TOOLS_CATEGORIES: readonly ToolsCategory[] = [
       "Compress PDF",
       "PDF to Word",
       "PDF to JPG",
-      "Sign PDF",
+      "Fill & Sign",
       "Protect PDF",
     ],
   },
