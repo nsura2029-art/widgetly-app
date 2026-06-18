@@ -269,6 +269,74 @@ curl -X POST "https://api.indexnow.org/indexnow" \
 
 ---
 
+## Developer-tools troubleshooting
+
+#### React DevTools Profiler: "Profiling not supported"
+
+- Symptom: open Chrome DevTools → Profiler tab → click Record →
+  banner says **"Profiling not supported. Profiling support requires
+  either a development or profiling build of React v16.5+"**.
+- Cause: production React builds strip the Profiling API. The
+  Profiler tab only works against (a) dev mode (`pnpm dev`) or
+  (b) a production build compiled with `--profile`. Next.js
+  production builds do **not** ship a profiling build by default.
+- Our React version: `react@19.2.0`, `react-dom@19.2.0` (see
+  `package.json` dependencies). This is already the latest
+  React major — upgrading to a newer React will not fix the
+  Profiler; the issue is the build flavor, not the version.
+- Impact of upgrading to React latest anyway (when a new major
+  ships, e.g. React 20 if/when it lands):
+  - **Bundle size**: minor. React 19's compiled output is ~6 KB
+    gzipped for the core; a major bump usually shifts a few KB.
+  - **Concurrent features**: progressive. We already use Server
+    Components, `useTransition`, and `<Suspense>`. Nothing in the
+    current widgetly surface relies on private React APIs.
+  - **Breaking changes**: each major historically renames or
+    removes a couple of APIs. Quick check via
+    `pnpm exec next-codemod@latest next-16-react-19-upgrade`
+    catches most of them.
+  - **Cost**: ~1 day of work for the upgrade itself + ~1 day
+    of regression testing (we have no automated browser tests
+    yet, so the regression pass is manual).
+- Practical fix for Profiler: run `pnpm dev` locally, navigate to
+  the page under test, then start recording in the Profiler tab.
+  The dev server compiles with the Profiling API enabled. If
+  you need Profiler data against production, install the
+  [React DevTools Profiling build extension](https://react.dev/learn/react-developer-tools)
+  (currently in preview) which can attach to production
+  bundles — or temporarily set `__PROFILE__` in your local
+  Next.js fork and rebuild.
+- Related: if Profiler fires many synthetic events, you may see
+  RSC prefetches 503. See "503 on tool pages during Profiler
+  recording" below.
+
+#### 503 on tool pages during Profiler recording
+
+- Symptom: Chrome DevTools Network tab shows `?_rsc=1_xxx`
+  requests to `/en/tools/[category]/[tool]` returning **503
+  Service Unavailable**, often 6+ in parallel. Trigger is the
+  React DevTools Profiler recording synthetic events (mouseovers)
+  which cause every visible Next.js `<Link>` to prefetch its
+  RSC payload.
+- Cause: Cloudflare Workers Free has a 10 ms CPU / request
+  budget and a tight per-isolate concurrent capacity. 6+
+  parallel prerender requests blow past the budget on the
+  losing requests.
+- Fix: every `<Link>` to a `/tools/[category]` or
+  `/tools/[category]/[tool]` route already has `prefetch={false}`
+  (these are all `force-static` pages — see
+  [`tools-banner.tsx`](../../src/components/layout/tools-banner.tsx)
+  for the rationale). If you see this error after adding new
+  tool Links, make sure `prefetch={false}` is set on them too.
+  See [`AGENTS.md`](../../AGENTS.md) § "Ship Cycle / Definition
+  of Done" and the "anti-pattern" table.
+- Note: the user-facing navigation is NOT broken — Next.js
+  falls back to a full HTML load when RSC prefetch fails. The
+  503s are visible only in the Network tab (and to the
+  Profiler).
+
+---
+
 ## Child DOX Index
 
 | Subtree                                      | Owns                                                                                                            | AGENTS.md                                                                    |

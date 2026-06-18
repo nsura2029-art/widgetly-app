@@ -41,7 +41,7 @@ const CATEGORY_ICON_NAMES: Record<string, string> = {
   writing: "PenLine",
 };
 const CATEGORY_ICONS: Record<string, ReturnType<typeof getIcon>> = Object.fromEntries(
-  Object.entries(CATEGORY_ICON_NAMES).map(([slug, name]) => [slug, getIcon(name)])
+  Object.entries(CATEGORY_ICON_NAMES).map(([slug, name]) => [slug, getIcon(name)]),
 );
 
 type Params = { category: string; tool: string };
@@ -107,7 +107,7 @@ export default async function ToolDetailPage({ params }: { params: Promise<Param
   // Other categories for the explore rail.
   const otherCategories = TOOLS_CATEGORIES.filter((c) => c.slug !== toolPage.categorySlug).slice(
     0,
-    6
+    6,
   );
 
   // Per-tool page schema: WebApplication + BreadcrumbList.
@@ -193,7 +193,11 @@ export default async function ToolDetailPage({ params }: { params: Promise<Param
           Tools
         </Link>
         <span aria-hidden="true">/</span>
-        <Link href={`/tools/${cat.slug}`} className="hover:text-foreground transition-colors">
+        <Link
+          href={`/tools/${cat.slug}`}
+          prefetch={false}
+          className="hover:text-foreground transition-colors"
+        >
           {cat.name}
         </Link>
         <span aria-hidden="true">/</span>
@@ -208,7 +212,7 @@ export default async function ToolDetailPage({ params }: { params: Promise<Param
             "flex h-20 w-20 items-center justify-center rounded-2xl shadow-sm md:h-24 md:w-24",
             // Accent background — same accent color as the mega-menu tile
             // for the same tool, so visual identity carries across surfaces.
-            toolAccentBg(toolPage.accent)
+            toolAccentBg(toolPage.accent),
           )}
           aria-hidden="true"
         >
@@ -241,6 +245,7 @@ export default async function ToolDetailPage({ params }: { params: Promise<Param
             </Link>
             <Link
               href={`/tools/${cat.slug}`}
+              prefetch={false}
               className="text-muted-foreground hover:text-foreground text-sm font-medium underline-offset-4 hover:underline"
             >
               ← {cat.name}
@@ -286,12 +291,13 @@ export default async function ToolDetailPage({ params }: { params: Promise<Param
                 <li key={rel.slug}>
                   <Link
                     href={`/tools/${rel.categorySlug}/${rel.slug}`}
+                    prefetch={false}
                     className="border-border/60 hover:border-primary/40 group flex items-center gap-3 rounded-xl border bg-white p-3.5 transition-colors"
                   >
                     <span
                       className={cn(
                         "inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg transition-colors",
-                        toolAccentBg(rel.accent)
+                        toolAccentBg(rel.accent),
                       )}
                       aria-hidden="true"
                     >
@@ -332,7 +338,7 @@ export default async function ToolDetailPage({ params }: { params: Promise<Param
                   <span
                     className={cn(
                       "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg",
-                      catAccentBg(o.accent)
+                      catAccentBg(o.accent),
                     )}
                     aria-hidden="true"
                   >

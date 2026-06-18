@@ -83,10 +83,13 @@ export const TOOLS_SUBGROUPS: Record<string, readonly Subgroup[]> = {
   //  - Optimize = teal (fresh, growth)
   //  - Convert to = blue (outbound, open)
   //  - Convert from = cyan (inbound, lighter counterpart to blue)
-  //  - Edit = purple (creative)
-  //  - Security = red (locks/caution — was orange, which clashed
-  //    visually with the "convert to" blue)
+  //  - Edit = purple (creative) — used for Edit PDF AND Edit Video
+  //  - Security = indigo (trustworthy, structural — replaced red in 2026-06)
   //  - AI = pink (playful, AI vibe)
+  //  - Health = teal (wellness, growth — replaced red in 2026-06)
+  //
+  // Red was intentionally removed from the palette — it read as
+  // "destructive / error" and clashed with our success-state styling.
   // ---------------------------------------------------------------------
   pdf: [
     {
@@ -143,7 +146,7 @@ export const TOOLS_SUBGROUPS: Record<string, readonly Subgroup[]> = {
     },
     {
       title: "PDF Security",
-      accent: "red",
+      accent: "indigo",
       items: [
         { name: "Unlock PDF", icon: "LockOpen" },
         { name: "Protect PDF", icon: "Lock" },
@@ -210,7 +213,7 @@ export const TOOLS_SUBGROUPS: Record<string, readonly Subgroup[]> = {
   video: [
     {
       title: "Edit Video",
-      accent: "red",
+      accent: "purple",
       items: [
         { name: "Trim Video", icon: "Scissors" },
         { name: "Merge Clips", icon: "Combine" },
@@ -287,7 +290,7 @@ export const TOOLS_SUBGROUPS: Record<string, readonly Subgroup[]> = {
     },
     {
       title: "Health",
-      accent: "red",
+      accent: "teal",
       items: [
         { name: "BMI Calculator", icon: "Heart" },
         { name: "Calorie Counter", icon: "Apple" },
@@ -407,5 +410,5 @@ export const FEATURED_WITH_SUBGROUPS: readonly string[] = Object.keys(TOOLS_SUBG
     // category registry. Keeps the two registries loosely coupled
     // — adding a sub-grouping for a non-featured category doesn't
     // accidentally promote it to the banner.
-    TOOLS_CATEGORIES.some((c) => c.slug === slug)
+    TOOLS_CATEGORIES.some((c) => c.slug === slug),
 );

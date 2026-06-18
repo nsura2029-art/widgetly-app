@@ -55,6 +55,7 @@ export function Categories() {
               <StaggerItem key={category.slug}>
                 <Link
                   href={category.href}
+                  prefetch={false}
                   className="group block focus:outline-none"
                   aria-label={`${name} \u2014 ${category.count}`}
                 >
@@ -63,7 +64,7 @@ export function Categories() {
                     transition={{ duration: 0.2, ease: "easeOut" }}
                     className={cn(
                       "border-border/80 shadow-soft relative h-full overflow-hidden rounded-2xl border bg-white p-5 transition-all",
-                      "hover:shadow-soft-lg hover:border-transparent"
+                      "hover:shadow-soft-lg hover:border-transparent",
                     )}
                   >
                     <div
@@ -73,7 +74,7 @@ export function Categories() {
                         "bg-gradient-to-br",
                         category.accent === "primary" && "from-primary/5 to-transparent",
                         category.accent === "secondary" && "from-secondary/5 to-transparent",
-                        category.accent === "accent" && "from-accent/5 to-transparent"
+                        category.accent === "accent" && "from-accent/5 to-transparent",
                       )}
                     />
 
@@ -81,7 +82,7 @@ export function Categories() {
                       <div
                         className={cn(
                           "inline-flex h-10 w-10 items-center justify-center rounded-xl",
-                          accent.iconBg
+                          accent.iconBg,
                         )}
                       >
                         <Icon className="h-5 w-5" />
