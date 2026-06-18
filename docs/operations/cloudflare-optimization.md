@@ -228,22 +228,49 @@ It's only used by Radio 3 (Override). Leave it blank.
 Click **+ Add status code setting** once per row. Each row has 3
 dropdowns: **Scope**, **Status code**, **Duration**.
 
-For our case, add these rows (you only need 2 critical rows;
-the rest are refinements):
+**Scope dropdown** has 4 options (verified 2026-06-18):
 
-| Scope picker               | Status code | Duration                        | Why                        |
-| -------------------------- | ----------- | ------------------------------- | -------------------------- |
-| `Greater than or equal to` | `200`       | `1 day` (or `86400` seconds)    | Cache successful responses |
-| `Greater than or equal to` | `500`       | `0 seconds` (or `Do not cache`) | **Never cache 5xx**        |
+- `Single code`
+- `Greater than or equal to`
+- `Less than or equal to`
+- `Range` (then a second `Status code` field appears for the upper bound)
 
-Optional refinements:
+**Duration dropdown** is **preset values only** (no free-form
+seconds input). Verified options:
 
-| Scope picker               | Status code    | Duration    | Why                                                                            |
-| -------------------------- | -------------- | ----------- | ------------------------------------------------------------------------------ |
-| `From` → `to` (range)      | `200` to `299` | `1 day`     | Same as the 200+ row, but using a range — pick whichever Scope type you prefer |
-| `Greater than or equal to` | `300`          | `1 day`     | Cache redirects                                                                |
-| `Greater than or equal to` | `400`          | `1 minute`  | Brief cache for bad-request floods                                             |
-| `Single code`              | `404`          | `5 minutes` | Don't slam Worker on deleted-tool 404s                                         |
+- `No store` (don't store the response at all)
+- `No cache` (store but always revalidate)
+- `30 seconds`, `1 minute`, `2 minutes`, `5 minutes`, `10 minutes`,
+  `15 minutes`, `30 minutes`
+- `1 hour`, `2 hours`, `3 hours`, `4 hours`, `6 hours`, `12 hours`
+- `1 day`, `1 week`, `1 month`, `1 year`
+
+##### Rows to add (using exact dropdown labels)
+
+**Critical rows** — add these two:
+
+| #   | Scope                      | Status code | Duration   |
+| --- | -------------------------- | ----------- | ---------- |
+| 1   | `Greater than or equal to` | `200`       | `1 day`    |
+| 2   | `Greater than or equal to` | `500`       | `No store` |
+
+The `500 → No store` row is the most important — it makes it
+**impossible** to cache 5xx responses, even if origin sends
+Cache-Control on an error.
+
+**Optional refinements** — add if you want fine-grained control:
+
+| Scope                      | Status code | Duration    |
+| -------------------------- | ----------- | ----------- |
+| `Greater than or equal to` | `300`       | `1 day`     |
+| `Greater than or equal to` | `400`       | `1 minute`  |
+| `Single code`              | `404`       | `5 minutes` |
+
+> ⚠️ **Use `No store` (not `No cache`) for the 5xx row.** They
+> sound similar but `No cache` still STORES the response and
+> revalidates it on the next request — a brief 503 could still
+> serve stale errors to subsequent users during the revalidation.
+> `No store` blocks storage entirely.
 
 ##### How the table interacts with the radio
 
@@ -268,7 +295,7 @@ header (so 200 always caches for 1 day regardless of
 TTL"** as the base radio. We don't want that for widgetly because
 it would discard our carefully-tuned `s-maxage=300`.
 
-##### API equivalent (for reference)
+##### API equivalent (for reference; the dashboard form does this for you)
 
 ```json
 "edge_ttl": {
@@ -278,13 +305,14 @@ it would discard our carefully-tuned `s-maxage=300`.
     { "status_code_range": { "from": 300, "to": 399 }, "value": 86400 },
     { "status_code_range": { "from": 400, "to": 499 }, "value": 60 },
     { "status_code_range": { "status_code": 404 }, "value": 300 },
-    { "status_code_range": { "from": 500 }, "value": 0 }
+    { "status_code_range": { "from": 500 }, "value": -1 }
   ]
 }
 ```
 
 The `mode: "respect_origin"` is what the radio "Use cache-control
-header if present, bypass cache if not" maps to.
+header if present, bypass cache if not" maps to. The `value: -1`
+is the API representation of the dashboard's `No store` option.
 
 **About "Eligible status codes"** — this is NOT a separate section
 on the form. Status-code filtering is handled **by the Status
