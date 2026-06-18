@@ -146,6 +146,35 @@ expression
 404, 408, 410, 418, 451) with **Edge TTL = respect existing
 headers** and **Browser TTL = 0**.
 
+#### Layer B dashboard walkthrough (Cache Rules form)
+
+Cloudflare's Create Rule form has 4 sections. Field-by-field:
+
+1. **Rule name**: `Cache HTML pages at edge`
+2. **Match expression** (use Editor, paste):
+   ```
+   (http.host eq "widgetly.tech" and http.request.method eq "GET"
+    and not starts_with(http.request.uri.path, "/api/")
+    and not starts_with(http.request.uri.path, "/_next/")
+    and not starts_with(http.request.uri.path, "/diag/"))
+   ```
+3. **Cache eligibility**: "Eligible for cache settings", check status codes:
+   ✅ 200, 203, 204, 300, 301, 302, 304, 307, 308, 404, 405, 410, 414, 451
+   ❌ Never check 5xx — caching 503 perpetuates the outage for the cache TTL.
+4. **Cache settings**:
+   - **Edge TTL**: "Use cache-control header if present, bypass cache if not"
+     (this honors our `s-maxage=300` from `next.config.ts`)
+   - **Browser TTL**: explicit `0` (always revalidate with CDN; edge handles perf)
+   - **Serve stale while revalidating**: ON, 86400 seconds (1 day)
+   - **Cache deception armor**: ON
+   - **Respect Strong ETags**: ON
+   - **Origin error page pass-through**: ON
+   - **Cache Key**: leave defaults
+
+Verify with `curl -sI https://widgetly.tech/en | grep -i cf-cache-status`:
+first request → `MISS`, second → `HIT`. Then check
+`/api/region` → `BYPASS`.
+
 ### Layer C — Strip the dynamic API surface down to what's actually needed
 
 Today we have 6 API routes (`contact`, `diag/consent`, `diag/d1`,
