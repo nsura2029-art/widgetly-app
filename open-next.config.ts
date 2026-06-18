@@ -1,8 +1,8 @@
 import type { OpenNextConfig } from "@opennextjs/cloudflare";
 
 // KV-backed incremental cache. The class is exported by OpenNext's Cloudflare
-// adapter — we import it and pass it as a function reference (not the string
-// "cloudflare-kv-incremental-cache", which the validator rejects).
+// adapter — we import it and pass it as a function reference (the validator
+// only accepts the literal string "dummy" or a function).
 //
 // The KV namespace binding is `NEXT_INC_CACHE_KV` (the adapter's default —
 // matches our [[kv_namespaces]] block in wrangler.toml).
@@ -11,7 +11,7 @@ import type { OpenNextConfig } from "@opennextjs/cloudflare";
 // cache population is enough; the build replaces the whole cache implicitly.
 // Adding KV tag caching would require a SECOND KV namespace (`NEXT_TAG_CACHE_KV`)
 // and was deemed not worth the complexity for widgetly.
-import kvIncrementalCache from "@opennextjs/cloudflare/api/overrides/incremental-cache/kv-incremental-cache";
+import kvIncrementalCache from "@opennextjs/cloudflare/overrides/incremental-cache/kv-incremental-cache";
 
 const config: OpenNextConfig = {
   default: {
