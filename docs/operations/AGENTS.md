@@ -271,4 +271,8 @@ curl -X POST "https://api.indexnow.org/indexnow" \
 
 ## Child DOX Index
 
-_No children. Operations is a leaf domain — pnpm scripts and workflows live entirely in this AGENTS.md._
+| Subtree                                      | Owns                                                                                                            | AGENTS.md                                                                    |
+| -------------------------------------------- | --------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| `docs/operations/cloudflare-optimization.md` | Cloudflare plan/tier analysis, edge-cache strategy, Error 1102 fix roadmap, Free vs Paid vs Pro feature matrix. | [`docs/operations/cloudflare-optimization.md`](./cloudflare-optimization.md) |
+
+_Other than the above, Operations is a leaf domain — pnpm scripts and workflows live entirely in this AGENTS.md._

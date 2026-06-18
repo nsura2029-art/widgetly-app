@@ -19,6 +19,78 @@ in brackets is when the item was filed.
 
 ---
 
+## 🔴 Cloudflare edge-cache plan + Error 1102 fix [2026-06-18]
+
+Random Error 1102s ("Worker exceeded resource limits") are coming
+from the **Workers Free** 10 ms CPU budget. Root cause is structural
+— Next.js SSR + i18n + middleware can't reliably finish in 10 ms,
+and our Worker bundle is over the 3 MB Free limit anyway.
+
+Full analysis + tier recommendation + 10-item priority list lives
+in [`docs/operations/cloudflare-optimization.md`](./docs/operations/cloudflare-optimization.md).
+TL;DR:
+
+1. **Cache HTML at the edge** with `Cache-Control: public,
+s-maxage=300, stale-while-revalidate=86400` — added to
+   `public/_headers` for all `/en/*`, `/es/*`, `/fr/*` routes.
+2. **Add a Cloudflare Cache Rule** in the dashboard that bypasses
+   `/api/*`, `/_next/*`, `/diag/*` and caches everything else for
+   5 min edge TTL. (Dashboard step, can't be done from the repo.)
+3. **Rewrite `sitemap.ts`** to import tool data statically so it
+   can be `force-static` instead of `force-dynamic`.
+4. **Strip middleware cookie writes** off cache-miss paths only, OR
+   move `wly_locale` / `wly_anon` to a client-side script.
+5. **Move `/api/openapi.json`** from a route handler to a static
+   file under `public/`.
+6. **Pre-generate OG images** at build time so `opengraph-image.tsx`
+   stops costing CPU per share preview.
+7. **If 1102 persists**, upgrade to **Workers Paid** ($5/mo) — 30 s
+   CPU + 10 MB Worker size + 10M req/mo. Decision rule: upgrade when
+   traffic hits ~50K req/day sustained OR after the next 1102 from
+   a real user, whichever comes first.
+
+## 🟡 Cloudflare tier — current vs next [2026-06-18]
+
+| Tier               | Cost      | CPU/req                 | Req cap         | Worker size | Worth it?                                    |
+| ------------------ | --------- | ----------------------- | --------------- | ----------- | -------------------------------------------- |
+| Workers Free       | $0        | 10 ms                   | 100K/day        | 3 MB        | ⚠️ we're here, 1102s prove it's too tight    |
+| Workers Paid       | **$5/mo** | 30 s default, 5 min max | 10M/mo included | 10 MB       | ✅ recommended next step                     |
+| Cloudflare Pro     | $25/mo    | (same as Paid)          | (same)          | (same)      | 🟡 post-launch, when uptime SLA / WAF matter |
+| Workers Enterprise | custom    | (same)                  | (same)          | (same)      | 🟢 not yet                                   |
+
+Cloudflare Pro adds: WAF managed rules, Bot Fight Mode, advanced
+DDoS, Image Resizing/Polish/Mirage, 100% SLA, priority support.
+None of those raise Workers limits. The "Workers Paid" upgrade is
+**separate** from the "Cloudflare Pro" site-plan upgrade.
+
+## 🟢 Cloudflare features we don't use yet [2026-06-18]
+
+Things available on our current or next tier that would help
+specific workloads — file for later:
+
+- **KV** — eventually-consistent key-value store. Commented out in
+  `wrangler.toml`. Re-enable when we need per-user preference
+  storage beyond cookies (e.g. saved tool collections).
+- **R2** — S3-compatible object storage with zero egress. Useful
+  when we host our own tool icons / images instead of pulling from
+  external CDNs.
+- **Queues** — async job queue ($0.40/M msgs on Paid). Useful for
+  webhook delivery, exports, batch notifications.
+- **Smart Placement** — multi-region Worker routing. Useful if
+  TTFB to EU/Asia becomes a complaint.
+- **Hyperdrive** — Postgres accelerator. Useful if we add a
+  relational DB (Turso, Neon, Supabase Postgres) for non-edge data.
+- **Durable Objects** — stateful coordination. Useful for real-time
+  collab (e.g. shared tool workspaces).
+- **Image Resizing / Polish / Mirage** — only on Cloudflare Pro.
+  Useful when we have many tool icons to serve at many sizes with
+  best-in-class compression.
+- **Logpush** — stream Worker logs to S3/BigQuery. Useful for
+  compliance + debugging at scale.
+- **Web Analytics** — already enabled via `ANALYTICS_TOKEN`.
+
+---
+
 ## ⚠️ Security — GitHub PAT leak [2026-06-15]
 
 A GitHub personal access token (PAT) was pasted into chat
