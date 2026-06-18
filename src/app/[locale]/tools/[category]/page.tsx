@@ -178,12 +178,13 @@ export default async function ToolsCategoryPage({ params }: { params: Promise<Pa
                 <li key={name} id={slug}>
                   <Link
                     href={`/tools/${cat.slug}/${slug}`}
+                    prefetch={false}
                     className="border-border/60 bg-muted/5 hover:border-primary/40 hover:bg-muted/10 group flex items-center gap-2.5 rounded-lg border px-3 py-2.5 text-sm transition-colors"
                   >
                     <span
                       className={cn(
                         "flex h-7 w-7 shrink-0 items-center justify-center rounded-md",
-                        ACCENT_CLASSES[cat.accent]
+                        ACCENT_CLASSES[cat.accent],
                       )}
                     >
                       <Icon className="h-3.5 w-3.5" aria-hidden="true" />
@@ -213,12 +214,13 @@ export default async function ToolsCategoryPage({ params }: { params: Promise<Pa
               <Link
                 key={o.slug}
                 href={`/tools/${o.slug}`}
+                prefetch={false}
                 className="border-border/60 hover:border-primary/40 group flex items-center gap-3 rounded-xl border bg-white p-3.5 transition-colors"
               >
                 <span
                   className={cn(
                     "flex h-9 w-9 items-center justify-center rounded-lg",
-                    ACCENT_CLASSES[o.accent]
+                    ACCENT_CLASSES[o.accent],
                   )}
                 >
                   <OIcon className="h-4 w-4" aria-hidden="true" />
