@@ -296,6 +296,10 @@ Exit code is `0` if all checks pass, `1` otherwise. Override the host:
 bash scripts/verify-cache.sh https://staging.widgetly.tech
 ```
 
+For **manual probes by route, region, or traffic pattern** — or to
+gather a Cloudflare support escalation packet — see
+[`cache-test.md`](./cache-test.md).
+
 ### Manual cache probes
 
 | Probe                      | Command                                                                                                                                                                                |
@@ -409,8 +413,9 @@ bash scripts/verify-cache.sh https://staging.widgetly.tech
 
 ## Child DOX Index
 
-| Subtree                                      | Owns                                                                                                            | AGENTS.md                                                                    |
-| -------------------------------------------- | --------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| `docs/operations/cloudflare-optimization.md` | Cloudflare plan/tier analysis, edge-cache strategy, Error 1102 fix roadmap, Free vs Paid vs Pro feature matrix. | [`docs/operations/cloudflare-optimization.md`](./cloudflare-optimization.md) |
+| Subtree                                      | Owns                                                                                                                                                                                                                                                        | AGENTS.md                                                                    |
+| -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| `docs/operations/cloudflare-optimization.md` | Cloudflare plan/tier analysis, edge-cache strategy, Error 1102 fix roadmap, Free vs Paid vs Pro feature matrix. Architecture + design.                                                                                                                      | [`docs/operations/cloudflare-optimization.md`](./cloudflare-optimization.md) |
+| `docs/operations/cache-test.md`              | Manual cache testing runbook: probes by URL, by route type, by region (global rollout), by traffic pattern (burst/soak/cold), 1102/5xx sweeps, and a Cloudflare support escalation packet (account/zone/Worker/KV IDs, when to escalate, support channels). | [`docs/operations/cache-test.md`](./cache-test.md)                           |
 
 _Other than the above, Operations is a leaf domain — pnpm scripts and workflows live entirely in this AGENTS.md._
