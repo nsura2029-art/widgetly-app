@@ -41,6 +41,32 @@ enabled = true
 # preview_id = "REPLACE_WITH_PREVIEW_KV_NAMESPACE_ID"
 
 # ---------------------------------------------------------------------------
+# KV: OpenNext incremental cache.
+#
+# Backing store for prerendered HTML pages (`force-static` routes). Without
+# this, OpenNext re-renders every request — the previous `incrementalCache:
+# "dummy"` config in open-next.config.ts caused the Worker to spin on every
+# request, which is what was triggering the random Error 1102s.
+#
+# Created via:
+#   pnpm wrangler kv:namespace create NEXT_INC_CACHE_KV
+#   pnpm wrangler kv:namespace create NEXT_INC_CACHE_KV --preview
+# Paste the printed IDs into `id` / `preview_id` below.
+#
+# KV is included in Workers Free (100K reads/day, 1K writes/day, 1 GB). Reads
+# happen on every cached request; writes happen at build time when OpenNext
+# prerenders each route. We use <0.1% of the daily quota.
+#
+# Bound binding name is `NEXT_INC_CACHE_KV` — this is the default name that
+# `cloudflare-kv-incremental-cache` looks up; if you change it here, you must
+# also override `kvBinding` in open-next.config.ts.
+# ---------------------------------------------------------------------------
+[[kv_namespaces]]
+binding = "NEXT_INC_CACHE_KV"
+id = "REPLACE_WITH_KV_NAMESPACE_ID"
+preview_id = "REPLACE_WITH_PREVIEW_KV_NAMESPACE_ID"
+
+# ---------------------------------------------------------------------------
 # Environment variables (set in Cloudflare dashboard, not here)
 # ---------------------------------------------------------------------------
 # WAITLIST_KV      — KV binding (if KV enabled)
