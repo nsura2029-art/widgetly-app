@@ -115,7 +115,8 @@ export function middleware(req: NextRequest) {
   }
 
   // `wly_anon` — only set on first visit (already correct pattern).
-  if (!req.cookies.get(COOKIE_ANON)) {
+  const existingAnon = req.cookies.get(COOKIE_ANON);
+  if (!existingAnon) {
     response.cookies.set(COOKIE_ANON, crypto.randomUUID(), {
       path: "/",
       maxAge: 60 * 60 * 24 * 365 * 2,
@@ -132,6 +133,16 @@ export function middleware(req: NextRequest) {
   const existingNextLocale = req.cookies.get("NEXT_LOCALE")?.value?.toLowerCase();
   if (existingNextLocale === resolved) {
     response.cookies.delete("NEXT_LOCALE");
+  }
+
+  // Returning user with all the right cookies? Strip ALL Set-Cookie
+  // headers from the response so Cloudflare's edge cache can engage.
+  // `response.cookies.delete()` above only marks NEXT_LOCALE for
+  // expiration — it still emits a Set-Cookie header. We need to drop
+  // the entire Set-Cookie header for the response to be cacheable.
+  if (existingLocale === resolved && existingNextLocale === resolved && existingAnon) {
+    // `Headers.delete('set-cookie')` removes every Set-Cookie header.
+    response.headers.delete("set-cookie");
   }
 
   // Forward to RSC for server components that want to read the locale
