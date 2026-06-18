@@ -1,3 +1,7 @@
-
+#!/usr/bin/env sh
+# .husky/pre-commit
+#
+# Runs lint-staged on staged files. Husky v9+ contract — no `_/husky.sh`
+# source-line (removed in v9). Keep executable: `chmod +x .husky/pre-commit`.
 
 npx lint-staged

@@ -14,6 +14,8 @@
     "type-check": "tsc --noEmit",
     "format": "prettier --write \"**/*.{ts,tsx,md,json,css}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,md,json,css}\"",
+    "ship": "node scripts/ship.mjs",
+    "ship:build": "node scripts/ship.mjs --build",
     "prepare": "husky",
     "prebuild": "node scripts/sync-swagger-assets.mjs",
     "sync:swagger": "node scripts/sync-swagger-assets.mjs",

@@ -243,15 +243,132 @@ The user can scan these blocks to confirm the agent activated the right roles an
 
 ---
 
-## Verification
+## Ship Cycle / Definition of Done
 
-| Check      | Command                                    | Pass criterion                  |
-| ---------- | ------------------------------------------ | ------------------------------- |
-| TypeScript | `pnpm type-check`                          | exit 0, no errors               |
-| Lint       | `pnpm lint <path>`                         | exit 0, no errors (warnings ok) |
-| Build      | `pnpm exec opennextjs-cloudflare build`    | produces `.open-next/worker.js` |
-| D1 schema  | `pnpm db:info`                             | shows current migration applied |
-| Deploy     | `gh workflow run deploy.yml --ref develop` | run completes `success`         |
+> **Why this section exists.** A change is *not* "done" when it lands on `main`.
+> It is done when the change **is built, deployed, and verified live** — and
+> any docs / contracts that the change touched have been updated. The
+> previous workflow treated "git push succeeded" as the finish line, which
+> shipped changes that were appended but never built or deployed. This
+> section is the fix.
+
+### The five-phase ship cycle
+
+Every change follows this loop. Skipping a phase is a defect, not a
+shortcut. The pre-push hook, the CI workflow, the deploy workflow, and the
+`pnpm ship` script are all designed to enforce it.
+
+```
+   ┌─────────┐   ┌──────┐   ┌──────┐   ┌────────┐   ┌──────────┐
+   │ 1. CODE │ → │ 2.   │ → │ 3.   │ → │ 4.     │ → │ 5.       │
+   │  + DOX  │   │ TEST │   │BUILD │   │ DEPLOY │   │ VERIFY   │
+   └─────────┘   └──────┘   └──────┘   └────────┘   └──────────┘
+        ↑                                              │
+        └──────────── fix & re-enter phase ────────────┘
+```
+
+1. **Code + DOX.** Implement the change. Update the owning AGENTS.md (root
+   or child) before you commit — see "Update After Editing" above. Commit
+   with the project's author identity (`Mavis <Mavis@local>` for AI work).
+2. **Test.** `pnpm lint`, `pnpm type-check`, and any tests under the changed
+   scope must pass. The local pre-push hook runs the same gate; CI runs the
+   full version. **No push out of a red gate.**
+3. **Build.** `pnpm exec opennextjs-cloudflare build` must produce a clean
+   `.open-next/worker.js`. A build that emits warnings you can't explain is
+   not a build you can ship.
+4. **Deploy.** Merge to `develop` (preview), then to `main` (production).
+   Each merge triggers the deploy workflow (`.github/workflows/deploy.yml`).
+   Wait for `success`. Capture the run URL.
+5. **Verify.** Hit the live URL. Confirm the change is observably present
+   (curl, browser, sitemap fetch, JSON-LD validator, Lighthouse — whichever
+   matches the surface touched). For SEO changes, also submit affected URLs
+   to IndexNow (see `docs/seo/AGENTS.md`).
+
+### Definition of Done (DOD) checklist
+
+A change is **done** only when **every box below** can be ticked. Paste
+this block into the PR description; do not merge while any box is unchecked.
+
+- [ ] **Code complete.** Feature/fix implemented, no `// TODO`s left behind,
+      no commented-out blocks, no debug `console.log`s.
+- [ ] **DOX updated.** Every owning AGENTS.md (root + child) reflects the
+      change. Stale text removed. Child DOX Index refreshed if needed.
+- [ ] **Pre-commit hook passed.** `npx lint-staged` ran on staged files
+      with no errors.
+- [ ] **Pre-push hook passed.** `pnpm lint && pnpm type-check` exit 0.
+      (Equivalent to CI's `quality` job.)
+- [ ] **Build succeeded.** `pnpm exec opennextjs-cloudflare build` exits 0
+      and produces `.open-next/worker.js`.
+- [ ] **Merged to `develop`.** PR merged (or fast-forward push) with a
+      conventional commit message.
+- [ ] **Preview deploy green.** Deploy workflow run on `develop` ends in
+      `success`. Run URL captured.
+- [ ] **Merged to `main`.** PR merged to `main` (production branch).
+- [ ] **Production deploy green.** Deploy workflow run on `main` ends in
+      `success`. Run URL captured.
+- [ ] **Live verification.** The deployed URL exhibits the expected
+      change — not a stale cache, not a 502, not "Error 1102".
+- [ ] **Indexes notified (if SEO surface touched).** IndexNow submission
+      for affected URLs; sitemap regenerated; canonical URL unchanged
+      unless that was the change.
+- [ ] **Secrets rotated (if any leaked).** See `docs/secrets/AGENTS.md`.
+- [ ] **Post-deploy observation window.** Watch the change for ≥ 30
+      minutes live (cf-ray logs, error rate, search console crawl stats).
+      If anything regresses, hotfix or revert immediately.
+
+### `pnpm ship` — one command that runs the local portion
+
+The local pre-push gate is wrapped in a single script so humans and agents
+can run it the same way:
+
+```bash
+pnpm ship   # runs: lint + type-check + (test) + build, with colored output
+```
+
+The script lives at `scripts/ship.mjs` and is the source of truth for what
+"the local DOD gate" actually means. The pre-push hook calls it instead of
+inlining commands, so the hook and the manual command can never drift.
+
+### What "shipped but not deployed" looks like (anti-patterns)
+
+Recognize these. They are the failure modes this section is here to prevent.
+
+| Anti-pattern                                      | Symptom                                                     | Fix                                                                                          |
+| ------------------------------------------------- | ----------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| **Appended but not built**                        | Commit on `main`, no deploy workflow run triggered.         | Push again or re-run via `workflow_dispatch`. Check the workflow's `on:` trigger.             |
+| **Built but not deployed**                        | `.open-next/worker.js` exists locally, but Worker still old.| The deploy step needs the bundle *uploaded* — `wrangler deploy`, not just `next build`.      |
+| **Deployed but not verified**                     | Run shows `success`, but live URL still old.                | Cache: purge Cloudflare cache. Or wait for stale-while-revalidate. Or check route prefix.   |
+| **Verified once, then regressed**                | Change works at 10:00, broken at 10:30 from a later deploy. | Pin the deploy SHA; never re-deploy `main` head without testing the diff.                   |
+| **DOX not updated**                               | Next agent can't find the new script / endpoint / env var.  | Stop. Update owning AGENTS.md. Then merge.                                                  |
+| **IndexNow skipped after SEO change**             | New tool page not crawled for weeks.                        | Submit affected URLs the same day as deploy. `docs/seo/AGENTS.md`.                          |
+
+### When a phase fails
+
+Failures are signals, not blockers. The right move:
+
+1. **Stop the cycle.** Don't push past a red phase. Don't merge past a
+   failed deploy.
+2. **Diagnose.** The troubleshooting table in `docs/operations/AGENTS.md`
+   covers the common cases (1102, OOM lint, wrangler auth, secrets drift).
+3. **Fix in the same branch.** Don't `git revert` and re-merge later —
+   that loses the diagnosis. Add the fix as a new commit on the branch.
+4. **Re-enter the cycle from the failed phase.** Not from phase 1 — the
+   code + DOX didn't change.
+5. **Note it.** If the failure mode was new, append it to the
+   troubleshooting table so the next agent doesn't re-discover it.
+
+### Scope exclusions
+
+The ship cycle does **not** apply to:
+
+- Pure documentation edits under `docs/**/AGENTS.md` (no code, no build,
+  no deploy — but still requires the DOX closeout pass).
+- Changes under ignored runtime folders (`usr/`, `tmp/`, `.next/`,
+  `.open-next/`, `node_modules/`, `.wrangler/`) — see "Scope exclusions"
+  in the Core DOX contract.
+
+If you're unsure whether the cycle applies, run it. A wasted build is
+cheaper than a half-shipped change.
 
 ---
 

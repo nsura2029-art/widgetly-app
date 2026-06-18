@@ -69,6 +69,8 @@ Owns pnpm scripts, common command sequences, deploy workflow, and troubleshootin
 | `pnpm lint`        | `eslint .` (whole project).     | Run with `NODE_OPTIONS="--max-old-space-size=8192"` to avoid OOM on big projects. |
 | `pnpm lint <path>` | Lint specific files.            | Faster than full lint.                                                            |
 | `pnpm format`      | Prettier write.                 | Optional, mostly automatic via editor.                                            |
+| `pnpm ship`        | Local DOD gate (lint + type-check + test). Calls `scripts/ship.mjs`. | Before push. Same code path the husky pre-push hook runs. |
+| `pnpm ship:build`  | `pnpm ship` + `opennextjs-cloudflare build`. | Before merge to `develop` / `main`. Slow — CI also runs it. |
 
 #### Secrets
 
@@ -257,6 +259,13 @@ curl -X POST "https://api.indexnow.org/indexnow" \
 | Lint (scoped)   | `NODE_OPTIONS="--max-old-space-size=8192" npx eslint <path>`                 | exit 0                          |
 | Build           | `pnpm exec opennextjs-cloudflare build`                                      | produces `.open-next/worker.js` |
 | Deploy          | `gh workflow run deploy.yml --ref develop` (or sandbox-side curl equivalent) | run completes `success`         |
+
+> The full ship-cycle gate (local lint + type-check + test + build, plus
+> remote merge + deploy + live verify) lives in the root
+> [`AGENTS.md`](../../AGENTS.md) § "Ship Cycle / Definition of Done".
+> This table is the local subset. `pnpm ship` runs the local subset via
+> `scripts/ship.mjs`; that script is the same body the husky pre-push hook
+> calls — they cannot drift.
 
 ---
 
