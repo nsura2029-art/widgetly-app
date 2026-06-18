@@ -556,3 +556,103 @@ When all rows are green, the 1102 class of issues is over.
 - [Cloudflare Cache Rules](https://developers.cloudflare.com/cache/concepts/cache-control/)
 - [OpenNext for Cloudflare caching](https://opennext.js.org/cloudflare/caching)
 - [opennextjs-cloudflare#598 — first-load 1102](https://github.com/opennextjs/opennextjs-cloudflare/issues/598)
+
+---
+
+## 9. OpenNext incremental cache (KV-backed)
+
+### Why this section exists
+
+The Cloudflare Cache Rule on its own **cannot engage Cloudflare's
+edge cache for HTML responses served by OpenNext Workers**. Edge
+cache works for static files (`/robots.txt`, `/_next/static/*.js`,
+sitemap.xml) but Worker-served HTML bypasses it by default.
+
+OpenNext has its own caching layer via the Workers Cache API and
+KV. The previous config had `incrementalCache: "dummy"` in
+`open-next.config.ts`, which meant **no caching at all** — every
+request invoked the full Next.js render path, which is what caused
+the random Error 1102s.
+
+### What we set up (2026-06-18)
+
+KV-backed incremental cache. The prerendered HTML for every
+`force-static` route gets stored in a KV namespace at build time
+and read on each request.
+
+**Files changed:**
+
+- [`wrangler.toml`](../../wrangler.toml) — added
+  `[[kv_namespaces]]` block with `binding = "NEXT_INC_CACHE_KV"`.
+- [`open-next.config.ts`](../../open-next.config.ts) — changed
+  `incrementalCache: "dummy"` to
+  `"cloudflare-kv-incremental-cache"`, and `tagCache` to the same.
+
+### Setup (one-time, per environment)
+
+```bash
+# 1. Create the production KV namespace
+pnpm wrangler kv:namespace create NEXT_INC_CACHE_KV
+
+# 2. Create the preview KV namespace
+pnpm wrangler kv:namespace create NEXT_INC_CACHE_KV --preview
+
+# 3. Copy the printed IDs into wrangler.toml:
+#    [[kv_namespaces]]
+#    binding = "NEXT_INC_CACHE_KV"
+#    id = "<production-id-from-step-1>"
+#    preview_id = "<preview-id-from-step-2>"
+
+# 4. Commit + push the updated wrangler.toml. Deploy will succeed.
+```
+
+After the first deploy, the Worker reads from KV on every cached
+request and writes to KV at build time.
+
+### What to expect after deploy
+
+| Before (no cache)                         | After (KV cache)                                                                                        |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `x-nextjs-cache: MISS` on every request   | `x-nextjs-cache: HIT` on cached requests                                                                |
+| Every request invokes full Next.js render | Cached requests bypass the render path                                                                  |
+| Random 1102 errors under traffic          | No 1102 because the Worker doesn't run the render                                                       |
+| TTFB ~150-700 ms for HTML                 | TTFB ~30-100 ms (KV read)                                                                               |
+| `cf-cache-status` missing on HTML         | Still missing — that's expected. KV cache is INSIDE the Worker; Cloudflare's edge cache doesn't see it. |
+
+### Trade-offs vs edge cache
+
+|                              | Edge cache (`cf-cache-status: HIT`)  | KV cache (`x-nextjs-cache: HIT`)                                         |
+| ---------------------------- | ------------------------------------ | ------------------------------------------------------------------------ |
+| **Latency**                  | ~5-30 ms (Cloudflare global network) | ~30-100 ms (single KV read at the Worker colocated with KV)              |
+| **Where it lives**           | 300+ Cloudflare POPs globally        | Single KV namespace, replicated globally but read from the local replica |
+| **Available on Free plan**   | Yes                                  | Yes (100K reads/day included)                                            |
+| **Bypasses Worker entirely** | Yes (Worker doesn't run)             | No (Worker still runs, but skips render)                                 |
+
+KV cache is faster than no cache but slower than true edge cache.
+For widgetly's traffic (~25K requests/day), the Workers Free KV
+quota (100K reads/day) is comfortable. If we ever exceed it, upgrade
+to Workers Paid ($5/mo) which raises the quota to 10M reads/day.
+
+### What the Cloudflare Cache Rule still does
+
+The Cache Rule we built earlier remains useful for:
+
+- Static files (`/robots.txt`, `/_next/static/*.js`, sitemap.xml)
+  that Cloudflare's edge cache DOES serve directly.
+- Caching `Cache-Control`-eligible responses from any future
+  Worker routes we add.
+
+But for HTML from OpenNext, the KV cache is now the primary cache
+layer. The Cache Rule is a defense-in-depth measure, not the
+primary defense.
+
+### If you see 1102 again after this change
+
+- Check `x-nextjs-cache: HIT` — if it's still MISS, KV isn't
+  engaging. Verify the binding ID in `wrangler.toml` matches the
+  actual KV namespace ID in Cloudflare.
+- Check Cloudflare dashboard → Workers → Logs for KV errors
+  ("binding not found", "namespace not found", etc.).
+- Verify OpenNext wrote to KV at build time: Cloudflare dashboard
+  → Workers → KV → NEXT_INC_CACHE_KV → should have keys for each
+  prerendered route.
