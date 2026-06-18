@@ -106,6 +106,17 @@ on every prerendered route. Use a **Cloudflare Cache Rule** to:
   excluded), and any route that sets its own `Cache-Control:
 no-store`.
 
+> **Important gotcha** — `public/_headers` on a Cloudflare Workers
+> (OpenNext) deployment **only applies to files served from the
+> Worker's `[assets]` binding** (i.e. the `.open-next/assets/`
+> directory). It does NOT apply to dynamic HTML responses from
+> Next.js SSR. Cache-Control for dynamic routes MUST be set via
+> `next.config.ts → headers()`. We learned this the hard way when
+> the first deploy showed `/en` still returning the default
+> `s-maxage=31536000` (from Next's own defaults) instead of our
+> intended `s-maxage=300`. The `_headers` rules for HTML routes
+> were silently ignored.
+
 Then 99% of HTML requests never hit the Worker at all. They hit
 Cloudflare's edge cache (which is essentially free and unlimited),
 and the bytes fly out at <30 ms TTFB globally.
