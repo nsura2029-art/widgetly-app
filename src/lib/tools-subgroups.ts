@@ -100,6 +100,7 @@ export const TOOLS_SUBGROUPS: Record<string, readonly Subgroup[]> = {
         { name: "Split PDF", icon: "Split" },
         { name: "Remove pages", icon: "FileX" },
         { name: "Extract pages", icon: "FileOutput" },
+        { name: "Insert PDF Pages", icon: "FilePlus" },
         { name: "Reorder pages", icon: "ArrowUpDown" },
         { name: "Scan to PDF", icon: "ScanLine" },
       ],
@@ -110,6 +111,7 @@ export const TOOLS_SUBGROUPS: Record<string, readonly Subgroup[]> = {
       items: [
         { name: "Compress PDF", icon: "Minimize2" },
         { name: "Repair PDF", icon: "Wrench" },
+        { name: "OCR PDF", icon: "ScanText" },
       ],
     },
     {
@@ -117,6 +119,8 @@ export const TOOLS_SUBGROUPS: Record<string, readonly Subgroup[]> = {
       accent: "blue",
       items: [
         { name: "JPG to PDF", icon: "ImagePlus" },
+        { name: "PNG to PDF", icon: "FileImage" },
+        { name: "HEIC to PDF", icon: "Camera" },
         { name: "Word to PDF", icon: "FileText" },
         { name: "PowerPoint to PDF", icon: "Presentation" },
         { name: "Excel to PDF", icon: "Sheet" },
@@ -128,6 +132,7 @@ export const TOOLS_SUBGROUPS: Record<string, readonly Subgroup[]> = {
       accent: "cyan",
       items: [
         { name: "PDF to JPG", icon: "ImageMinus" },
+        { name: "PDF to PNG", icon: "FileImage" },
         { name: "PDF to Word", icon: "FileText" },
         { name: "PDF to PowerPoint", icon: "Presentation" },
         { name: "PDF to Excel", icon: "Sheet" },
@@ -151,6 +156,8 @@ export const TOOLS_SUBGROUPS: Record<string, readonly Subgroup[]> = {
         { name: "Unlock PDF", icon: "LockOpen" },
         { name: "Protect PDF", icon: "Lock" },
         { name: "Sign PDF", icon: "PenTool" },
+        { name: "Fill & Sign", icon: "Signature" },
+        { name: "Request e-signatures", icon: "Send" },
         { name: "Redact PDF", icon: "EyeOff" },
         { name: "Compare PDFs", icon: "Eye" },
       ],
@@ -160,7 +167,9 @@ export const TOOLS_SUBGROUPS: Record<string, readonly Subgroup[]> = {
       accent: "pink",
       items: [
         { name: "AI Summarizer", icon: "Sparkles" },
+        { name: "Chat with PDF", icon: "MessageCircle" },
         { name: "Translate PDF", icon: "Languages" },
+        { name: "Generate Presentation", icon: "Presentation" },
       ],
     },
   ],
