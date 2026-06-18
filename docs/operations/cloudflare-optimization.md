@@ -148,32 +148,70 @@ headers** and **Browser TTL = 0**.
 
 #### Layer B dashboard walkthrough (Cache Rules form)
 
-Cloudflare's Create Rule form has 4 sections. Field-by-field:
+The actual Cache Rules form (verified 2026-06-18 against the live
+dashboard) has **only the radio + 6 expandable settings**, no
+"Eligible status codes" checkboxes section. Every setting is
+gated behind a `+ Add setting` button that reveals its controls.
+Walk through:
 
-1. **Rule name**: `Cache HTML pages at edge`
-2. **Match expression** (use Editor, paste):
-   ```
-   (http.host eq "widgetly.tech" and http.request.method eq "GET"
-    and not starts_with(http.request.uri.path, "/api/")
-    and not starts_with(http.request.uri.path, "/_next/")
-    and not starts_with(http.request.uri.path, "/diag/"))
-   ```
-3. **Cache eligibility**: "Eligible for cache settings", check status codes:
-   ✅ 200, 203, 204, 300, 301, 302, 304, 307, 308, 404, 405, 410, 414, 451
-   ❌ Never check 5xx — caching 503 perpetuates the outage for the cache TTL.
-4. **Cache settings**:
-   - **Edge TTL**: "Use cache-control header if present, bypass cache if not"
-     (this honors our `s-maxage=300` from `next.config.ts`)
-   - **Browser TTL**: explicit `0` (always revalidate with CDN; edge handles perf)
-   - **Serve stale while revalidating**: ON, 86400 seconds (1 day)
-   - **Cache deception armor**: ON
-   - **Respect Strong ETags**: ON
-   - **Origin error page pass-through**: ON
-   - **Cache Key**: leave defaults
+**Step 1 — Rule name** (top of the form, plain text field):
+`Cache HTML pages at edge`
 
-Verify with `curl -sI https://widgetly.tech/en | grep -i cf-cache-status`:
-first request → `MISS`, second → `HIT`. Then check
-`/api/region` → `BYPASS`.
+**Step 2 — Match expression** (next section):
+Click **Edit expression**, switch to **Expression Editor**, paste:
+
+```
+(http.host eq "widgetly.tech" and http.request.method eq "GET"
+ and not starts_with(http.request.uri.path, "/api/")
+ and not starts_with(http.request.uri.path, "/_next/")
+ and not starts_with(http.request.uri.path, "/diag/"))
+```
+
+**Step 3 — Cache eligibility** (radio buttons):
+Pick **Eligible for cache** (not Bypass cache).
+
+**Step 4 — Add the settings you need** (each is `+ Add setting`):
+
+| Setting                                    | What to pick                                                                                                  | Notes                                                                                                                                        |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Edge TTL**                               | Click `+ Add setting`, then in the dropdown pick **Use cache-control header if present, bypass cache if not** | This honors our `s-maxage=300, stale-while-revalidate=86400` from `next.config.ts`. Do NOT pick "Override" — that would discard our headers. |
+| **Browser TTL**                            | Click `+ Add setting`, set to **0** seconds                                                                   | Edge handles perf; browsers should always revalidate with the CDN.                                                                           |
+| **Cache key**                              | Leave **NOT** added (defaults are fine)                                                                       | Adding this exposes include/exclude fields. Defaults already exclude cookies.                                                                |
+| **Serve stale content while revalidating** | Click `+ Add setting`, toggle **ON**, set duration to **86400** seconds (1 day)                               | This is what enables SWR on the edge even if origin is slow.                                                                                 |
+| **Respect strong ETags**                   | Click `+ Add setting`, toggle **ON**                                                                          | More reliable revalidation.                                                                                                                  |
+| **Origin error page pass-through**         | Click `+ Add setting`, toggle **ON**                                                                          | So our custom 404 stays a 404, not Cloudflare's generic error.                                                                               |
+
+**About "Eligible status codes"** — this is NOT a separate section
+on the form. Status-code filtering is handled implicitly:
+
+- The **Edge TTL mode** ("Use cache-control header if present")
+  only caches responses that the origin marked cacheable.
+- Our `next.config.ts` sets `Cache-Control: public, s-maxage=300`
+  on 200 responses only — 5xx never gets a cacheable header, so
+  they're never cached, regardless of what we'd "check."
+- That's exactly the behavior we want: never cache errors,
+  regardless of the dashboard UI.
+
+**Step 5 — Deploy**. Click the blue **Deploy** button at the
+bottom right.
+
+**Verify**:
+
+```bash
+# First request: cache miss
+curl -sI https://widgetly.tech/en | grep -iE 'cf-cache-status|cache-control'
+#  → cf-cache-status: MISS
+#  → cache-control: public, s-maxage=300, stale-while-revalidate=86400
+
+# Second request: cache hit (rule is working)
+curl -sI https://widgetly.tech/en | grep -i cf-cache-status
+#  → cf-cache-status: HIT
+
+# /api/* should be bypassed (not in our expression)
+curl -sI https://widgetly.tech/api/region | grep -iE 'cf-cache-status|cache-control'
+#  → cf-cache-status: BYPASS
+#  → cache-control: no-store, no-cache, must-revalidate
+```
 
 ### Layer C — Strip the dynamic API surface down to what's actually needed
 
