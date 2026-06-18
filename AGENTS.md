@@ -245,7 +245,7 @@ The user can scan these blocks to confirm the agent activated the right roles an
 
 ## Ship Cycle / Definition of Done
 
-> **Why this section exists.** A change is *not* "done" when it lands on `main`.
+> **Why this section exists.** A change is _not_ "done" when it lands on `main`.
 > It is done when the change **is built, deployed, and verified live** — and
 > any docs / contracts that the change touched have been updated. The
 > previous workflow treated "git push succeeded" as the finish line, which
@@ -333,14 +333,14 @@ inlining commands, so the hook and the manual command can never drift.
 
 Recognize these. They are the failure modes this section is here to prevent.
 
-| Anti-pattern                                      | Symptom                                                     | Fix                                                                                          |
-| ------------------------------------------------- | ----------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
-| **Appended but not built**                        | Commit on `main`, no deploy workflow run triggered.         | Push again or re-run via `workflow_dispatch`. Check the workflow's `on:` trigger.             |
-| **Built but not deployed**                        | `.open-next/worker.js` exists locally, but Worker still old.| The deploy step needs the bundle *uploaded* — `wrangler deploy`, not just `next build`.      |
-| **Deployed but not verified**                     | Run shows `success`, but live URL still old.                | Cache: purge Cloudflare cache. Or wait for stale-while-revalidate. Or check route prefix.   |
-| **Verified once, then regressed**                | Change works at 10:00, broken at 10:30 from a later deploy. | Pin the deploy SHA; never re-deploy `main` head without testing the diff.                   |
-| **DOX not updated**                               | Next agent can't find the new script / endpoint / env var.  | Stop. Update owning AGENTS.md. Then merge.                                                  |
-| **IndexNow skipped after SEO change**             | New tool page not crawled for weeks.                        | Submit affected URLs the same day as deploy. `docs/seo/AGENTS.md`.                          |
+| Anti-pattern                          | Symptom                                                      | Fix                                                                                       |
+| ------------------------------------- | ------------------------------------------------------------ | ----------------------------------------------------------------------------------------- |
+| **Appended but not built**            | Commit on `main`, no deploy workflow run triggered.          | Push again or re-run via `workflow_dispatch`. Check the workflow's `on:` trigger.         |
+| **Built but not deployed**            | `.open-next/worker.js` exists locally, but Worker still old. | The deploy step needs the bundle _uploaded_ — `wrangler deploy`, not just `next build`.   |
+| **Deployed but not verified**         | Run shows `success`, but live URL still old.                 | Cache: purge Cloudflare cache. Or wait for stale-while-revalidate. Or check route prefix. |
+| **Verified once, then regressed**     | Change works at 10:00, broken at 10:30 from a later deploy.  | Pin the deploy SHA; never re-deploy `main` head without testing the diff.                 |
+| **DOX not updated**                   | Next agent can't find the new script / endpoint / env var.   | Stop. Update owning AGENTS.md. Then merge.                                                |
+| **IndexNow skipped after SEO change** | New tool page not crawled for weeks.                         | Submit affected URLs the same day as deploy. `docs/seo/AGENTS.md`.                        |
 
 ### When a phase fails
 

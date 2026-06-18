@@ -20,94 +20,95 @@
 //   node scripts/ship.mjs --skip-build     # explicit skip
 //   pnpm ship                              # the canonical alias
 
-import { spawnSync } from 'node:child_process';
-import { existsSync, readFileSync } from 'node:fs';
-import { resolve, dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { spawnSync } from "node:child_process";
+import { existsSync, readFileSync } from "node:fs";
+import { resolve, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const ROOT = resolve(__dirname, '..');
+const ROOT = resolve(__dirname, "..");
 
 const args = new Set(process.argv.slice(2));
-const wantBuild = args.has('--build');
-const skipBuild = args.has('--skip-build') || args.has('--no-build');
-const verbose = args.has('--verbose') || process.env.SHIP_VERBOSE === '1';
+const wantBuild = args.has("--build");
+const skipBuild = args.has("--skip-build") || args.has("--no-build");
+const verbose = args.has("--verbose") || process.env.SHIP_VERBOSE === "1";
 
-const RED = '\x1b[31m';
-const GREEN = '\x1b[32m';
-const YELLOW = '\x1b[33m';
-const BLUE = '\x1b[34m';
-const DIM = '\x1b[2m';
-const RESET = '\x1b[0m';
+const RED = "\x1b[31m";
+const GREEN = "\x1b[32m";
+const YELLOW = "\x1b[33m";
+const BLUE = "\x1b[34m";
+const DIM = "\x1b[2m";
+const RESET = "\x1b[0m";
 
 function log(level, msg) {
-  const prefix = {
-    info: `${BLUE}▶${RESET}`,
-    ok: `${GREEN}✓${RESET}`,
-    warn: `${YELLOW}⚠${RESET}`,
-    err: `${RED}✗${RESET}`,
-    dim: `${DIM}·${RESET}`,
-  }[level] ?? '·';
+  const prefix =
+    {
+      info: `${BLUE}▶${RESET}`,
+      ok: `${GREEN}✓${RESET}`,
+      warn: `${YELLOW}⚠${RESET}`,
+      err: `${RED}✗${RESET}`,
+      dim: `${DIM}·${RESET}`,
+    }[level] ?? "·";
   console.log(`${prefix} ship: ${msg}`);
 }
 
 function hasScript(name) {
-  const pkg = JSON.parse(readFileSync(resolve(ROOT, 'package.json'), 'utf8'));
+  const pkg = JSON.parse(readFileSync(resolve(ROOT, "package.json"), "utf8"));
   return Boolean(pkg.scripts?.[name]);
 }
 
 function run(label, cmd, cmdArgs, opts = {}) {
-  log('info', `${label} …`);
+  log("info", `${label} …`);
   const result = spawnSync(cmd, cmdArgs, {
     cwd: ROOT,
-    stdio: verbose ? 'inherit' : 'pipe',
+    stdio: verbose ? "inherit" : "pipe",
     env: { ...process.env, ...(opts.env ?? {}) },
     shell: false,
   });
   if (result.error) {
-    log('err', `${label} failed to start: ${result.error.message}`);
+    log("err", `${label} failed to start: ${result.error.message}`);
     process.exit(2);
   }
   if (result.status !== 0) {
-    log('err', `${label} exited ${result.status}`);
+    log("err", `${label} exited ${result.status}`);
     if (!verbose && result.stdout) process.stdout.write(result.stdout);
     if (!verbose && result.stderr) process.stderr.write(result.stderr);
     process.exit(result.status ?? 1);
   }
-  log('ok', `${label} passed`);
+  log("ok", `${label} passed`);
 }
 
-const pm = (process.env.npm_command ?? 'pnpm').trim() || 'pnpm';
-const runner = existsSync(resolve(ROOT, 'pnpm-lock.yaml')) ? 'pnpm' : pm;
+const pm = (process.env.npm_command ?? "pnpm").trim() || "pnpm";
+const runner = existsSync(resolve(ROOT, "pnpm-lock.yaml")) ? "pnpm" : pm;
 
-log('info', `runner=${runner} root=${ROOT}`);
+log("info", `runner=${runner} root=${ROOT}`);
 
 // Phase 2 — Test
-run('lint', runner, ['run', 'lint'], {
-  env: { NODE_OPTIONS: '--max-old-space-size=8192' },
+run("lint", runner, ["run", "lint"], {
+  env: { NODE_OPTIONS: "--max-old-space-size=8192" },
 });
-run('type-check', runner, ['run', 'type-check']);
+run("type-check", runner, ["run", "type-check"]);
 
-if (hasScript('test')) {
-  run('test', runner, ['run', 'test']);
+if (hasScript("test")) {
+  run("test", runner, ["run", "test"]);
 } else {
-  log('warn', 'no `test` script defined — skipping (DOD checklist will note this)');
+  log("warn", "no `test` script defined — skipping (DOD checklist will note this)");
 }
 
 // Phase 3 — Build (opt-in by default; CI is the source of truth for prod builds)
 if (wantBuild) {
-  run('build', runner, ['exec', 'opennextjs-cloudflare', 'build']);
-  const workerJs = resolve(ROOT, '.open-next', 'worker.js');
+  run("build", runner, ["exec", "opennextjs-cloudflare", "build"]);
+  const workerJs = resolve(ROOT, ".open-next", "worker.js");
   if (!existsSync(workerJs)) {
-    log('err', `build said success but ${workerJs} is missing`);
+    log("err", `build said success but ${workerJs} is missing`);
     process.exit(3);
   }
-  log('ok', `.open-next/worker.js present`);
+  log("ok", `.open-next/worker.js present`);
 } else if (!skipBuild) {
-  log('dim', 'build skipped (pass --build to include; CI runs it on every PR)');
+  log("dim", "build skipped (pass --build to include; CI runs it on every PR)");
 }
 
-log('ok', 'local DOD gate passed');
+log("ok", "local DOD gate passed");
 console.log(
   `${DIM}  next: merge → develop → wait for preview → merge → main → wait for prod → verify live (see AGENTS.md § Ship Cycle)${RESET}`,
 );
