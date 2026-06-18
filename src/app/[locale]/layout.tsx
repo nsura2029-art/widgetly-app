@@ -8,6 +8,7 @@ import { isSupportedLocale, getDirection } from "@/i18n/config";
 import ClientHeader from "@/components/layout/client-header";
 import { ToolsBanner } from "@/components/layout/tools-banner";
 import { Footer } from "@/components/layout/footer";
+import { ScrollToHash } from "@/components/layout/scroll-to-hash";
 import { ConsentProvider } from "@/lib/consent/useConsent";
 import { ConsentBanner } from "@/components/consent/ConsentBanner";
 import { regionFromLocale } from "@/lib/consent/region";
@@ -166,6 +167,11 @@ export default async function LocaleLayout({
             </main>
             <Footer />
             <ConsentBanner />
+            {/* Watches for hash changes on cross-page navigation and
+                scrolls the matching element into view. Fixes a Next.js
+                App Router quirk where hash links fail on soft
+                navigations. See component file for details. */}
+            <ScrollToHash />
           </ConsentProvider>
         </NextIntlClientProvider>
       </body>
