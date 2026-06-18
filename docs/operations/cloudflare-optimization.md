@@ -251,22 +251,30 @@ seconds input). Verified options:
 
 **Critical rows** — add these two:
 
-| #   | Scope                      | Status code | Duration   |
-| --- | -------------------------- | ----------- | ---------- |
-| 1   | `Greater than or equal to` | `200`       | `1 day`    |
-| 2   | `Greater than or equal to` | `500`       | `No store` |
+| #   | Scope   | Status code    | Duration   |
+| --- | ------- | -------------- | ---------- |
+| 1   | `Range` | `200` to `299` | `1 day`    |
+| 2   | `Range` | `500` to `599` | `No store` |
 
-The `500 → No store` row is the most important — it makes it
+> ⚠️ **Why `Range` and not `Greater than or equal to`?** Using
+> "Greater than or equal to 200" matches every code from 200
+> upward INFINITELY — so it overlaps with "Greater than or
+> equal to 500" at 500-599. Cloudflare rejects overlapping
+> ranges at deploy time with the error
+> **"status_code ranges should not overlap"**. Use `Range`
+> with explicit `from` and `to` to avoid this trap.
+
+The `500-599 → No store` row is the most important — it makes it
 **impossible** to cache 5xx responses, even if origin sends
 Cache-Control on an error.
 
 **Optional refinements** — add if you want fine-grained control:
 
-| Scope                      | Status code | Duration    |
-| -------------------------- | ----------- | ----------- |
-| `Greater than or equal to` | `300`       | `1 day`     |
-| `Greater than or equal to` | `400`       | `1 minute`  |
-| `Single code`              | `404`       | `5 minutes` |
+| Scope         | Status code    | Duration    |
+| ------------- | -------------- | ----------- |
+| `Range`       | `300` to `399` | `1 day`     |
+| `Range`       | `400` to `499` | `1 minute`  |
+| `Single code` | `404`          | `5 minutes` |
 
 > ⚠️ **Use `No store` (not `No cache`) for the 5xx row.** They
 > sound similar but `No cache` still STORES the response and
