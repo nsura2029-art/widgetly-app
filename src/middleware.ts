@@ -84,15 +84,37 @@ export function middleware(req: NextRequest) {
   // can set cookies / headers on the response.
   const resolved = resolveLocaleFromRequest(req);
 
-  // Persist the locale as a cookie (1 year, Lax, Secure)
-  response.cookies.set(COOKIE_LOCALE, resolved, {
-    path: "/",
-    maxAge: 60 * 60 * 24 * 365,
-    sameSite: "lax",
-    secure: true,
-  });
+  // ---------------------------------------------------------------
+  // Cookie setting — kept minimal so Cloudflare's edge cache works.
+  //
+  // The Cloudflare Cache Rule (see docs/operations/cloudflare-optimization.md)
+  // bypasses cache by default for responses with Set-Cookie headers. If
+  // we set cookies on every response, the cache rule never fires — every
+  // HTML request hits the Worker.
+  //
+  // Fix: only set each cookie when the user doesn't already have it
+  // (or has a different value). Returning users skip Set-Cookie entirely,
+  // so their responses become cacheable.
+  //
+  // First-visit responses still have Set-Cookie (intentional — that's
+  // when we need to establish the cookie). The Worker renders them once,
+  // Cloudflare caches the rendered response, and subsequent visits from
+  // any user get the cached version (without re-setting the cookie).
+  // ---------------------------------------------------------------
 
-  // Anonymous identity for KV keying (2 years, HttpOnly)
+  // `wly_locale` — only set if missing or different. Returning users
+  // with the correct cookie get a no-Set-Cookie response.
+  const existingLocale = req.cookies.get(COOKIE_LOCALE)?.value?.toLowerCase();
+  if (existingLocale !== resolved) {
+    response.cookies.set(COOKIE_LOCALE, resolved, {
+      path: "/",
+      maxAge: 60 * 60 * 24 * 365,
+      sameSite: "lax",
+      secure: true,
+    });
+  }
+
+  // `wly_anon` — only set on first visit (already correct pattern).
   if (!req.cookies.get(COOKIE_ANON)) {
     response.cookies.set(COOKIE_ANON, crypto.randomUUID(), {
       path: "/",
@@ -101,6 +123,15 @@ export function middleware(req: NextRequest) {
       secure: true,
       httpOnly: true,
     });
+  }
+
+  // `NEXT_LOCALE` — set by next-intl internally. Strip it from the
+  // response if the user already has the same value, so the response
+  // becomes cacheable. If the value differs (locale change), keep the
+  // Set-Cookie so the user's preference is updated.
+  const existingNextLocale = req.cookies.get("NEXT_LOCALE")?.value?.toLowerCase();
+  if (existingNextLocale === resolved) {
+    response.cookies.delete("NEXT_LOCALE");
   }
 
   // Forward to RSC for server components that want to read the locale
