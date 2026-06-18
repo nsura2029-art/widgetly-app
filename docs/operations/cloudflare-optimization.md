@@ -172,52 +172,103 @@ Pick **Eligible for cache** (not Bypass cache).
 
 **Step 4 — Add the settings you need** (each is `+ Add setting`):
 
-| Setting                                    | What to pick                                                                                                                                  | Notes                                                                                                                                                                                                                                                                                                                                                           |
-| ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Edge TTL**                               | Click `+ Add setting`, then in the dropdown pick **Status code TTL** (recommended). Configure the per-status-code mapping in the table below. | **Status code TTL** is the bulletproof choice — it maps each status-code range to an explicit TTL, so even if origin accidentally sends `Cache-Control` on a 5xx response, the rule prevents caching. The simpler mode **Use cache-control header if present, bypass cache if not** also works, but relies on origin never setting cacheable headers on errors. |
-| **Browser TTL**                            | Click `+ Add setting`, set to **0** seconds                                                                                                   | Edge handles perf; browsers should always revalidate with the CDN.                                                                                                                                                                                                                                                                                              |
-| **Cache key**                              | Leave **NOT** added (defaults are fine)                                                                                                       | Adding this exposes include/exclude fields. Defaults already exclude cookies.                                                                                                                                                                                                                                                                                   |
-| **Serve stale content while revalidating** | Click `+ Add setting`, toggle **ON**, set duration to **86400** seconds (1 day)                                                               | This is what enables SWR on the edge even if origin is slow.                                                                                                                                                                                                                                                                                                    |
-| **Respect strong ETags**                   | Click `+ Add setting`, toggle **ON**                                                                                                          | More reliable revalidation.                                                                                                                                                                                                                                                                                                                                     |
-| **Origin error page pass-through**         | Click `+ Add setting`, toggle **ON**                                                                                                          | So our custom 404 stays a 404, not Cloudflare's generic error.                                                                                                                                                                                                                                                                                                  |
+| Setting                                    | What to pick                                                                                                                                                                               | Notes                                                                                                                                                     |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Edge TTL**                               | Click `+ Add setting`. Form has **3 radio buttons** for the base mode + a separate **Status code TTL** table below for per-range overrides. Pick radio #1 + fill in the table (see below). | This is the bulletproof setup — the radio handles the common case (respect origin), and the Status code TTL table explicitly defends against 5xx caching. |
+| **Browser TTL**                            | Click `+ Add setting`, set to **0** seconds                                                                                                                                                | Edge handles perf; browsers should always revalidate with the CDN.                                                                                        |
+| **Cache key**                              | Leave **NOT** added (defaults are fine)                                                                                                                                                    | Adding this exposes include/exclude fields. Defaults already exclude cookies.                                                                             |
+| **Serve stale content while revalidating** | Click `+ Add setting`, toggle **ON**, set duration to **86400** seconds (1 day)                                                                                                            | This is what enables SWR on the edge even if origin is slow.                                                                                              |
+| **Respect strong ETags**                   | Click `+ Add setting`, toggle **ON**                                                                                                                                                       | More reliable revalidation.                                                                                                                               |
+| **Origin error page pass-through**         | Click `+ Add setting`, toggle **ON**                                                                                                                                                       | So our custom 404 stays a 404, not Cloudflare's generic error.                                                                                            |
 
-##### Edge TTL: Status code TTL — per-code mapping
+##### Edge TTL form layout (verified 2026-06-18)
 
-After picking **Status code TTL** in the Edge TTL dropdown, click
-**+ Add status code TTL** once per row. The fields are:
+When you click **+ Add setting** on the Edge TTL row, the form
+expands to show:
 
-- **Status code range** — pick from dropdown:
-  - `Equal to` (single code)
-  - `Greater than or equal to`
-  - `Less than or equal to`
-  - `From ... to` (range)
-- **Status codes** — numeric field(s) depending on the range picker
-- **TTL (seconds)** — positive int, `0` for no-cache, `-1` for no-store
+```
+Edge TTL (optional)
+Specify if and how long Cloudflare should cache the response,
+depending on if a cache-control header is present on the origin
+response. If you need to modify your origin's cache-control
+directives, create a cache response transform rule.
 
-Use these rows (recommended):
+(•) Use cache-control header if present, bypass cache if not    ← RADIO 1
+( ) Use cache-control header if present, cache request with
+    Cloudflare's default TTL for the response status if not     ← RADIO 2
+( ) Ignore cache-control header and use this TTL                ← RADIO 3
 
-| Status code range                          | TTL (seconds) | Why                                                                                           |
-| ------------------------------------------ | ------------- | --------------------------------------------------------------------------------------------- |
-| `200` to `299` (success)                   | `86400`       | Cache successful responses for 1 day. Matches what we want long-term.                         |
-| `300` to `399` (redirects)                 | `86400`       | Cache redirects (e.g. `/` → `/en`) so they don't hit the Worker.                              |
-| `400` to `499` (client errors, except 404) | `60`          | Cache bad-request responses briefly so a misbehaving client doesn't pound the Worker.         |
-| `404` (not found)                          | `300`         | Cache 404s for 5 min — same as our HTML TTL — so a deleted tool page doesn't slam the Worker. |
-| `500` to `599` (server errors)             | `0`           | **Never cache 5xx.** Even a one-time Worker 1102 must not become a 5-minute global outage.    |
+Input time-to-live (TTL)                                        ← Only relevant for RADIO 3
+[ Select or add a duration in seconds ▼ ]                       ← grayed out for radios 1/2
 
-You can skip the `400-499` and `404` rows if you want — the
-default (no entry for that range) means Cloudflare falls back to
-the mode's default behavior. The two critical rows are:
+Status code TTL
+Specify how long Cloudflare should cache the response based on
+the status code from the origin.
+Scope          Status code     Duration
+Single code ▼  Select ▼        Select ▼                        [×]
+[+ Add status code setting]
+```
 
-- `200-299` → `86400` (cache successes)
-- `500-599` → `0` (never cache errors)
+So the form has **3 radios** (not 4) and a **separate Status code
+TTL table below**. The table is always shown, regardless of which
+radio you pick. The recommended setup combines both:
 
-The dropdown in the form asks for **range or single code** in a
-specific UI. To replicate the API example below, enter:
+##### Step-by-step Edge TTL config
 
-- **Greater than or equal to** + `200`, **less than or equal to** `299` → `86400`
-- **Greater than or equal to** `500` → `0` (no-cache)
+**Step 1 — Pick the base mode** (radio):
 
-API equivalent (for reference; the dashboard form does this for you):
+- ✅ Pick **"Use cache-control header if present, bypass cache if not"**
+- Why: when our origin sends Cache-Control, Cloudflare follows it.
+  When it doesn't, Cloudflare doesn't cache at all. Safe default.
+
+**Step 2 — Ignore the "Input time-to-live (TTL)" field**:
+It's only used by Radio 3 (Override). Leave it blank.
+
+**Step 3 — Fill in the Status code TTL table**.
+Click **+ Add status code setting** once per row. Each row has 3
+dropdowns: **Scope**, **Status code**, **Duration**.
+
+For our case, add these rows (you only need 2 critical rows;
+the rest are refinements):
+
+| Scope picker               | Status code | Duration                        | Why                        |
+| -------------------------- | ----------- | ------------------------------- | -------------------------- |
+| `Greater than or equal to` | `200`       | `1 day` (or `86400` seconds)    | Cache successful responses |
+| `Greater than or equal to` | `500`       | `0 seconds` (or `Do not cache`) | **Never cache 5xx**        |
+
+Optional refinements:
+
+| Scope picker               | Status code    | Duration    | Why                                                                            |
+| -------------------------- | -------------- | ----------- | ------------------------------------------------------------------------------ |
+| `From` → `to` (range)      | `200` to `299` | `1 day`     | Same as the 200+ row, but using a range — pick whichever Scope type you prefer |
+| `Greater than or equal to` | `300`          | `1 day`     | Cache redirects                                                                |
+| `Greater than or equal to` | `400`          | `1 minute`  | Brief cache for bad-request floods                                             |
+| `Single code`              | `404`          | `5 minutes` | Don't slam Worker on deleted-tool 404s                                         |
+
+##### How the table interacts with the radio
+
+The Status code TTL rows **override** the base radio mode for the
+matched status code. So:
+
+- A 200 response from our origin has `Cache-Control:
+public, s-maxage=300, SWR=86400` from `next.config.ts`.
+- The radio says "respect cache-control" → cache for 300s.
+- The Status code TTL table says `200+ → 1 day`.
+- **Which wins?** With "respect_origin" semantics: Cloudflare
+  uses the **shorter** of (origin's `s-maxage`, rule's TTL).
+  Origin's `s-maxage=300` wins → cached for 5 min.
+- A 500 response with no Cache-Control header from origin.
+- The radio says "bypass if not" → don't cache.
+- The Status code TTL table says `500+ → 0` → don't cache.
+- Either way: never cached. Belt + suspenders.
+
+If you want the rule's TTL to **strictly override** the origin's
+header (so 200 always caches for 1 day regardless of
+`s-maxage=300`), pick **"Ignore cache-control header and use this
+TTL"** as the base radio. We don't want that for widgetly because
+it would discard our carefully-tuned `s-maxage=300`.
+
+##### API equivalent (for reference)
 
 ```json
 "edge_ttl": {
@@ -232,13 +283,8 @@ API equivalent (for reference; the dashboard form does this for you):
 }
 ```
 
-Note the `mode: "respect_origin"` — when a status-code range
-doesn't match a row, Cloudflare still respects the origin's
-Cache-Control header. This means our `next.config.ts` setting
-of `s-maxage=300` wins for 200s even though the rule says 86400,
-because `respect_origin` means "if origin said cache for 300s,
-cache for 300s, not 86400." If you want the rule's TTL to
-**override** origin, switch the mode to `override_origin`.
+The `mode: "respect_origin"` is what the radio "Use cache-control
+header if present, bypass cache if not" maps to.
 
 **About "Eligible status codes"** — this is NOT a separate section
 on the form. Status-code filtering is handled **by the Status
