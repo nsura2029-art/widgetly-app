@@ -94,6 +94,40 @@ const MEGA_PANEL_ID = "tools-mega-panel";
  * Sticky, themed band that sits below the page header and above
  * the page content. Replaces the per-page breadcrumb.
  *
+ * ## Why `prefetch={false}` on every Link in this file
+ *
+ * The mega panel renders 7-29 sub-tool Links at once. With
+ * Next.js's default `prefetch` behavior, mounting the panel
+ * triggers an RSC prefetch for every visible Link. That is
+ * 7-29 parallel POSTs to the Cloudflare Worker, and when
+ * the user opens the panel quickly (or opens multiple
+ * panels in succession) the Worker's concurrent-request
+ * budget is exhausted — the browser sees 503 Service
+ * Unavailable for the losing requests.
+ *
+ * Two reasons `prefetch={false}` is correct here, not just
+ * a workaround:
+ *
+ *  1. All destination routes (`/tools/[category]` and
+ *     `/tools/[category]/[tool]`) are `force-static`. The
+ *     page HTML is prerendered at build time and served
+ *     from the edge cache on every request — no Worker
+ *     involvement, no RSC serialization. A regular
+ *     navigation is already faster than an RSC prefetch
+ *     for these pages.
+ *
+ *  2. A user opening the mega panel is **exploring**,
+ *     not committing to a destination. Most panels are
+ *     opened-and-closed without a click. Prefetching 30
+ *     routes just to be ready for the 1-in-30 click is
+ *     pure waste.
+ *
+ * When real tool UIs ship (the "Coming Soon" hero is
+ * replaced with an interactive tool), revisit this —
+ * dynamic tool pages might benefit from intent-based
+ * prefetch. For now, the static HTML navigation is
+ * already < 50ms warm.
+ *
  * Layout:
  *  - Background spans the full viewport width (same as header)
  *    so the band reads as a continuous global utility surface.
@@ -296,6 +330,7 @@ function MegaPanel({
             <Link
               href={`/tools/${category.slug}`}
               role="menuitem"
+              prefetch={false}
               onClick={onLinkClick}
               className="text-primary hover:text-primary/80 inline-flex items-center gap-1 text-xs font-medium"
             >
@@ -399,6 +434,7 @@ function SubToolLink({
     <Link
       href={href}
       role="menuitem"
+      prefetch={false}
       onClick={onClick}
       className={cn(
         "text-foreground/85 hover:bg-muted hover:text-foreground",
