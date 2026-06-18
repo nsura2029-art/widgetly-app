@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations, setRequestLocale } from "next-intl/server";
@@ -11,7 +10,7 @@ import { ToolsBanner } from "@/components/layout/tools-banner";
 import { Footer } from "@/components/layout/footer";
 import { ConsentProvider } from "@/lib/consent/useConsent";
 import { ConsentBanner } from "@/components/consent/ConsentBanner";
-import { regionFromCountry, regionFromLocale } from "@/lib/consent/region";
+import { regionFromLocale } from "@/lib/consent/region";
 
 import { websiteJsonLd, organizationJsonLd } from "@/lib/seo";
 
@@ -73,12 +72,15 @@ export async function generateMetadata({
  * NextIntlClientProvider, and renders the shared chrome (header, footer,
  * breadcrumb). Per-request locale resolution via next-intl's helpers.
  *
- * Also reads Cloudflare's `cf-ipcountry` header to compute the
- * visitor's consent region. The header is free, populated by the
- * edge for every request, and is the standard server-side signal
- * for GDPR/CCPA region detection. We fall back to a locale-based
- * heuristic when the header is absent (local dev, non-Cloudflare
- * proxies).
+ * The consent region is derived from locale here (cheap, static)
+ * and refined client-side inside <ConsentProvider> via a fetch to
+ * /api/diag/consent (which reads cf-ipcountry server-side). This
+ * keeps the layout free of `headers()` calls — `headers()` in a
+ * server component opts every page into dynamic rendering, which
+ * caused Cloudflare Worker 1102 errors on 2026-06-18. The
+ * client-side fetch gives us the actual region a moment after
+ * mount; the locale-based default is what GDPR/CCPA users see
+ * before the fetch resolves.
  */
 export default async function LocaleLayout({
   children,
@@ -100,22 +102,10 @@ export default async function LocaleLayout({
   const messages = await getMessages();
   const dir = getDirection(locale);
 
-  // Server-side consent region: cf-ipcountry first, then locale
-  // fallback. The result is passed into <ConsentProvider> so the
-  // banner can pick the right default toggles (and so the audit
-  // record captures where the user was when they made the choice).
-  let consentRegion = regionFromLocale(locale);
-  try {
-    const h = await headers();
-    const country = h.get("cf-ipcountry");
-    const fromCountry = regionFromCountry(country);
-    // Country code is more reliable than locale; only fall back to
-    // locale-based if the country is unknown.
-    if (fromCountry !== "other") consentRegion = fromCountry;
-  } catch {
-    // headers() can throw outside of a request context (very rare in
-    // App Router; defensive). Stick with the locale-based guess.
-  }
+  // Locale-based consent region as the static default. Refined
+  // client-side via /api/diag/consent. Do NOT add `headers()` here
+  // — see the block comment above.
+  const consentRegion = regionFromLocale(locale);
 
   // JSON-LD entities (these are locale-agnostic for now, but could
   // be parameterized in the future).
