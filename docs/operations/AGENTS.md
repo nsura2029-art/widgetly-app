@@ -335,7 +335,39 @@ curl -X POST "https://api.indexnow.org/indexnow" \
   503s are visible only in the Network tab (and to the
   Profiler).
 
----
+#### Edge cache not engaging — `cf-cache-status` header missing
+
+- Symptom: Cache Rule is deployed, Edge TTL is set to "Use
+  cache-control header if present", origin returns
+  `Cache-Control: public, s-maxage=300, ...`, but no
+  `cf-cache-status` header appears on responses. Curl shows:
+  ```
+  cache-control: public, s-maxage=300, stale-while-revalidate=86400
+  set-cookie: NEXT_LOCALE=en; Path=/; SameSite=lax
+  set-cookie: wly_locale=en; ...
+  set-cookie: wly_anon=...; ...
+  ```
+- Cause: Cloudflare's `bypass_by_default` Edge TTL mode bypasses
+  cache for responses with `Set-Cookie` headers, regardless of
+  Cache-Control. The Cache Rule "Eligible for cache" eligibility
+  enables the rule but doesn't override the Set-Cookie bypass in
+  this mode.
+- Fix (architecture): make the middleware skip Set-Cookie for
+  returning users. See
+  [`src/middleware.ts`](../../src/middleware.ts) — `wly_locale`
+  is now only set if the request cookie is missing or differs
+  from the resolved locale; `wly_anon` was already conditional;
+  `NEXT_LOCALE` (set by next-intl internally) is stripped from
+  the response when the request cookie already matches. Result:
+  returning users get a no-Set-Cookie response, which is
+  cacheable.
+- Fix (config, less ideal): switch the Edge TTL mode to
+  "Ignore cache-control and use this TTL" and set the Input TTL
+  dropdown explicitly. This forces caching despite Set-Cookie
+  but discards the `s-maxage=300` from `next.config.ts`.
+- Verification: after deploying the middleware fix, curl twice:
+  `curl -sI https://widgetly.tech/en | grep -i cf-cache-status`
+  → 1st: `MISS`, 2nd: `HIT`.
 
 ## Child DOX Index
 
