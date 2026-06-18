@@ -98,7 +98,7 @@ export default function ToolsIndexPage() {
                 <span
                   className={cn(
                     "flex h-11 w-11 items-center justify-center rounded-xl",
-                    ACCENT_CLASSES[cat.accent],
+                    ACCENT_CLASSES[cat.accent]
                   )}
                 >
                   <Icon className="h-5 w-5" aria-hidden="true" />

@@ -41,7 +41,7 @@ const CATEGORY_ICON_NAMES: Record<string, string> = {
   writing: "PenLine",
 };
 const CATEGORY_ICONS: Record<string, ReturnType<typeof getIcon>> = Object.fromEntries(
-  Object.entries(CATEGORY_ICON_NAMES).map(([slug, name]) => [slug, getIcon(name)]),
+  Object.entries(CATEGORY_ICON_NAMES).map(([slug, name]) => [slug, getIcon(name)])
 );
 
 type Params = { category: string; tool: string };
@@ -107,7 +107,7 @@ export default async function ToolDetailPage({ params }: { params: Promise<Param
   // Other categories for the explore rail.
   const otherCategories = TOOLS_CATEGORIES.filter((c) => c.slug !== toolPage.categorySlug).slice(
     0,
-    6,
+    6
   );
 
   // Per-tool page schema: WebApplication + BreadcrumbList.
@@ -212,7 +212,7 @@ export default async function ToolDetailPage({ params }: { params: Promise<Param
             "flex h-20 w-20 items-center justify-center rounded-2xl shadow-sm md:h-24 md:w-24",
             // Accent background — same accent color as the mega-menu tile
             // for the same tool, so visual identity carries across surfaces.
-            toolAccentBg(toolPage.accent),
+            toolAccentBg(toolPage.accent)
           )}
           aria-hidden="true"
         >
@@ -297,7 +297,7 @@ export default async function ToolDetailPage({ params }: { params: Promise<Param
                     <span
                       className={cn(
                         "inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg transition-colors",
-                        toolAccentBg(rel.accent),
+                        toolAccentBg(rel.accent)
                       )}
                       aria-hidden="true"
                     >
@@ -338,7 +338,7 @@ export default async function ToolDetailPage({ params }: { params: Promise<Param
                   <span
                     className={cn(
                       "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg",
-                      catAccentBg(o.accent),
+                      catAccentBg(o.accent)
                     )}
                     aria-hidden="true"
                   >

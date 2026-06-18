@@ -63,8 +63,8 @@ enabled = true
 # ---------------------------------------------------------------------------
 [[kv_namespaces]]
 binding = "NEXT_INC_CACHE_KV"
-id = "REPLACE_WITH_KV_NAMESPACE_ID"
-preview_id = "REPLACE_WITH_PREVIEW_KV_NAMESPACE_ID"
+id = "0e35b410aaf04be18d7cb17e54bc9cfb"
+preview_id = "d85f0da78ed64650a9502783e03f116f"
 
 # ---------------------------------------------------------------------------
 # Environment variables (set in Cloudflare dashboard, not here)

@@ -102,7 +102,7 @@ function HistoryPill({ item }: { item: HistoryItem }) {
       className={cn(
         "group/pill border-border/60 shadow-soft hover:border-border bg-white",
         "inline-flex shrink-0 items-center gap-3 rounded-2xl border px-4 py-3",
-        "hover:shadow-soft-lg transition-all hover:-translate-y-0.5",
+        "hover:shadow-soft-lg transition-all hover:-translate-y-0.5"
       )}
       aria-label={`${item.name} (last visited ${relativeTime(item.visitedAt)})`}
     >
@@ -163,7 +163,7 @@ export function RecentlyVisited() {
           className={cn(
             "border-border/60 text-muted hover:text-foreground hover:border-border bg-white",
             "inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium",
-            "transition-colors",
+            "transition-colors"
           )}
           aria-label={t("clearAll")}
         >

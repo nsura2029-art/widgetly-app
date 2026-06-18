@@ -419,5 +419,5 @@ export const FEATURED_WITH_SUBGROUPS: readonly string[] = Object.keys(TOOLS_SUBG
     // category registry. Keeps the two registries loosely coupled
     // — adding a sub-grouping for a non-featured category doesn't
     // accidentally promote it to the banner.
-    TOOLS_CATEGORIES.some((c) => c.slug === slug),
+    TOOLS_CATEGORIES.some((c) => c.slug === slug)
 );
