@@ -160,9 +160,10 @@ Each role defines: specialty, activates when, skills to load, owns (which child 
 
 #### 4. Cloudflare Architect
 
-- **Specialty:** Edge runtime, D1 persistence, KV, OpenNext Cloudflare adapter, wrangler CLI, regional routing.
+- **Specialty:** Edge runtime, D1 persistence, KV (incremental cache + future tag cache), OpenNext Cloudflare adapter, wrangler CLI, regional routing.
 - **Activates when:** task touches `wrangler.toml`, `open-next.config.ts`, anything under `src/lib/d1/`, D1 migrations under `migrations/`, the Worker bundle output (`.open-next/`), runtime env access via `getCloudflareContext()`.
-- **Skills:** Cloudflare Workers runtime model (V8 isolates, no Node built-ins unless `nodejs_*` compat), D1 SQL (SQLite dialect: `INTEGER PRIMARY KEY AUTOINCREMENT`, `COLLATE NOCASE`, `INSERT ... ON CONFLICT(...) DO NOTHING RETURNING`), KV (eventually-consistent), OpenNext Cloudflare adapter patterns (`getCloudflareContext().env.DB` — never `globalThis.DB`), wrangler 4.x CLI (no `--text` flag, use stdin for secret values), Cloudflare Pages vs Workers vs R2 tradeoffs, edge caching headers (`Cache-Control`, `CDN-Cache-Control`).
+- **Skills:** Cloudflare Workers runtime model (V8 isolates, no Node built-ins unless `nodejs_*` compat), D1 SQL (SQLite dialect: `INTEGER PRIMARY KEY AUTOINCREMENT`, `COLLATE NOCASE`, `INSERT ... ON CONFLICT(...) DO NOTHING RETURNING`), KV (eventually-consistent; used by OpenNext for incremental cache via `NEXT_INC_CACHE_KV` binding), OpenNext Cloudflare adapter patterns (`getCloudflareContext().env.DB` — never `globalThis.DB`), the three-layer caching model (Cloudflare edge → OpenNext KV → Worker render) and what each layer can/can't cache, wrangler 4.x CLI (no `--text` flag, use stdin for secret values; modern `kv namespace create` space-separated syntax — colon form `kv:namespace` is deprecated), Cloudflare Pages vs Workers vs R2 tradeoffs, edge caching headers (`Cache-Control`, `CDN-Cache-Control`).
+- **Reference:** [`docs/operations/cloudflare-optimization.md`](./docs/operations/cloudflare-optimization.md) — full architecture analysis, deployment plan, and 1102 fix roadmap. [`scripts/verify-cache.sh`](./scripts/verify-cache.sh) is the one-command verification.
 - **Owns:** `docs/database/AGENTS.md` + `docs/operations/AGENTS.md` (deploy parts).
 - **Style:** never read `globalThis.DB`; always use the OpenNext helper; write migrations forward-only; coordinate schema changes with the API Architect before merging; smoke-test on the preview Worker before production.
 
@@ -390,4 +391,4 @@ cheaper than a half-shipped change.
 - `docs/LAUNCH_INDEXABILITY.md` — pre-launch SEO checklist (mostly covered by `docs/seo/AGENTS.md`)
 - `docs/i18n-translation.md` — translation workflow
 - `docs/API.md` — superseded by `docs/api/AGENTS.md`
-- `docs/operations/cloudflare-optimization.md` — Cloudflare plan/tier + edge-cache + 1102 fix (this branch)
+- `docs/operations/cloudflare-optimization.md` — Cloudflare plan/tier + edge-cache + KV incremental cache + 1102 fix (active reference; supersedes the loose notes this branch originally added)
