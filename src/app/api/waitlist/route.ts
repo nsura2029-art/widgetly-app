@@ -1,28 +1,29 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { forwardToWebhook, jsonOk, parseJson, withErrorHandling } from "@/lib/api/responses";
 import { waitlistRequest, type WaitlistResponse } from "@/lib/api/schemas";
-import { isSupabaseConfigured } from "@/lib/supabase/server";
-import { recordWaitlist } from "@/lib/supabase/waitlist";
+import { isD1Configured } from "@/lib/d1/server";
+import { recordWaitlist } from "@/lib/d1/waitlist";
 import { log, maskEmail } from "@/lib/log";
 
 /**
  * POST /api/waitlist
  *
  * Add an email to the launch waitlist. Validates the payload, persists
- * via Supabase (when configured), forwards to the configured webhook
+ * via D1 (when configured), forwards to the configured webhook
  * (Discord / Slack / Resend / custom) as a best-effort notification,
  * and returns a "you're on the list" envelope with a durable queue
  * position.
  *
  * Persistence order:
- *   1. If Supabase is configured, write to `waitlist` first. The DB is
- *      the source of truth and the position is real. If the DB write
- *      fails, return a 503 — we won't lie to the user with a fake
- *      position number.
- *   2. If Supabase is NOT configured, fall back to a synthetic
- *      position (the existing behavior) and forward to the webhook
- *      as the durable record. This keeps the route working in dev
- *      environments and preview deploys that haven't bound secrets.
+ *   1. If D1 is configured (binding present), write to `waitlist`
+ *      first. The DB is the source of truth and the position is real
+ *      (it's the rowid, which SQLite auto-assigns monotonically). If
+ *      the DB write fails, return a 503 — we won't lie to the user
+ *      with a fake position number.
+ *   2. If D1 is NOT configured, fall back to a synthetic position
+ *      (the existing behavior) and forward to the webhook as the
+ *      durable record. This keeps the route working in environments
+ *      that haven't bound the D1 binding yet.
  *   3. The webhook forward is always best-effort and never blocks
  *      the success response.
  *
@@ -31,9 +32,10 @@ import { log, maskEmail } from "@/lib/log";
  * if a submission doesn't reach the DB — the log trail will tell you
  * which step failed.
  *
- * Runtime: edge. Uses Web Crypto + `fetch` only.
+ * Runtime: nodejs (changed from edge in commit 6907477 — see the
+ * post-deploy notes).
  */
-export const runtime = "edge";
+export const runtime = "nodejs";
 
 function shortReqId(): string {
   // 6 chars of base36 is enough to correlate start/end log lines for
@@ -81,13 +83,13 @@ async function handle(request: NextRequest) {
     locale,
   });
 
-  const configured = isSupabaseConfigured();
+  const configured = isD1Configured();
   log.info("api.waitlist", "config check", {
     req_id: reqId,
-    supabase_configured: configured,
+    d1_configured: configured,
   });
 
-  // ---- Persistence path: Supabase ----
+  // ---- Persistence path: D1 ----
   if (configured) {
     const result = await recordWaitlist({
       email: body.email,
@@ -151,7 +153,7 @@ async function handle(request: NextRequest) {
   }
 
   // ---- Fallback path: webhook-only, synthetic position ----
-  log.warn("api.waitlist", "supabase not configured, using fallback", { req_id: reqId });
+  log.warn("api.waitlist", "d1 not configured, using fallback", { req_id: reqId });
   await forwardToWebhook(process.env.WAITLIST_WEBHOOK_URL, {
     type: "widgetly.waitlist",
     submittedAt: new Date().toISOString(),

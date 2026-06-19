@@ -194,6 +194,7 @@ export default async function SuggestionPage({ params }: { params: Promise<Param
           {toolsCat && (
             <Link
               href={`/tools/${toolsCat.slug}`}
+              prefetch={false}
               className="border-border bg-muted/5 text-muted hover:border-primary/40 hover:text-primary inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors"
             >
               {toolsCat.name}
@@ -232,7 +233,7 @@ export default async function SuggestionPage({ params }: { params: Promise<Param
           </Button>
           {toolsCat && (
             <Button asChild variant="outline">
-              <Link href={`/tools/${toolsCat.slug}`}>
+              <Link href={`/tools/${toolsCat.slug}`} prefetch={false}>
                 Browse {toolsCat.name.toLowerCase()}
                 <ArrowRight className="h-4 w-4" />
               </Link>
@@ -349,6 +350,7 @@ export default async function SuggestionPage({ params }: { params: Promise<Param
             {toolsCat && (
               <Link
                 href={`/tools/${toolsCat.slug}`}
+                prefetch={false}
                 className="text-primary hidden text-sm font-medium hover:underline sm:inline"
               >
                 Browse all {toolsCat.name.toLowerCase()} →

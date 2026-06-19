@@ -45,7 +45,7 @@ export async function FaqSection() {
   return (
     <section
       id="faq"
-      className="border-border/60 relative border-t py-12 sm:py-16 lg:py-20"
+      className="border-border/60 relative border-t py-6 sm:py-8 lg:py-10"
       aria-labelledby="faq-title"
     >
       <div className="container">

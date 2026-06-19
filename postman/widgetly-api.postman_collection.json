@@ -1,0 +1,617 @@
+{
+  "info": {
+    "_postman_id": "widgetly-api-2026-06",
+    "name": "Widgetly API",
+    "description": "Public HTTP API for the Widgetly platform.\n\nEndpoints:\n  - GET    /api/openapi.json\n  - GET    /api/locale\n  - POST   /api/locale         (set user locale)\n  - DELETE /api/locale         (reset to default)\n  - POST   /api/waitlist       (join launch waitlist)\n  - POST   /api/suggest        (propose a tool to build)\n  - POST   /api/contact        (contact form)\n  - GET    /api/diag/d1       (dev-only, 404 in prod)\n  - GET    /api/diag/consent   (dev-only, 404 in prod)\n\nAll requests accept JSON and return JSON. Base URL is the {{baseUrl}} variable on the active environment — point it at prod (https://widgetly.tech), a preview deploy, or http://localhost:8787 when running `pnpm preview` locally.\n\nThe OpenAPI spec served at GET /api/openapi.json is the authoritative source of truth for request/response shapes; this collection mirrors those shapes so Postman can validate them via the built-in test runner. If the API and this collection drift, update both at once.\n",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": {
+      "major": 1,
+      "minor": 0,
+      "patch": 0
+    }
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://widgetly.tech",
+      "type": "default",
+      "description": "Origin (no trailing slash). For local dev use http://localhost:8787 after `pnpm preview`."
+    },
+    {
+      "key": "locale",
+      "value": "es",
+      "type": "default",
+      "description": "Active locale for the /api/locale POST tests. One of: en, es, fr."
+    },
+    {
+      "key": "testEmail",
+      "value": "postman-test@example.com",
+      "type": "default",
+      "description": "Email used across the waitlist/contact tests. Override per-environment if you don't want to spam the same address."
+    }
+  ],
+  "item": [
+    {
+      "name": "OpenAPI Spec",
+      "item": [
+        {
+          "name": "GET /api/openapi.json",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/openapi.json",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "openapi.json"]
+            },
+            "description": "Returns the OpenAPI 3.0 spec as JSON. This same document drives the Swagger UI at `/docs`. Useful as a sanity check after deploy — if it returns 500 the API runtime is broken."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('content-type is JSON', () => pm.expect(pm.response.headers.get('content-type')).to.include('json'));",
+                  "const body = pm.response.json();",
+                  "pm.test('openapi field is 3.0.x', () => pm.expect(body.openapi).to.match(/^3\\.0\\./));",
+                  "pm.test('info.title is \"Widgetly API\"', () => pm.expect(body.info.title).to.eql('Widgetly API'));",
+                  "pm.test('paths include /api/waitlist', () => pm.expect(body.paths['/api/waitlist']).to.exist);",
+                  "pm.test('paths include /api/suggest', () => pm.expect(body.paths['/api/suggest']).to.exist);",
+                  "pm.test('paths include /api/contact', () => pm.expect(body.paths['/api/contact']).to.exist);"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Locale",
+      "item": [
+        {
+          "name": "GET /api/locale",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/locale",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "locale"]
+            },
+            "description": "Returns the user's current locale preference. Reads from the `wly_locale` cookie first, then falls back to the Supabase KV store keyed by `wly_anon`. Useful for debugging — if `cookie` is null but `resolved` is set, the cookie was just not sent with this request."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('resolved is a supported locale', () => pm.expect(['en','es','fr']).to.include(body.resolved));",
+                  "pm.test('cookie is null or a supported locale', () => {",
+                  "  if (body.cookie !== null) pm.expect(['en','es','fr']).to.include(body.cookie);",
+                  "  else pm.expect(body.cookie).to.be.null;",
+                  "});",
+                  "pm.test('kv is null or a supported locale', () => {",
+                  "  if (body.kv !== null) pm.expect(['en','es','fr']).to.include(body.kv);",
+                  "  else pm.expect(body.kv).to.be.null;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /api/locale — set",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"locale\": \"{{locale}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/locale",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "locale"]
+            },
+            "description": "Sets the user's preferred locale. Writes `wly_locale` cookie (1 year, Secure, SameSite=Lax) and, if KV is configured, mirrors the choice into the LOCALE_KV namespace keyed by the `wly_anon` cookie. Idempotent — re-posting the same locale is a no-op."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('response ok=true', () => pm.expect(body.ok).to.eql(true));",
+                  "pm.test('response locale matches request', () => pm.expect(body.locale).to.eql(pm.variables.get('locale')));",
+                  "pm.test('wly_locale cookie is set', () => pm.expect(pm.cookies.has('wly_locale')).to.eql(true));",
+                  "pm.test('wly_anon cookie is set on first call', () => pm.expect(pm.cookies.has('wly_anon')).to.eql(true));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /api/locale — invalid",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"locale\": \"klingon\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/locale",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "locale"]
+            },
+            "description": "Negative test: unsupported locale returns 400 with the list of supported locales. Useful as a contract check — if this returns 200, the locale validation has been relaxed and downstream locale routing will break."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 400', () => pm.response.to.have.status(400));",
+                  "const body = pm.response.json();",
+                  "pm.test('error is \"Unsupported locale\"', () => pm.expect(body.error).to.eql('Unsupported locale'));",
+                  "pm.test('supported array is non-empty', () => pm.expect(body.supported).to.be.an('array').that.is.not.empty);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "DELETE /api/locale",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/locale",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "locale"]
+            },
+            "description": "Resets the user's locale to the platform default (en). Clears the KV record for the current anon ID. Cookie is overwritten with the default value, not deleted, so the next GET /api/locale returns `cookie: 'en'` rather than null."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('response ok=true', () => pm.expect(body.ok).to.eql(true));",
+                  "pm.test('response locale is en (default)', () => pm.expect(body.locale).to.eql('en'));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Waitlist",
+      "item": [
+        {
+          "name": "POST /api/waitlist — happy path",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{testEmail}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/waitlist",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "waitlist"]
+            },
+            "description": "Adds an email to the launch waitlist. Persists to Supabase (when configured) for a durable position; falls back to webhook-only + synthetic position if Supabase isn't bound. Both code paths return 200 with a `position` integer."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('response ok=true', () => pm.expect(body.ok).to.eql(true));",
+                  "pm.test('position is a non-negative integer', () => {",
+                  "  pm.expect(body.position).to.be.a('number');",
+                  "  pm.expect(body.position).to.be.at.least(0);",
+                  "});",
+                  "pm.test('message is non-empty', () => pm.expect(body.message).to.be.a('string').that.is.not.empty);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /api/waitlist — resubmit (same email)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{testEmail}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/waitlist",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "waitlist"]
+            },
+            "description": "Same email again. With Supabase configured, the route recognizes the duplicate and returns the existing position with a \"you're already on the list\" message. Without Supabase, both calls return synthetic positions (different numbers) and a webhook fires for each — that's the silent-data-loss case to watch for."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('response ok=true', () => pm.expect(body.ok).to.eql(true));",
+                  "pm.test('position is a non-negative integer', () => pm.expect(body.position).to.be.at.least(0));",
+                  "pm.test('message mentions already or on the list', () => pm.expect(body.message.toLowerCase()).to.match(/already|on the list/));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /api/waitlist — invalid email",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"not-an-email\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/waitlist",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "waitlist"]
+            },
+            "description": "Negative test: bad email shape returns 400 with `code: validation_error` and a per-field breakdown. The route uses Zod with `email()` validation, so anything that doesn't match a real TLD fails here."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 400', () => pm.response.to.have.status(400));",
+                  "const body = pm.response.json();",
+                  "pm.test('ok is false', () => pm.expect(body.ok).to.eql(false));",
+                  "pm.test('error.code is validation_error', () => pm.expect(body.error.code).to.eql('validation_error'));",
+                  "pm.test('error.fields names the email field', () => {",
+                  "  const paths = body.error.fields.map(f => f.path);",
+                  "  pm.expect(paths).to.include('email');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Tool Suggestion",
+      "item": [
+        {
+          "name": "POST /api/suggest — full payload",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"PDF Summarizer\",\n  \"description\": \"Drop in a PDF, get a one-paragraph summary with key takeaways. Useful for skimming long reports.\",\n  \"category\": \"productivity\",\n  \"email\": \"{{testEmail}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/suggest",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "suggest"]
+            },
+            "description": "Submit a tool suggestion. Server generates an id (e.g. `sg_abc123`) and a URL slug (e.g. `pdf-summarizer`) for the eventual public page. Persists to Supabase `suggestions` table when configured; webhook-only fallback otherwise. Idempotency-key header not used in this request — pass an `idempotencyKey` in the body to make retries safe."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('response ok=true', () => pm.expect(body.ok).to.eql(true));",
+                  "pm.test('id is non-empty', () => pm.expect(body.id).to.be.a('string').that.is.not.empty);",
+                  "pm.test('id starts with sg_', () => pm.expect(body.id).to.match(/^sg_/));",
+                  "pm.test('slug is lowercase kebab', () => pm.expect(body.slug).to.match(/^[a-z0-9-]+$/));",
+                  "pm.test('status is one of the expected enums', () => pm.expect(['pending_review','in_queue','duplicate']).to.include(body.status));",
+                  "pm.test('message is non-empty', () => pm.expect(body.message).to.be.a('string').that.is.not.empty);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /api/suggest — minimal (name + description)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Quick Idea\",\n  \"description\": \"Just a quick idea without all the metadata.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/suggest",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "suggest"]
+            },
+            "description": "Minimum valid payload. `name` and `description` are required; everything else (category, email, source, idempotencyKey) is optional."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('response ok=true', () => pm.response.json().ok === true);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /api/suggest — missing required fields",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"category\": \"productivity\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/suggest",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "suggest"]
+            },
+            "description": "Negative test: missing `name` and `description`. Expects 400 with field-level errors pointing at the missing fields. The Zod schema uses `.strict()`, so extra unknown fields would also produce a `Unrecognized key(s)` error — useful for catching client bugs that send stale fields."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 400', () => pm.response.to.have.status(400));",
+                  "const body = pm.response.json();",
+                  "pm.test('error.code is validation_error', () => pm.expect(body.error.code).to.eql('validation_error'));",
+                  "pm.test('error.fields names name and description', () => {",
+                  "  const paths = body.error.fields.map(f => f.path);",
+                  "  pm.expect(paths).to.include('name');",
+                  "  pm.expect(paths).to.include('description');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Contact",
+      "item": [
+        {
+          "name": "POST /api/contact — happy path",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Postman Tester\",\n  \"email\": \"{{testEmail}}\",\n  \"message\": \"Hello from the Postman collection — this is a test contact form message that's at least ten characters.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/contact",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "contact"]
+            },
+            "description": "Submit a contact-form message. Returns a server-generated `id` (`ct_xxx`) and a human-friendly `ticket` (`WID-NNNN`). The ticket is what the user-facing UI displays. Persists to Supabase `suggestions` table when configured, else webhook-only fallback."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('response ok=true', () => pm.expect(body.ok).to.eql(true));",
+                  "pm.test('id starts with ct_', () => pm.expect(body.id).to.match(/^ct_/));",
+                  "pm.test('ticket matches WID-NNNN', () => pm.expect(body.ticket).to.match(/^WID-\\d+$/));",
+                  "pm.test('message is non-empty', () => pm.expect(body.message).to.be.a('string').that.is.not.empty);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /api/contact — message too short",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Short\",\n  \"email\": \"{{testEmail}}\",\n  \"message\": \"hi\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/contact",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "contact"]
+            },
+            "description": "Negative test: `message` minimum length is 10 characters. Confirms the validator is firing — if this returns 200, the constraint has been loosened."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 400', () => pm.response.to.have.status(400));",
+                  "const body = pm.response.json();",
+                  "pm.test('error.code is validation_error', () => pm.expect(body.error.code).to.eql('validation_error'));",
+                  "pm.test('error.fields names message', () => {",
+                  "  const paths = body.error.fields.map(f => f.path);",
+                  "  pm.expect(paths).to.include('message');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Diagnostics (dev-only — returns 404 in prod)",
+      "item": [
+        {
+          "name": "GET /api/diag/d1",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/diag/d1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "diag", "d1"]
+            },
+            "description": "Dev-only diagnostic endpoint. Returns whether the D1 binding is present, plus a cheap COUNT(*) ping on the `waitlist` table to confirm migrations have been applied. **Returns 404 in production** (NODE_ENV guard inside the route). Useful when running `pnpm preview` locally to confirm the wrangler D1 binding is wired up."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.status === 200) {",
+                  "  const body = pm.response.json();",
+                  "  pm.test('d1_configured is boolean', () => pm.expect(body.config.d1_configured).to.be.a('boolean'));",
+                  "  pm.test('ping.ok is boolean', () => pm.expect(body.ping.ok).to.be.a('boolean'));",
+                  "  pm.test('ping.count is a number when ok', () => {",
+                  "    if (body.ping.ok) pm.expect(body.ping.count).to.be.a('number');",
+                  "  });",
+                  "} else {",
+                  "  pm.test('status is 404 in production (NODE_ENV guard)', () => pm.response.to.have.status(404));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /api/diag/consent",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/diag/consent",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "diag", "consent"]
+            },
+            "description": "Dev-only diagnostic for the cookie-consent system. Returns the detected region (from cf-ipcountry, with locale fallback), the current CONSENT_VERSION constant, and the request's region headers (sanitized — never the raw IP). **Returns 404 in production**."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.status === 200) {",
+                  "  const body = pm.response.json();",
+                  "  pm.test('CONSENT_VERSION is set', () => pm.expect(body.CONSENT_VERSION).to.be.a('string'));",
+                  "} else {",
+                  "  pm.test('status is 404 in production (NODE_ENV guard)', () => pm.response.to.have.status(404));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

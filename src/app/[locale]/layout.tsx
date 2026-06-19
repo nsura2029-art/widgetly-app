@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations, setRequestLocale } from "next-intl/server";
@@ -7,14 +6,16 @@ import { Inter } from "next/font/google";
 import { routing } from "../../../next-intl.config";
 import { isSupportedLocale, getDirection } from "@/i18n/config";
 import ClientHeader from "@/components/layout/client-header";
+import { ToolsBanner } from "@/components/layout/tools-banner";
 import { BreadcrumbNav } from "@/components/layout/breadcrumb-nav";
 import { Footer } from "@/components/layout/footer";
+import { ScrollToHash } from "@/components/layout/scroll-to-hash";
 import { ConsentProvider } from "@/lib/consent/useConsent";
 import { ConsentBanner } from "@/components/consent/ConsentBanner";
-import { regionFromCountry, regionFromLocale } from "@/lib/consent/region";
+import { regionFromLocale } from "@/lib/consent/region";
+import { SITE_CONFIG } from "@/lib/constants";
 
-import { websiteJsonLd, organizationJsonLd, softwareApplicationJsonLd, faqJsonLd } from "@/lib/seo";
-import { FAQS } from "@/lib/constants";
+import { websiteJsonLd, organizationJsonLd } from "@/lib/seo";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -44,7 +45,7 @@ export async function generateMetadata({
   if (!isSupportedLocale(locale)) return {};
 
   const t = await getTranslations({ locale, namespace: "site" });
-  const baseUrl = "https://widgetly.app";
+  const baseUrl = SITE_CONFIG.url;
   const localePath = `/${locale}`;
 
   const languages: Record<string, string> = {};
@@ -74,12 +75,15 @@ export async function generateMetadata({
  * NextIntlClientProvider, and renders the shared chrome (header, footer,
  * breadcrumb). Per-request locale resolution via next-intl's helpers.
  *
- * Also reads Cloudflare's `cf-ipcountry` header to compute the
- * visitor's consent region. The header is free, populated by the
- * edge for every request, and is the standard server-side signal
- * for GDPR/CCPA region detection. We fall back to a locale-based
- * heuristic when the header is absent (local dev, non-Cloudflare
- * proxies).
+ * The consent region is derived from locale here (cheap, static)
+ * and refined client-side inside <ConsentProvider> via a fetch to
+ * /api/diag/consent (which reads cf-ipcountry server-side). This
+ * keeps the layout free of `headers()` calls — `headers()` in a
+ * server component opts every page into dynamic rendering, which
+ * caused Cloudflare Worker 1102 errors on 2026-06-18. The
+ * client-side fetch gives us the actual region a moment after
+ * mount; the locale-based default is what GDPR/CCPA users see
+ * before the fetch resolves.
  */
 export default async function LocaleLayout({
   children,
@@ -101,29 +105,32 @@ export default async function LocaleLayout({
   const messages = await getMessages();
   const dir = getDirection(locale);
 
-  // Server-side consent region: cf-ipcountry first, then locale
-  // fallback. The result is passed into <ConsentProvider> so the
-  // banner can pick the right default toggles (and so the audit
-  // record captures where the user was when they made the choice).
-  let consentRegion = regionFromLocale(locale);
-  try {
-    const h = await headers();
-    const country = h.get("cf-ipcountry");
-    const fromCountry = regionFromCountry(country);
-    // Country code is more reliable than locale; only fall back to
-    // locale-based if the country is unknown.
-    if (fromCountry !== "other") consentRegion = fromCountry;
-  } catch {
-    // headers() can throw outside of a request context (very rare in
-    // App Router; defensive). Stick with the locale-based guess.
-  }
+  // Locale-based consent region as the static default. Refined
+  // client-side via /api/diag/consent. Do NOT add `headers()` here
+  // — see the block comment above.
+  const consentRegion = regionFromLocale(locale);
 
   // JSON-LD entities (these are locale-agnostic for now, but could
-  // be parameterized in the future)
+  // be parameterized in the future).
+  //
+  // FAQPage + SoftwareApplication are NOT emitted here. They're
+  // page-specific and live where they're actually meaningful:
+  //   - FAQPage: on the home page (the only page with a visible
+  //     FAQ section). Per Google guidelines, FAQPage schema must
+  //     match visible FAQ content; emitting it on every page
+  //     would be misleading and could be flagged as structured
+  //     data spam.
+  //   - SoftwareApplication: on the home page (the platform as a
+  //     whole). Per-tool pages already emit WebApplication via
+  //     tools/[category]/[tool]/page.tsx — emitting both
+  //     SoftwareApplication (platform) and WebApplication (tool)
+  //     on tool pages would be redundant.
+  //
+  // We DO emit WebSite (with SearchAction for sitelinks) and
+  // Organization globally because they're site-wide identity
+  // signals that don't conflict with per-page schemas.
   const jsonLdWebSite = websiteJsonLd();
   const jsonLdOrg = organizationJsonLd();
-  const jsonLdApp = softwareApplicationJsonLd();
-  const jsonLdFaq = faqJsonLd(FAQS);
 
   return (
     <html lang={locale} dir={dir} className={inter.variable} suppressHydrationWarning>
@@ -144,14 +151,6 @@ export default async function LocaleLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdOrg) }}
         />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdApp) }}
-        />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdFaq) }}
-        />
       </head>
       <body className="bg-background min-h-screen font-sans antialiased">
         <NextIntlClientProvider locale={locale} messages={messages}>
@@ -164,12 +163,18 @@ export default async function LocaleLayout({
             </a>
             <ClientHeader />
 
-            <main id="main" className="pt-16">
+            <main id="main" className="pt-5">
+              <ToolsBanner />
               <BreadcrumbNav />
               {children}
             </main>
             <Footer />
             <ConsentBanner />
+            {/* Watches for hash changes on cross-page navigation and
+                scrolls the matching element into view. Fixes a Next.js
+                App Router quirk where hash links fail on soft
+                navigations. See component file for details. */}
+            <ScrollToHash />
           </ConsentProvider>
         </NextIntlClientProvider>
       </body>

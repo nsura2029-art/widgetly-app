@@ -16,6 +16,8 @@ enabled = true
 # ---------------------------------------------------------------------------
 # `pnpm build` produces .open-next/ via @opennextjs/cloudflare. `pnpm deploy`
 # invokes `opennextjs-cloudflare build && wrangler deploy` to ship the worker.
+# Production domains are attached in the Cloudflare dashboard so CI deploys
+# only update Worker code and assets, not route/custom-domain triggers.
 # ---------------------------------------------------------------------------
 
 # Optional KV (e.g. waitlist persistence)
@@ -29,8 +31,8 @@ enabled = true
 # via the wly_locale cookie). Anonymous identity is the key.
 #
 # Created via:
-#   pnpm wrangler kv:namespace create LOCALE_KV
-#   pnpm wrangler kv:namespace create LOCALE_KV --preview
+#   pnpm wrangler kv namespace create LOCALE_KV
+#   pnpm wrangler kv namespace create LOCALE_KV --preview
 # Paste the printed IDs into `id` / `preview_id` below.
 # ---------------------------------------------------------------------------
 # [[kv_namespaces]]
@@ -39,9 +41,58 @@ enabled = true
 # preview_id = "REPLACE_WITH_PREVIEW_KV_NAMESPACE_ID"
 
 # ---------------------------------------------------------------------------
+# KV: OpenNext incremental cache.
+#
+# Backing store for prerendered HTML pages (`force-static` routes). Without
+# this, OpenNext re-renders every request — the previous `incrementalCache:
+# "dummy"` config in open-next.config.ts caused the Worker to spin on every
+# request, which is what was triggering the random Error 1102s.
+#
+# Created via:
+#   pnpm wrangler kv namespace create NEXT_INC_CACHE_KV
+#   pnpm wrangler kv namespace create NEXT_INC_CACHE_KV --preview
+# Paste the printed IDs into `id` / `preview_id` below.
+#
+# KV is included in Workers Free (100K reads/day, 1K writes/day, 1 GB). Reads
+# happen on every cached request; writes happen at build time when OpenNext
+# prerenders each route. We use <0.1% of the daily quota.
+#
+# Bound binding name is `NEXT_INC_CACHE_KV` — this is the default name that
+# `cloudflare-kv-incremental-cache` looks up; if you change it here, you must
+# also override `kvBinding` in open-next.config.ts.
+# ---------------------------------------------------------------------------
+[[kv_namespaces]]
+binding = "NEXT_INC_CACHE_KV"
+id = "0e35b410aaf04be18d7cb17e54bc9cfb"
+preview_id = "d85f0da78ed64650a9502783e03f116f"
+
+# ---------------------------------------------------------------------------
 # Environment variables (set in Cloudflare dashboard, not here)
 # ---------------------------------------------------------------------------
 # WAITLIST_KV      — KV binding (if KV enabled)
 # LOCALE_KV        — KV binding (locale preference persistence)
 # ANALYTICS_TOKEN  — Cloudflare Web Analytics token (set in dashboard)
 # ---------------------------------------------------------------------------
+
+# ---------------------------------------------------------------------------
+# D1: waitlist + tool suggestions persistence.
+#
+# Replaces the previous Supabase integration. D1 lives inside Cloudflare's
+# edge network, so writes are 5-20ms vs the 100-300ms round-trip to
+# Supabase we had before.
+#
+# Setup (one-time, on your local machine):
+#   1. pnpm exec wrangler d1 create widgetly
+#      → prints a database_id; paste it below.
+#   2. pnpm db:migrate:remote
+#      → applies migrations/0001_init.sql to the deployed D1.
+#
+# Migrations are SQL files in /migrations. Add a new NNNN_*.sql file and
+# run `pnpm db:migrate:remote` to apply. Never edit applied migrations.
+#
+# The binding `DB` is what the code reads via (globalThis as { DB?: D1Database }).DB.
+# ---------------------------------------------------------------------------
+[[d1_databases]]
+binding = "DB"
+database_name = "widgetly"
+database_id = "64cbb0d4-af76-46cf-a742-cf78902f1dc3"

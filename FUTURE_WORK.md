@@ -19,6 +19,200 @@ in brackets is when the item was filed.
 
 ---
 
+## 🟡 Cloudflare cache hardening — future enhancements [2026-06-18]
+
+The KV incremental cache is now working (Error 1102 class of issues
+resolved as of this branch). The remaining items are optimizations
+for scale, robustness, and edge cases. Filed under "should do" — no
+immediate action, but track these as traffic grows.
+
+### 🟡 Add KV tag cache (`NEXT_TAG_CACHE_KV`)
+
+Currently `tagCache: "dummy"`. That works because deploy-time cache
+replacement is enough for our build → deploy cycle. If we add
+on-demand revalidation (e.g., `revalidateTag('tool-pdf')` from an
+admin tool), the dummy cache means revalidation is a no-op.
+
+The fix is one extra KV namespace + one config line:
+
+```typescript
+// wrangler.toml — add second binding
+[[kv_namespaces]];
+binding = "NEXT_TAG_CACHE_KV";
+id = "<id>";
+preview_id = "<preview-id>";
+
+// open-next.config.ts
+import kvTagCache from "@opennextjs/cloudflare/overrides/tag-cache/kv-next-tag-cache";
+
+export default defineCloudflareConfig({
+  incrementalCache: kvIncrementalCache,
+  tagCache: kvTagCache,
+});
+```
+
+KV is eventually-consistent (~60s) so revalidations propagate slowly.
+Fine for our low-traffic case but worth noting.
+
+### 🟡 Upgrade to Workers Paid ($5/mo) when traffic warrants
+
+Decision rule (in `docs/operations/cloudflare-optimization.md`):
+upgrade when sustained traffic hits ~50K req/day OR after the next
+real-user 1102 incident.
+
+Paid plan unlocks:
+
+- 30 s CPU/req (vs 10 ms) — 1102 disappears for non-cached routes
+- 10 M req/mo included (vs 100K/day)
+- 10 MB Worker (vs 3 MB)
+- 1 GB KV (we already have this on Free; Paid keeps it)
+
+### 🟢 Add Cloudflare Cache Rule for static files
+
+The KV cache handles HTML. Cloudflare's edge cache (`cf-cache-status`)
+already handles `/robots.txt`, `/_next/static/*`, etc. — we verified
+this in the verification script. No action needed unless we want a
+dashboard Cache Rule for explicit control.
+
+If we add one: see `docs/operations/cloudflare-optimization.md` §
+"Layer B dashboard walkthrough" for the field-by-field UI guide.
+
+### 🟢 Move R2 instead of KV (when traffic > 5M req/mo)
+
+KV is fine up to ~5M req/mo on Free, ~10M on Paid. Beyond that, KV
+gets expensive ($0.50 per million reads after the included quota).
+
+R2 has zero egress and 10 GB free storage. For a static site like
+widgetly where reads dominate, R2 is cheaper at scale.
+
+Migration path: change `incrementalCache: kvIncrementalCache` to
+`incrementalCache: r2IncrementalCache` (also exported by
+`@opennextjs/cloudflare/overrides/incremental-cache/`). Add
+`[[r2_buckets]]` binding to `wrangler.toml`. Reads/writes are
+slightly slower (~50-100 ms vs ~10 ms for KV) but no egress costs.
+
+### 🟢 Add a smoke-test endpoint for deploy verification
+
+After every deploy, hit `/api/diag/cache-status` (new route) to
+confirm the KV cache is engaging on the freshly-deployed Worker.
+Today we verify manually via `scripts/verify-cache.sh` after deploy.
+Automating it catches cache regressions before users do.
+
+Implementation: a tiny route that does a `kv.get` on a known key
+and returns the value + headers. Add to deploy.yml as a final
+post-deploy step.
+
+### 🟡 Monitor KV quota usage
+
+Workers Free KV: 100K reads/day, 1K writes/day, 1 GB storage.
+We're using <0.1% of quota today, but track this once traffic picks
+up. Cloudflare dashboard → Workers → KV → NEXT_INC_CACHE_KV →
+"Storage" + "Operations" tabs. Alert if storage > 800 MB (80% of 1 GB
+limit) — at that point older entries will get evicted under load.
+
+If we hit limits: upgrade to Paid ($5/mo) for 10 GB + 10M reads.
+
+### 🟢 Cache invalidation strategy
+
+Currently we have NO invalidation — deploying a new build replaces
+the whole cache implicitly. This is fine for our build → deploy
+workflow but breaks if we ever add:
+
+- On-demand revalidation (ISR)
+- Webhook-driven content updates (e.g., update a tool page when the
+  underlying data changes)
+- Admin UI for editing content
+
+For those, we'd need `kv.delete(key)` calls triggered by the
+mutation. OpenNext's `revalidateTag()` API is the canonical way;
+requires the tag cache mentioned above.
+
+---
+
+## 🔴 Cloudflare edge-cache plan + Error 1102 fix [2026-06-18]
+
+Random Error 1102s ("Worker exceeded resource limits") are coming
+from the **Workers Free** 10 ms CPU budget. Root cause is structural
+— Next.js SSR + i18n + middleware can't reliably finish in 10 ms,
+and our Worker bundle is over the 3 MB Free limit anyway.
+
+Full analysis + tier recommendation + 10-item priority list lives
+in [`docs/operations/cloudflare-optimization.md`](./docs/operations/cloudflare-optimization.md).
+
+---
+
+## 🔴 Cloudflare edge-cache plan + Error 1102 fix [2026-06-18]
+
+Random Error 1102s ("Worker exceeded resource limits") are coming
+from the **Workers Free** 10 ms CPU budget. Root cause is structural
+— Next.js SSR + i18n + middleware can't reliably finish in 10 ms,
+and our Worker bundle is over the 3 MB Free limit anyway.
+
+Full analysis + tier recommendation + 10-item priority list lives
+in [`docs/operations/cloudflare-optimization.md`](./docs/operations/cloudflare-optimization.md).
+TL;DR:
+
+1. **Cache HTML at the edge** with `Cache-Control: public,
+s-maxage=300, stale-while-revalidate=86400` — added to
+   `public/_headers` for all `/en/*`, `/es/*`, `/fr/*` routes.
+2. **Add a Cloudflare Cache Rule** in the dashboard that bypasses
+   `/api/*`, `/_next/*`, `/diag/*` and caches everything else for
+   5 min edge TTL. (Dashboard step, can't be done from the repo.)
+3. **Rewrite `sitemap.ts`** to import tool data statically so it
+   can be `force-static` instead of `force-dynamic`.
+4. **Strip middleware cookie writes** off cache-miss paths only, OR
+   move `wly_locale` / `wly_anon` to a client-side script.
+5. **Move `/api/openapi.json`** from a route handler to a static
+   file under `public/`.
+6. **Pre-generate OG images** at build time so `opengraph-image.tsx`
+   stops costing CPU per share preview.
+7. **If 1102 persists**, upgrade to **Workers Paid** ($5/mo) — 30 s
+   CPU + 10 MB Worker size + 10M req/mo. Decision rule: upgrade when
+   traffic hits ~50K req/day sustained OR after the next 1102 from
+   a real user, whichever comes first.
+
+## 🟡 Cloudflare tier — current vs next [2026-06-18]
+
+| Tier               | Cost      | CPU/req                 | Req cap         | Worker size | Worth it?                                    |
+| ------------------ | --------- | ----------------------- | --------------- | ----------- | -------------------------------------------- |
+| Workers Free       | $0        | 10 ms                   | 100K/day        | 3 MB        | ⚠️ we're here, 1102s prove it's too tight    |
+| Workers Paid       | **$5/mo** | 30 s default, 5 min max | 10M/mo included | 10 MB       | ✅ recommended next step                     |
+| Cloudflare Pro     | $25/mo    | (same as Paid)          | (same)          | (same)      | 🟡 post-launch, when uptime SLA / WAF matter |
+| Workers Enterprise | custom    | (same)                  | (same)          | (same)      | 🟢 not yet                                   |
+
+Cloudflare Pro adds: WAF managed rules, Bot Fight Mode, advanced
+DDoS, Image Resizing/Polish/Mirage, 100% SLA, priority support.
+None of those raise Workers limits. The "Workers Paid" upgrade is
+**separate** from the "Cloudflare Pro" site-plan upgrade.
+
+## 🟢 Cloudflare features we don't use yet [2026-06-18]
+
+Things available on our current or next tier that would help
+specific workloads — file for later:
+
+- **KV** — eventually-consistent key-value store. Commented out in
+  `wrangler.toml`. Re-enable when we need per-user preference
+  storage beyond cookies (e.g. saved tool collections).
+- **R2** — S3-compatible object storage with zero egress. Useful
+  when we host our own tool icons / images instead of pulling from
+  external CDNs.
+- **Queues** — async job queue ($0.40/M msgs on Paid). Useful for
+  webhook delivery, exports, batch notifications.
+- **Smart Placement** — multi-region Worker routing. Useful if
+  TTFB to EU/Asia becomes a complaint.
+- **Hyperdrive** — Postgres accelerator. Useful if we add a
+  relational DB (Turso, Neon, Supabase Postgres) for non-edge data.
+- **Durable Objects** — stateful coordination. Useful for real-time
+  collab (e.g. shared tool workspaces).
+- **Image Resizing / Polish / Mirage** — only on Cloudflare Pro.
+  Useful when we have many tool icons to serve at many sizes with
+  best-in-class compression.
+- **Logpush** — stream Worker logs to S3/BigQuery. Useful for
+  compliance + debugging at scale.
+- **Web Analytics** — already enabled via `ANALYTICS_TOKEN`.
+
+---
+
 ## ⚠️ Security — GitHub PAT leak [2026-06-15]
 
 A GitHub personal access token (PAT) was pasted into chat

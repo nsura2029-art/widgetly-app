@@ -25,7 +25,7 @@ export function Categories() {
   return (
     <section
       id="categories"
-      className="border-border/60 bg-muted/5 relative border-t py-12 sm:py-16 lg:py-20"
+      className="border-border/60 bg-muted/5 relative border-t py-6 sm:py-8 lg:py-10"
       aria-labelledby="categories-title"
     >
       <div className="container">
@@ -55,6 +55,7 @@ export function Categories() {
               <StaggerItem key={category.slug}>
                 <Link
                   href={category.href}
+                  prefetch={false}
                   className="group block focus:outline-none"
                   aria-label={`${name} \u2014 ${category.count}`}
                 >

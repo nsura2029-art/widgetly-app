@@ -1,5 +1,5 @@
 /**
- * Edge proxy: locale path-prefix routing + cookie persistence.
+ * Edge middleware: locale path-prefix routing + cookie persistence.
  *
  * Runs in the Cloudflare Worker (via @opennextjs/cloudflare), before the
  * request reaches the Next.js renderer. Responsibilities:
@@ -25,7 +25,7 @@
  *     next-intl doesn't know about.
  *   - We want to set the `wly_anon` cookie in the same pass.
  */
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import createIntlMiddleware from "next-intl/middleware";
 import { routing } from "../next-intl.config";
 import {
@@ -73,7 +73,7 @@ function resolveLocaleFromRequest(req: NextRequest): LocaleCode {
   return DEFAULT_LOCALE;
 }
 
-export function proxy(req: NextRequest) {
+export function middleware(req: NextRequest) {
   // Run the next-intl middleware first. It may issue a 308 redirect
   // (we capture and return that as-is) or a pass-through NextResponse
   // for already-prefixed URLs.
@@ -84,16 +84,39 @@ export function proxy(req: NextRequest) {
   // can set cookies / headers on the response.
   const resolved = resolveLocaleFromRequest(req);
 
-  // Persist the locale as a cookie (1 year, Lax, Secure)
-  response.cookies.set(COOKIE_LOCALE, resolved, {
-    path: "/",
-    maxAge: 60 * 60 * 24 * 365,
-    sameSite: "lax",
-    secure: true,
-  });
+  // ---------------------------------------------------------------
+  // Cookie setting — kept minimal so Cloudflare's edge cache works.
+  //
+  // The Cloudflare Cache Rule (see docs/operations/cloudflare-optimization.md)
+  // bypasses cache by default for responses with Set-Cookie headers. If
+  // we set cookies on every response, the cache rule never fires — every
+  // HTML request hits the Worker.
+  //
+  // Fix: only set each cookie when the user doesn't already have it
+  // (or has a different value). Returning users skip Set-Cookie entirely,
+  // so their responses become cacheable.
+  //
+  // First-visit responses still have Set-Cookie (intentional — that's
+  // when we need to establish the cookie). The Worker renders them once,
+  // Cloudflare caches the rendered response, and subsequent visits from
+  // any user get the cached version (without re-setting the cookie).
+  // ---------------------------------------------------------------
 
-  // Anonymous identity for KV keying (2 years, HttpOnly)
-  if (!req.cookies.get(COOKIE_ANON)) {
+  // `wly_locale` — only set if missing or different. Returning users
+  // with the correct cookie get a no-Set-Cookie response.
+  const existingLocale = req.cookies.get(COOKIE_LOCALE)?.value?.toLowerCase();
+  if (existingLocale !== resolved) {
+    response.cookies.set(COOKIE_LOCALE, resolved, {
+      path: "/",
+      maxAge: 60 * 60 * 24 * 365,
+      sameSite: "lax",
+      secure: true,
+    });
+  }
+
+  // `wly_anon` — only set on first visit (already correct pattern).
+  const existingAnon = req.cookies.get(COOKIE_ANON);
+  if (!existingAnon) {
     response.cookies.set(COOKIE_ANON, crypto.randomUUID(), {
       path: "/",
       maxAge: 60 * 60 * 24 * 365 * 2,
@@ -101,6 +124,25 @@ export function proxy(req: NextRequest) {
       secure: true,
       httpOnly: true,
     });
+  }
+
+  // `NEXT_LOCALE` — set by next-intl internally. Strip it from the
+  // response if the user already has the same value, so the response
+  // becomes cacheable. If the value differs (locale change), keep the
+  // Set-Cookie so the user's preference is updated.
+  const existingNextLocale = req.cookies.get("NEXT_LOCALE")?.value?.toLowerCase();
+  if (existingNextLocale === resolved) {
+    response.cookies.delete("NEXT_LOCALE");
+  }
+
+  // Returning user with all the right cookies? Strip ALL Set-Cookie
+  // headers from the response so Cloudflare's edge cache can engage.
+  // `response.cookies.delete()` above only marks NEXT_LOCALE for
+  // expiration — it still emits a Set-Cookie header. We need to drop
+  // the entire Set-Cookie header for the response to be cacheable.
+  if (existingLocale === resolved && existingNextLocale === resolved && existingAnon) {
+    // `Headers.delete('set-cookie')` removes every Set-Cookie header.
+    response.headers.delete("set-cookie");
   }
 
   // Forward to RSC for server components that want to read the locale

@@ -235,6 +235,11 @@
         "name": "Outils professionnels",
         "shortDesc": "Factures, contrats, propositions",
         "longDesc": "Outils de productivité professionnelle : générateur de factures, modèles de contrats, créateur de propositions, générateur d'accords de confidentialité, modèles de business plans, analyse SWOT, suivi des OKR."
+      },
+      "writing": {
+        "name": "Outils de rédaction",
+        "shortDesc": "Mots, grammaire, reformulation",
+        "longDesc": "Outils de rédaction gratuits : compteur de mots, compteur de caractères, correcteur grammatical, reformulateur, réécriture de ton, analyseur de titres, score de lisibilité, générateur de lorem ipsum."
       }
     }
   },
@@ -383,5 +388,29 @@
     "sectionHint": "Catégories d'outils que vous avez consultées sur cet appareil. Enregistrées localement, jamais envoyées.",
     "clearAll": "Effacer",
     "emptyHidden": "Vous n'avez encore consulté aucune catégorie d'outils."
+  },
+  "toolsBanner": {
+    "label": "Tools",
+    "browseAll": "Browse all {count} tools →",
+    "ariaLabel": "Featured tools",
+    "toolsCount": "{count} tools"
+  },
+  "toolPage": {
+    "comingSoonBadge": "Coming soon",
+    "headline": "{toolName} — coming soon to Widgetly",
+    "intro": "We're building {toolName} and it'll be ready soon. Run it in your browser, no upload, no signup — just like every other Widgetly tool.",
+    "getNotifiedCta": "Get notified when {toolName} launches",
+    "getNotifiedSubtitle": "Drop your email and we'll send a one-line ping the day it ships. No marketing, no spam.",
+    "whatItWillDoTitle": "What this tool will do",
+    "featuresIntro": "{toolName} will handle the everyday {categoryName} jobs you used to fire up a desktop app for.",
+    "featureFree": "Free, with no usage caps during launch",
+    "featurePrivate": "Files stay in your browser — no upload to our servers",
+    "featureFast": "Runs at the edge on Cloudflare's network",
+    "featureMobile": "Works on phone, tablet, and desktop",
+    "featureNoSignup": "No account required to use it",
+    "relatedToolsTitle": "Other {categoryName}",
+    "exploreOtherCategoriesTitle": "Explore other categories",
+    "schemaBreadcrumbCategory": "{categoryName}",
+    "schemaBreadcrumbTool": "{toolName}"
   }
 }

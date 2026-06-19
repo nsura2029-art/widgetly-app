@@ -60,7 +60,7 @@ export function useConsent(): ConsentContextValue {
 }
 
 export function ConsentProvider({
-  region,
+  region: initialRegion,
   children,
 }: {
   region: ConsentRegion;
@@ -68,6 +68,15 @@ export function ConsentProvider({
 }) {
   const [state, setState] = React.useState<ConsentState | null>(null);
   const [ready, setReady] = React.useState(false);
+  // The region prop passed from the layout is locale-derived (cheap,
+  // static). The actual user region requires reading cf-ipcountry
+  // which the server-side layout can't do without opting every page
+  // into dynamic rendering. So we refine the region client-side via
+  // a fetch to /api/diag/consent (dev-only in dev; 404 in prod) or
+  // a no-op fallback. GDPR/CCPA users see the locale-based default
+  // for a brief moment before the fetch resolves — acceptable for
+  // the static-rendering win.
+  const [region, setRegion] = React.useState<ConsentRegion>(initialRegion);
 
   // Hydrate from localStorage on mount. We can't do this during
   // render because it would cause SSR/CSR markup mismatch.
@@ -81,6 +90,24 @@ export function ConsentProvider({
     setReady(true);
     const unsub = subscribeConsent((next) => setState(next));
     return unsub;
+  }, []);
+
+  // Refine the region from the edge. Fire-and-forget; failures
+  // (network error, off-cloudflare proxy, etc.) keep the
+  // locale-based default. /api/region is publicly readable and
+  // edge-cached for 1 hour.
+  React.useEffect(() => {
+    let cancelled = false;
+    fetch("/api/region")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (cancelled || !d?.region) return;
+        setRegion(d.region as ConsentRegion);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   // Stable callbacks. They read `state` from the closure each call,

@@ -17,7 +17,7 @@ export async function SeoCopy() {
   return (
     <section
       id="about-widgetly"
-      className="border-border/60 relative border-t py-12 sm:py-16 lg:py-20"
+      className="border-border/60 relative border-t py-6 sm:py-8 lg:py-10"
       aria-labelledby="seo-explore-title"
     >
       <div className="container">

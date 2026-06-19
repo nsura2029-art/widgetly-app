@@ -29,7 +29,17 @@ export type ToolsCategory = {
   intro: string;
   /** Plural form for the headline — e.g. "PDF tools", "Calculators". */
   headline: string;
-  /** Approximate tool count at launch (used in the page card). */
+  /**
+   * Number of tools actually shipped in this category (used in the
+   * page card and the mega-menu label). MUST match the real data:
+   *   - If the category has entries in `TOOLS_SUBGROUPS`, count items
+   *     across all subgroups.
+   *   - Otherwise count `examples.length`.
+   *
+   * The verification script `scripts/verify-counts.sh` (run by the
+   * ship-cycle DOD gate) catches drift if these go out of sync. Run
+   * it locally before pushing: `bash scripts/verify-counts.sh`.
+   */
   count: number;
   /** Lucide icon name from `src/lib/icons.ts`. */
   icon: string;
@@ -49,10 +59,11 @@ export const TOOLS_CATEGORIES: readonly ToolsCategory[] = [
     slug: "pdf",
     name: "PDF Tools",
     headline: "Free online PDF tools",
-    pitch: "Merge, split, compress, convert, sign, redact — every PDF tool you need in one place.",
+    pitch:
+      "Merge, split, compress, convert, sign, redact, fill forms, request signatures, run OCR — every PDF tool you need in one place.",
     intro:
-      "Every PDF tool you'll actually use, in your browser. No upload limits, no watermarks, no sign-up. Merge, split, compress, convert to Word / Excel / JPG, sign, redact, protect — and the rest just works.",
-    count: 28,
+      "Every PDF tool you'll actually use, in your browser. No upload limits, no watermarks, no sign-up. Merge, split, compress, convert to Word / Excel / JPG / PNG, sign, fill forms, request e-signatures, redact, protect, OCR scanned pages, and run AI on any PDF — the rest just works.",
+    count: 38,
     icon: "FileText",
     accent: "primary",
     keywords: {
@@ -65,6 +76,10 @@ export const TOOLS_CATEGORIES: readonly ToolsCategory[] = [
         "compress pdf",
         "pdf to word",
         "pdf editor",
+        "fill and sign pdf",
+        "request e-signatures",
+        "ocr pdf",
+        "chat with pdf",
       ],
     },
     examples: [
@@ -73,7 +88,7 @@ export const TOOLS_CATEGORIES: readonly ToolsCategory[] = [
       "Compress PDF",
       "PDF to Word",
       "PDF to JPG",
-      "Sign PDF",
+      "Fill & Sign",
       "Protect PDF",
     ],
   },
@@ -84,7 +99,7 @@ export const TOOLS_CATEGORIES: readonly ToolsCategory[] = [
     pitch: "Resize, crop, convert, optimize, remove backgrounds — image tools that just work.",
     intro:
       "A full image workshop in your browser. Resize and crop for any platform, convert between JPG, PNG, WebP, SVG, and AVIF, remove backgrounds, add watermarks, and batch-process whole folders in seconds.",
-    count: 35,
+    count: 12,
     icon: "Image",
     accent: "secondary",
     keywords: {
@@ -116,7 +131,7 @@ export const TOOLS_CATEGORIES: readonly ToolsCategory[] = [
     pitch: "Compress, trim, transcribe, convert, subtitle — all in your browser, no install.",
     intro:
       "Browser-based video tools that don't ship you to a download page. Compress without losing quality, trim and merge clips, transcribe audio to text, auto-generate subtitles, and convert between MP4, WebM, and GIF.",
-    count: 18,
+    count: 10,
     icon: "Video",
     accent: "accent",
     keywords: {
@@ -149,7 +164,7 @@ export const TOOLS_CATEGORIES: readonly ToolsCategory[] = [
       "Write, summarize, generate, translate, brainstorm — AI tools powered by the latest models.",
     intro:
       "Useful AI tools, not toys. Summarize long documents, draft emails, generate images, rewrite in a different tone, translate to 50+ languages, and answer research questions — all without a ChatGPT account.",
-    count: 42,
+    count: 10,
     icon: "Sparkles",
     accent: "primary",
     keywords: {
@@ -181,7 +196,7 @@ export const TOOLS_CATEGORIES: readonly ToolsCategory[] = [
     pitch: "Finance, math, health, GPA, mortgage, BMI — every calculator you'll actually open.",
     intro:
       "Hundreds of free online calculators for the moments you actually need one. Mortgage payments, loan amortization, BMI, calorie targets, percentage changes, scientific and graphing — all instant, all free.",
-    count: 64,
+    count: 7,
     icon: "Calculator",
     accent: "secondary",
     keywords: {
@@ -214,7 +229,7 @@ export const TOOLS_CATEGORIES: readonly ToolsCategory[] = [
       "Units, currencies, file formats — convert anything to anything, with live currency rates.",
     intro:
       "Convert anything to anything in your browser. Units of length, weight, temperature, area, volume, time, and data. Currencies with live mid-market rates. File formats between PDF, DOCX, JPG, PNG, MP3, MP4, and 40+ others.",
-    count: 51,
+    count: 7,
     icon: "ArrowLeftRight",
     accent: "accent",
     keywords: {
@@ -245,7 +260,7 @@ export const TOOLS_CATEGORIES: readonly ToolsCategory[] = [
     pitch: "Keywords, meta tags, sitemaps, SERP preview, page speed — every SEO check you need.",
     intro:
       "The SEO checks you'd otherwise pay for. Meta tag generator, keyword density analyzer, XML sitemap builder, robots.txt tester, SERP snippet preview, backlink inspector, and a Core Web Vitals audit for any URL.",
-    count: 24,
+    count: 7,
     icon: "Search",
     accent: "primary",
     keywords: {
@@ -278,7 +293,7 @@ export const TOOLS_CATEGORIES: readonly ToolsCategory[] = [
       "Formatters, validators, encoders, regex testers — the utilities you keep alt-tabbing for.",
     intro:
       "The dev utilities you keep reaching for. JSON / YAML / XML formatters and validators, Base64 and URL encoders, regex tester with match highlighting, JWT decoder, diff viewer, and a code-beautifier that handles 30+ languages.",
-    count: 32,
+    count: 7,
     icon: "Code",
     accent: "accent",
     keywords: {
@@ -311,7 +326,7 @@ export const TOOLS_CATEGORIES: readonly ToolsCategory[] = [
       "Invoices, contracts, proposals, expense reports — business paperwork, done in your browser.",
     intro:
       "The paperwork tools every small business actually needs. Invoice generator with line items and tax, contract templates, expense reports, simple CRM, and a proposal builder you can send as a link.",
-    count: 19,
+    count: 7,
     icon: "Briefcase",
     accent: "primary",
     keywords: {
@@ -343,7 +358,7 @@ export const TOOLS_CATEGORIES: readonly ToolsCategory[] = [
       "Flashcards, study planners, citation generators, GPA trackers — study smarter, not longer.",
     intro:
       "Built for students, teachers, and lifelong learners. AI flashcard generator from any text, study schedule planner, citation generator for APA / MLA / Chicago, GPA tracker, and a one-click lesson-plan builder.",
-    count: 22,
+    count: 7,
     icon: "GraduationCap",
     accent: "secondary",
     keywords: {
@@ -376,7 +391,7 @@ export const TOOLS_CATEGORIES: readonly ToolsCategory[] = [
       "Word counters, grammar checks, paraphrasers, headline analyzers — write better, faster.",
     intro:
       "The writing desk you keep meaning to build. Real-time word and character counters, grammar and tone checks, paraphraser with 5 styles, headline analyzer for click-through, and a readability scorer that doesn't lie to you.",
-    count: 17,
+    count: 7,
     icon: "PenLine",
     accent: "accent",
     keywords: {

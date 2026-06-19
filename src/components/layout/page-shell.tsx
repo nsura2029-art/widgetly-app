@@ -5,38 +5,64 @@ import { cn } from "@/lib/utils";
  * Canonical page-content wrapper.
  *
  * Every non-landing page should render its body inside `<PageShell>` so the
- * horizontal alignment (Tailwind's `.container`, 1280px max), the top/bottom
- * rhythm, and the inner max-width are identical across the site. This is
- * the single source of truth for "what a content page looks like" — the
- * SEO/Google-Ads template depends on the body width being predictable.
+ * horizontal alignment (Tailwind's `.container`, 1440px max) matches the
+ * sticky header, featured tools band, and breadcrumb band, all of which
+ * also span the full container width. The container is the single source of truth for
+ * "what horizontal edge content sits at" on the site.
  *
- * Variants:
- *  - default: prose/forms/legal (max-w-3xl content card)
- *  - wide:    lists/grid pages (max-w-5xl content)
- *  - narrow:  single-column form pages (max-w-2xl content card)
- *  - full:    no inner max-w (use the container only)
+ * The inner content is LEFT-ALIGNED at the container's left edge (no
+ * `mx-auto`). Inner max-widths come from the `width` prop:
+ *  - default: prose/forms/legal (max-w-3xl content card, ~768px)
+ *  - wide:    lists/grid pages (max-w-5xl content, ~1024px)
+ *  - narrow:  single-column form pages (max-w-2xl content card, ~672px)
+ *  - full:    no inner max-w — spans the full container width
+ *
+ * Why left-align instead of centered? Because the user perceives the
+ * header (logo at container left) and breadcrumb (trail at container left)
+ * as the visual anchor. Centering page content under them creates an
+ * offset that reads as misalignment. Left-aligning content under a
+ * left-aligned header matches how the home page's landing sections are
+ * laid out (Hero, Features, Categories, etc., all start at container
+ * left).
+ *
+ * Pages that want a centered column on top of the container can still
+ * do that internally — e.g. a centered hero header, a centered prose
+ * card on a wider page — by wrapping their content in
+ * `<div className="mx-auto max-w-2xl">` themselves. PageShell doesn't
+ * force one or the other globally.
  *
  * Notes:
  *  - The root <main> is provided by the layout; do NOT wrap children in
  *    another <main>.
- *  - The layout already reserves `pt-16` to clear the sticky header. The
- *    breadcrumb lives between the header and <main>, so it scrolls under
- *    the sticky header normally.
- *  - Vertical padding is responsive: `py-12` on mobile, `py-20` from
- *    `md:` up. This matches the rhythm the marketing/landing sections
- *    were tuned to.
+ *  - The locale layout owns the single root <main>; it renders the
+ *    featured tools band and global breadcrumb before page content.
+ *  - Vertical padding is asymmetric: smaller on top (the breadcrumb
+ *    band already provides the visual break — adding 80px more felt
+ *    like dead space), larger on the bottom for separation before the
+ *    footer / next section. Tuned to feel tight under the breadcrumb
+ *    and breathing before what comes next.
  */
 export type PageShellWidth = "default" | "wide" | "narrow" | "full";
 
 const WIDTH_CLASS: Record<PageShellWidth, string> = {
   // Default reads comfortably on phones and desktop; used for prose
-  // content (about) and most other text-heavy pages.
+  // content (blog post articles, etc.) where 60-80 chars per line is
+  // the readability sweet spot.
   default: "max-w-3xl",
-  // Blog index, blog post — body benefits from a touch more breathing room.
-  wide: "max-w-5xl",
-  // Contact, suggest — single-column form pages.
+  // Wide now spans the full container width. Pages that need a card grid, hero + grid combo, or
+  // anything that fills the screen flow naturally use this. Previously
+  // this was max-w-5xl which left a 256px gap on the right vs the
+  // Join Waitlist button — felt misaligned. Pages that want a
+  // narrower-than-full inner column should use width="default" or
+  // wrap their content in mx-auto max-w-3xl themselves.
+  wide: "max-w-7xl",
+  // Contact, suggest — single-column form pages. 2xl = 672px, leaves
+  // a visible right gutter on wide screens so the form doesn't look
+  // like it's stretched.
   narrow: "max-w-2xl",
-  // Anything that wants the full container width (e.g. category grids).
+  // Explicit "no inner cap". Same as "wide" — kept for clarity at
+  // call sites that want to express intent ("this page is intentionally
+  // full-width, not narrow").
   full: "",
 };
 
@@ -78,12 +104,19 @@ export function PageShell({
     <div
       className={cn(
         // Tailwind v4's `.container` is 100% width with horizontal padding
-        // that scales with the viewport (1rem -> 2rem). It caps at 80rem.
-        "container py-12 sm:py-16 md:py-20",
+        // that scales with the viewport (1rem -> 2rem). It caps at 90rem.
+        //
+        // Vertical padding is split: pt-* (smaller, breadcrumb already
+        // provides visual separation) + pb-* (larger, breathing room
+        // before footer / next section). Tuned to match the sticky
+        // chrome above so the rhythm is consistent across the page:
+        // header | tools | breadcrumb |
+        // gap | content | ... | footer.
+        "container pt-6 pb-12 sm:pt-6 sm:pb-16 md:pt-6 md:pb-20",
         className
       )}
     >
-      <InnerTag className={cn("mx-auto w-full", innerMaxW, innerClassName)}>{children}</InnerTag>
+      <InnerTag className={cn("w-full", innerMaxW, innerClassName)}>{children}</InnerTag>
     </div>
   );
 }

@@ -99,71 +99,94 @@ export function Hero({ mascotSeed }: { mascotSeed?: number } = {}) {
       <AnimatedBackground />
 
       <div className="relative container">
-        <div className="mx-auto flex max-w-3xl flex-col items-center text-center">
-          <ComingSoonBadge />
+        <div className="mx-auto grid max-w-6xl items-center gap-7 min-[500px]:grid-cols-[minmax(0,1fr)_9.5rem] min-[500px]:gap-5 sm:grid-cols-[minmax(0,1fr)_13rem] sm:gap-8 lg:grid-cols-[minmax(0,1fr)_25rem] lg:gap-14">
+          <div className="flex min-w-0 flex-col items-center text-center min-[500px]:items-start min-[500px]:text-left">
+            <ComingSoonBadge />
 
-          <motion.h1
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-            className="text-display-md text-foreground sm:text-display-lg lg:text-display-xl mt-8 font-semibold tracking-tight whitespace-nowrap"
-          >
-            {t("title")}
-          </motion.h1>
+            <motion.h1
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+              className="text-foreground sm:text-display-lg lg:text-display-xl mt-7 max-w-[12ch] text-4xl leading-[1.08] font-semibold text-wrap sm:max-w-[13ch] lg:max-w-[15ch]"
+            >
+              {t("title")}
+            </motion.h1>
 
-          <motion.p
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.25, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-            className="text-muted mt-4 max-w-2xl text-base leading-relaxed sm:text-lg"
-          >
-            <span>{t("subtitle")}</span>{" "}
-            <span className="text-foreground font-medium">{displayText}</span>
-          </motion.p>
+            <motion.p
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.25, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+              className="text-muted mt-4 max-w-2xl text-base leading-relaxed sm:text-lg"
+            >
+              <span>{t("subtitle")}</span>{" "}
+              <span className="text-foreground font-medium">{displayText}</span>
+            </motion.p>
 
-          <motion.p
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.35, duration: 0.6 }}
-            className="text-foreground mt-6 text-base font-medium"
-          >
-            {t("askPrompt")}
-          </motion.p>
+            <motion.p
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.35, duration: 0.6 }}
+              className="text-foreground mt-6 text-base font-medium"
+            >
+              {t("askPrompt")}
+            </motion.p>
 
-          <motion.p
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.45, duration: 0.6 }}
-            className="text-muted mt-2 max-w-xl text-sm"
-          >
-            {t("askCta")}
-          </motion.p>
+            <motion.p
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.45, duration: 0.6 }}
+              className="text-muted mt-2 max-w-xl text-sm"
+            >
+              {t("askCta")}
+            </motion.p>
 
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.55, duration: 0.6 }}
-            className="mt-6 flex w-full max-w-sm gap-3"
-          >
-            <Button asChild size="lg" className="w-full">
-              <Link href="/suggest">
-                👉 {t("suggestTool")}
-                <ArrowRight className="ml-2" />
-              </Link>
-            </Button>
-            <Button asChild size="lg" className="w-full">
-              <Link href="#waitlist">
-                👉 {t("joinWaitlist")}
-                <ArrowRight className="ml-2" />
-              </Link>
-            </Button>
-          </motion.div>
-
-          <div className="mt-10 w-full">
-            <RandomMascot seed={mascotSeed} />
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.55, duration: 0.6 }}
+              className="mt-6 flex w-full max-w-sm flex-col gap-3 min-[390px]:flex-row"
+            >
+              <Button asChild size="lg" variant="secondary" className="w-full">
+                <Link href="/suggest">
+                  {t("suggestTool")}
+                  <ArrowRight className="ml-2" />
+                </Link>
+              </Button>
+              <Button asChild size="lg" className="w-full">
+                <Link href="#waitlist">
+                  {t("joinWaitlist")}
+                  <ArrowRight className="ml-2" />
+                </Link>
+              </Button>
+            </motion.div>
           </div>
 
-          <div className="mt-2 w-full">
+          <motion.div
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.35, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+            className="border-border/80 shadow-soft relative mx-auto hidden aspect-square w-full max-w-[13rem] overflow-hidden rounded-xl border bg-white/90 min-[500px]:block lg:max-w-sm"
+          >
+            <div
+              aria-hidden="true"
+              className="absolute inset-0 opacity-50"
+              style={{
+                backgroundImage:
+                  "radial-gradient(circle at 1px 1px, rgba(17, 24, 39, 0.18) 1px, transparent 0)",
+                backgroundSize: "18px 18px",
+              }}
+            />
+            <div className="border-border/70 absolute inset-4 rounded-lg border bg-white/80 lg:inset-8">
+              <div className="flex h-full items-center justify-center">
+                <RandomMascot
+                  seed={mascotSeed}
+                  className="h-24 w-24 sm:h-32 sm:w-32 lg:h-44 lg:w-44"
+                />
+              </div>
+            </div>
+          </motion.div>
+
+          <div className="min-[500px]:col-span-2 lg:col-span-1 lg:col-start-1">
             <SearchMockup />
           </div>
         </div>

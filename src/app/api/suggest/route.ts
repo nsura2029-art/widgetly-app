@@ -8,8 +8,8 @@ import {
   withErrorHandling,
 } from "@/lib/api/responses";
 import { suggestRequest, type SuggestResponse } from "@/lib/api/schemas";
-import { isSupabaseConfigured } from "@/lib/supabase/server";
-import { recordSuggestion } from "@/lib/supabase/suggestions";
+import { isD1Configured } from "@/lib/d1/server";
+import { recordSuggestion } from "@/lib/d1/suggestions";
 import { log } from "@/lib/log";
 
 /**
@@ -32,7 +32,7 @@ import { log } from "@/lib/log";
  * Runtime: edge. Uses Web Crypto for the id and the standard `fetch`
  * for the webhook + Supabase HTTP API. No Node-only APIs.
  */
-export const runtime = "edge";
+export const runtime = "nodejs";
 
 function shortReqId(): string {
   return Math.floor(Math.random() * 0xffffffff)
@@ -82,13 +82,13 @@ async function handle(request: NextRequest) {
     locale,
   });
 
-  const configured = isSupabaseConfigured();
+  const configured = isD1Configured();
   log.info("api.suggest", "config check", {
     req_id: reqId,
-    supabase_configured: configured,
+    d1_configured: configured,
   });
 
-  // ---- Persistence path: Supabase ----
+  // ---- Persistence path: D1 ----
   if (configured) {
     const result = await recordSuggestion({
       id,
@@ -165,7 +165,7 @@ async function handle(request: NextRequest) {
   }
 
   // ---- Fallback path: webhook-only ----
-  log.warn("api.suggest", "supabase not configured, using fallback", { req_id: reqId });
+  log.warn("api.suggest", "d1 not configured, using fallback", { req_id: reqId });
   await forwardToWebhook(process.env.SUGGEST_WEBHOOK_URL, {
     type: "widgetly.suggest",
     id,

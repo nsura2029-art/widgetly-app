@@ -14,6 +14,8 @@
     "type-check": "tsc --noEmit",
     "format": "prettier --write \"**/*.{ts,tsx,md,json,css}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,md,json,css}\"",
+    "ship": "node scripts/ship.mjs",
+    "ship:build": "node scripts/ship.mjs --build",
     "prepare": "husky",
     "prebuild": "node scripts/sync-swagger-assets.mjs",
     "sync:swagger": "node scripts/sync-swagger-assets.mjs",
@@ -30,7 +32,15 @@
     "i18n:export:all": "node scripts/translate-file.mjs export --out=tmp/translate",
     "i18n:export:missing": "node scripts/translate-file.mjs export --locales=es,fr --out=tmp/translate --mode=missing",
     "i18n:import": "node scripts/translate-file.mjs import --dir=tmp/translate",
-    "i18n:translate:mvp": "node scripts/translate-messages.mjs --locales=es,fr"
+    "i18n:translate:mvp": "node scripts/translate-messages.mjs --locales=es,fr",
+    "setup:secrets": "node scripts/setup-cloudflare-secrets.mjs",
+    "setup:secrets:dry": "node scripts/setup-cloudflare-secrets.mjs --dry-run",
+    "db:migrate:local": "wrangler d1 migrations apply widgetly --local",
+    "db:migrate:remote": "wrangler d1 migrations apply widgetly --remote",
+    "db:create": "wrangler d1 create widgetly",
+    "db:info": "wrangler d1 info widgetly",
+    "db:console:local": "wrangler d1 execute widgetly --local --command",
+    "db:console:remote": "wrangler d1 execute widgetly --remote --command"
   },
   "remotion": {
     "webpackOverride": "./remotion/webpack.override.js"

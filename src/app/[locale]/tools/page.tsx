@@ -91,6 +91,7 @@ export default function ToolsIndexPage() {
             <Link
               key={cat.slug}
               href={`/tools/${cat.slug}`}
+              prefetch={false}
               className="group border-border/60 hover:border-primary/40 shadow-soft hover:shadow-soft-lg block rounded-2xl border bg-white p-6 transition-all hover:-translate-y-0.5"
             >
               <div className="flex items-start justify-between gap-3">

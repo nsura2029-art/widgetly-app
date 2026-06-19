@@ -98,6 +98,7 @@ function HistoryPill({ item }: { item: HistoryItem }) {
   return (
     <Link
       href={`/tools/${item.slug}`}
+      prefetch={false}
       className={cn(
         "group/pill border-border/60 shadow-soft hover:border-border bg-white",
         "inline-flex shrink-0 items-center gap-3 rounded-2xl border px-4 py-3",

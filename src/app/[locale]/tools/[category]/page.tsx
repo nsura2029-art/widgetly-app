@@ -172,23 +172,34 @@ export default async function ToolsCategoryPage({ params }: { params: Promise<Pa
             A handful of the most-used tools in this category. New ones ship every month.
           </p>
           <ul className="mt-6 grid gap-2 sm:grid-cols-2">
-            {cat.examples.map((name) => (
-              <li
-                key={name}
-                id={name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}
-                className="border-border/60 bg-muted/5 flex items-center gap-2.5 rounded-lg border px-3 py-2.5 text-sm"
-              >
-                <span
-                  className={cn(
-                    "flex h-7 w-7 items-center justify-center rounded-md",
-                    ACCENT_CLASSES[cat.accent]
-                  )}
-                >
-                  <Icon className="h-3.5 w-3.5" aria-hidden="true" />
-                </span>
-                <span className="text-foreground font-medium">{name}</span>
-              </li>
-            ))}
+            {cat.examples.map((name) => {
+              const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+              return (
+                <li key={name} id={slug}>
+                  <Link
+                    href={`/tools/${cat.slug}/${slug}`}
+                    prefetch={false}
+                    className="border-border/60 bg-muted/5 hover:border-primary/40 hover:bg-muted/10 group flex items-center gap-2.5 rounded-lg border px-3 py-2.5 text-sm transition-colors"
+                  >
+                    <span
+                      className={cn(
+                        "flex h-7 w-7 shrink-0 items-center justify-center rounded-md",
+                        ACCENT_CLASSES[cat.accent]
+                      )}
+                    >
+                      <Icon className="h-3.5 w-3.5" aria-hidden="true" />
+                    </span>
+                    <span className="text-foreground flex-1 font-medium">{name}</span>
+                    <span
+                      className="text-muted-foreground group-hover:text-primary text-xs font-medium transition-colors"
+                      aria-hidden="true"
+                    >
+                      →
+                    </span>
+                  </Link>
+                </li>
+              );
+            })}
           </ul>
         </div>
       </div>
@@ -203,6 +214,7 @@ export default async function ToolsCategoryPage({ params }: { params: Promise<Pa
               <Link
                 key={o.slug}
                 href={`/tools/${o.slug}`}
+                prefetch={false}
                 className="border-border/60 hover:border-primary/40 group flex items-center gap-3 rounded-xl border bg-white p-3.5 transition-colors"
               >
                 <span

@@ -18,11 +18,92 @@ import {
   Github,
   Twitter,
   Linkedin,
+  // Mega-menu icons — added for the ToolsBanner sub-tool lists.
+  // Keep additions here, not in constants, so the icon registry
+  // stays a single source of truth for all string-keyed icons
+  // in the app.
+  Combine,
+  Split,
+  Minimize2,
+  Maximize2,
+  Crop,
+  RotateCw,
+  Lock,
+  LockOpen,
+  Key,
+  Eye,
+  EyeOff,
+  PenTool,
+  Edit3,
+  Stamp,
+  Hash,
+  ScanLine,
+  ScanText,
+  Wrench,
+  Languages,
+  Mail,
+  Home,
+  Heart,
+  Apple,
+  Percent,
+  TrendingUp,
+  DollarSign,
+  Tag,
+  Map,
+  Link as LinkIcon,
+  Bot,
+  Gauge,
+  BarChart3,
+  CheckCircle2,
+  FileOutput,
+  FileX,
+  ArrowUpDown,
+  ImagePlus,
+  ImageMinus,
+  Eraser,
+  ZoomIn,
+  Circle,
+  Presentation,
+  Sheet,
+  Binary,
+  Braces,
+  Regex,
+  Captions,
+  Scissors,
+  Film,
+  Pilcrow,
+  MessageSquare,
+  Repeat,
+  Heading,
+  Volume2,
+  Headphones,
+  // ---- Adobe parity icons (added 2026-06-18) ----
+  // Six icons for the 9 new PDF tools added for Adobe parity:
+  //   FilePlus      → Insert PDF Pages
+  //   FileImage     → PNG to PDF / PDF to PNG (raster file shape)
+  //   Camera        → HEIC to PDF (iPhone photo format)
+  //   Signature     → Fill & Sign (form-fill signature)
+  //   Send          → Request e-signatures (send a signing request)
+  //   MessageCircle → Chat with PDF (distinct from MessageSquare
+  //                   which is already used for Tone Rewriter in
+  //                   the Writing category — keeps the two chat-ish
+  //                   actions visually different)
+  FilePlus,
+  FileImage,
+  Camera,
+  Signature,
+  Send,
+  MessageCircle,
 } from "lucide-react";
 
 /**
- * Map a string identifier from `constants.ts` to a real Lucide icon component.
- * Decouples data (which is plain JSON-safe) from view (icon library).
+ * Map a string identifier from `constants.ts` (or any other
+ * data-only file) to a real Lucide icon component. Decouples
+ * data (which is plain JSON-safe) from view (icon library).
+ *
+ * If a requested name is missing, falls back to `Sparkles` rather
+ * than throwing — keeps banner/data updates from breaking the
+ * build when a new icon hasn't been registered yet.
  */
 const ICON_MAP = {
   Sparkles,
@@ -43,6 +124,67 @@ const ICON_MAP = {
   Github,
   Twitter,
   Linkedin,
+  Combine,
+  Split,
+  Minimize2,
+  Maximize2,
+  Crop,
+  RotateCw,
+  Lock,
+  LockOpen,
+  Key,
+  Eye,
+  EyeOff,
+  PenTool,
+  Edit3,
+  Stamp,
+  Hash,
+  ScanLine,
+  ScanText,
+  Wrench,
+  Languages,
+  Mail,
+  Home,
+  Heart,
+  Apple,
+  Percent,
+  TrendingUp,
+  DollarSign,
+  Tag,
+  Map,
+  Link: LinkIcon,
+  Bot,
+  Gauge,
+  BarChart3,
+  CheckCircle2,
+  FileOutput,
+  FileX,
+  ArrowUpDown,
+  ImagePlus,
+  ImageMinus,
+  Eraser,
+  ZoomIn,
+  Circle,
+  Presentation,
+  Sheet,
+  Binary,
+  Braces,
+  Regex,
+  Captions,
+  Scissors,
+  Film,
+  Pilcrow,
+  MessageSquare,
+  Repeat,
+  Heading,
+  Volume2,
+  Headphones,
+  FilePlus,
+  FileImage,
+  Camera,
+  Signature,
+  Send,
+  MessageCircle,
 } satisfies Record<string, LucideIcon>;
 
 export type IconName = keyof typeof ICON_MAP;

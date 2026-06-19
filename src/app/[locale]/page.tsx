@@ -1,4 +1,6 @@
 import { setRequestLocale } from "next-intl/server";
+import { FAQS } from "@/lib/constants";
+import { softwareApplicationJsonLd, faqJsonLd } from "@/lib/seo";
 import { Hero } from "@/components/landing/hero";
 import { Features } from "@/components/landing/features";
 import { Categories } from "@/components/landing/categories";
@@ -10,12 +12,30 @@ import { SeoCopy } from "@/components/landing/seo-copy";
 // import { CtaStrip } from "@/components/landing/cta-strip";
 // import { AdZone } from "@/components/ads/ad-zone";
 
-// Opt into per-request rendering. Required so the mascot seed (generated
-// below with Math.random) is fresh on every visit. Without this, Next.js
-// would cache the rendered HTML at build time and every visitor would
-// see the same mascot. For a marketing landing page, the SSR cost is
-// trivial and the per-request variation is the whole point.
-export const dynamic = "force-dynamic";
+// Static prerendering (the default in App Router for pages without
+// dynamic data sources). The home page has no per-request data —
+// everything is the same for every visitor — so we let Next.js
+// prerender it at build time and serve from Cloudflare's edge cache.
+//
+// Previous setup was `export const dynamic = "force-dynamic"` so the
+// mascot picker could use Math.random() per request. That worked but
+// had two costs:
+//
+//   1. Every home-page request hit the Worker runtime for full SSR,
+//      not the edge cache. A spike in traffic or a slow render could
+//      push the Worker over its CPU/memory limits and return a
+//      Cloudflare 1102 ('Worker exceeded resource limits') error to
+//      real visitors. We saw this in production on 2026-06-18 around
+//      01:07 UTC.
+//
+//   2. SSR cost on every request — wasteful when the output is the
+//      same for every visitor. With 150KB+ HTML + framer-motion + all
+//      landing sections, each request was O(component-tree) work.
+//
+// Trade-off: every visitor sees the same mascot (the one picked by
+// React's useId() at build time). The mascot still varies per
+// component instance, just not per visitor. Acceptable for an MVP;
+// revisit when we have a real reason for per-visitor variation.
 
 /**
  * Single-page landing — sections composed in a deliberate funnel:
@@ -31,22 +51,28 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
   const { locale } = await params;
   setRequestLocale(locale);
 
-  // Per-request random seed for the hero mascot picker. Generated on
-  // the server (where Math.random() is stable within a single render)
-  // and passed down so the SSR HTML and the client hydration see the
-  // SAME pick. Without this, useId() alone would give every visitor
-  // the same mascot (stable for hydration, but not actually random).
-  // Rounded to a small int so the prop is cheap to serialize.
-  // Math.random is fine here — this is a server component, it runs
-  // exactly once per request. The react-hooks/purity rule is overly
-  // broad for server components (it can't tell this isn't a client
-  // component) so we disable it locally.
-  // eslint-disable-next-line react-hooks/purity
-  const mascotSeed = Math.floor(Math.random() * 1_000_000);
+  // JSON-LD for the home page only — moved out of the root layout
+  // so they only appear where the visible content matches the
+  // schema. See [locale]/layout.tsx for the rationale.
+  const jsonLdApp = softwareApplicationJsonLd();
+  const jsonLdFaq = faqJsonLd(FAQS);
 
   return (
     <>
-      <Hero mascotSeed={mascotSeed} />
+      {/* SoftwareApplication (the platform) + FAQPage (matches the
+          visible FAQ section below). WebSite + Organization are
+          emitted by the root layout. */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdApp) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdFaq) }}
+      />
+      {/* No mascotSeed prop — RandomMascot falls back to useId() so
+          every visitor sees the build-time pick. Stable for hydration. */}
+      <Hero />
       <Features />
       <Categories />
       <SocialProof />

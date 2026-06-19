@@ -17,7 +17,7 @@ import { CONSENT_VERSION } from "@/lib/consent/types";
  * leading-underscore 'private folder' convention that Next.js
  * applies to /api/_diag/.
  */
-export const runtime = "edge";
+export const runtime = "nodejs";
 
 export async function GET(_request: NextRequest) {
   if (process.env.NODE_ENV === "production") {
