@@ -1,10 +1,12 @@
 import { SITE_CONFIG, CATEGORIES } from "./constants";
+import { isSupportedLocale } from "@/i18n/config";
 
 /**
  * Breadcrumb route generator + Schema.org BreadcrumbList builder.
  *
  * Design goals:
  * - Zero hardcoded paths; works for any future route automatically.
+ * - Locale-prefixed routes keep the locale in hrefs but not as a visible crumb.
  * - Slug → title mapping table for known labels, with a graceful fallback
  *   that converts hyphens/underscores into "PDF Tools"-style titles.
  * - Pure functions: cheap to memoize and safe to call during SSR.
@@ -219,13 +221,15 @@ export function generateBreadcrumbs(
   // Normalize trailing slash (except for root).
   const normalized = cleaned === "/" || cleaned === "" ? "/" : cleaned.replace(/\/+$/, "");
   const segments = normalized.split("/").filter(Boolean);
+  const locale = segments[0] && isSupportedLocale(segments[0]) ? segments[0] : null;
+  const visibleSegments = locale ? segments.slice(1) : segments;
 
   // Home (or root).
-  const crumbs: Crumb[] = [{ label: "Home", href: "/" }];
+  const crumbs: Crumb[] = [{ label: "Home", href: locale ? `/${locale}` : "/" }];
 
   // Build up cumulative paths.
-  let acc = "";
-  for (const segment of segments) {
+  let acc = locale ? `/${locale}` : "";
+  for (const segment of visibleSegments) {
     acc += `/${segment}`;
     crumbs.push({
       label: resolveLabel(segment, options.customLabels),

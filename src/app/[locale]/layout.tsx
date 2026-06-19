@@ -7,11 +7,13 @@ import { routing } from "../../../next-intl.config";
 import { isSupportedLocale, getDirection } from "@/i18n/config";
 import ClientHeader from "@/components/layout/client-header";
 import { ToolsBanner } from "@/components/layout/tools-banner";
+import { BreadcrumbNav } from "@/components/layout/breadcrumb-nav";
 import { Footer } from "@/components/layout/footer";
 import { ScrollToHash } from "@/components/layout/scroll-to-hash";
 import { ConsentProvider } from "@/lib/consent/useConsent";
 import { ConsentBanner } from "@/components/consent/ConsentBanner";
 import { regionFromLocale } from "@/lib/consent/region";
+import { SITE_CONFIG } from "@/lib/constants";
 
 import { websiteJsonLd, organizationJsonLd } from "@/lib/seo";
 
@@ -43,7 +45,7 @@ export async function generateMetadata({
   if (!isSupportedLocale(locale)) return {};
 
   const t = await getTranslations({ locale, namespace: "site" });
-  const baseUrl = "https://widgetly.app";
+  const baseUrl = SITE_CONFIG.url;
   const localePath = `/${locale}`;
 
   const languages: Record<string, string> = {};
@@ -161,8 +163,9 @@ export default async function LocaleLayout({
             </a>
             <ClientHeader />
 
-            <main id="main" className="pt-6">
+            <main id="main" className="pt-5">
               <ToolsBanner />
+              <BreadcrumbNav />
               {children}
             </main>
             <Footer />

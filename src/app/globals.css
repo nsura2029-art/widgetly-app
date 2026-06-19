@@ -63,19 +63,19 @@
 
   --text-display-2xl: 4.5rem;
   --text-display-2xl--line-height: 1.1;
-  --text-display-2xl--letter-spacing: -0.04em;
+  --text-display-2xl--letter-spacing: 0;
   --text-display-xl: 3.75rem;
   --text-display-xl--line-height: 1.1;
-  --text-display-xl--letter-spacing: -0.035em;
+  --text-display-xl--letter-spacing: 0;
   --text-display-lg: 3rem;
   --text-display-lg--line-height: 1.15;
-  --text-display-lg--letter-spacing: -0.03em;
+  --text-display-lg--letter-spacing: 0;
   --text-display-md: 2.25rem;
   --text-display-md--line-height: 1.2;
-  --text-display-md--letter-spacing: -0.025em;
+  --text-display-md--letter-spacing: 0;
   --text-display-sm: 1.875rem;
   --text-display-sm--line-height: 1.25;
-  --text-display-sm--letter-spacing: -0.02em;
+  --text-display-sm--letter-spacing: 0;
 
   /* Shadows */
   --shadow-glow-sm: 0 0 20px -5px rgba(91, 108, 255, 0.3);
@@ -102,7 +102,7 @@
   );
 
   /* Container */
-  --container-2xl: 1280px;
+  --container-2xl: 1440px;
   --container-xl: 1120px;
   --container-lg: 1024px;
   --container-md: 768px;
@@ -118,7 +118,7 @@
  * Behaviour:
  *  - 100% width with auto side margins -> always horizontally centered.
  *  - Responsive horizontal padding (1rem on phones, 1.5rem >=sm, 2rem >=lg).
- *  - Caps at 1280px on >=2xl viewports, scaling down at each breakpoint.
+ *  - Caps at 1440px on >=2xl viewports, scaling down at each breakpoint.
  *  - `padding-inline` keeps content away from the viewport edges so the
  *    hero text, header items, and page cards never hug the screen edge.
  * --------------------------------------------------------------------- */
@@ -150,7 +150,7 @@
     max-width: 1280px;
   }
   @media (min-width: 1536px) {
-    max-width: 1280px;
+    max-width: 1440px;
   }
 }
 
@@ -243,6 +243,9 @@
 @layer base {
   :root {
     --font-inter: "Inter", system-ui, sans-serif;
+    --wly-header-height: 4rem;
+    --wly-tools-height: 2.75rem;
+    --wly-breadcrumb-height: 3rem;
   }
 
   * {
@@ -265,7 +268,20 @@
       "rlig" 1,
       "calt" 1,
       "ss01" 1,
-      "cv11" 1;
+      "cv11" 1,
+      "cv02" 1,
+      "cv03" 1,
+      "cv04" 1;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-variation-settings: "opsz" 32;
+    letter-spacing: 0;
   }
 
   /* Selection styling */
@@ -395,7 +411,7 @@
     font-size: 1.5rem;
     font-weight: 600;
     color: #0f172a;
-    letter-spacing: -0.01em;
+    letter-spacing: 0;
   }
   .prose h3 {
     margin-top: 1.5em;
@@ -579,8 +595,7 @@
 /* -----------------------------------------------------------------------
  * Hash navigation offset
  *
- * Both the site header (h-16 = 64px) and the tools banner
- * (sticky top-16, ~56px tall) are pinned to the top of the
+ * The site header, tools banner, and breadcrumb are pinned to the top of the
  * viewport. When a user navigates to `/#features` (either
  * natively or via <ScrollToHash />), the browser scrolls the
  * target element to the very top of the viewport — putting the
@@ -606,5 +621,7 @@
  * ----------------------------------------------------------------------- */
 section[id],
 main[id] {
-  scroll-margin-top: 7.5rem;
+  scroll-margin-top: calc(
+    var(--wly-header-height) + var(--wly-tools-height) + var(--wly-breadcrumb-height) + 1.5rem
+  );
 }

@@ -5,9 +5,9 @@ import { cn } from "@/lib/utils";
  * Canonical page-content wrapper.
  *
  * Every non-landing page should render its body inside `<PageShell>` so the
- * horizontal alignment (Tailwind's `.container`, 1280px max) matches the
- * sticky header and the breadcrumb band — both of which also span the full
- * container width. The container is the single source of truth for
+ * horizontal alignment (Tailwind's `.container`, 1440px max) matches the
+ * sticky header, featured tools band, and breadcrumb band, all of which
+ * also span the full container width. The container is the single source of truth for
  * "what horizontal edge content sits at" on the site.
  *
  * The inner content is LEFT-ALIGNED at the container's left edge (no
@@ -34,9 +34,8 @@ import { cn } from "@/lib/utils";
  * Notes:
  *  - The root <main> is provided by the layout; do NOT wrap children in
  *    another <main>.
- *  - The layout already reserves `pt-16` to clear the sticky header. The
- *    breadcrumb lives between the header and <main>, so it scrolls under
- *    the sticky header normally.
+ *  - The locale layout owns the single root <main>; it renders the
+ *    featured tools band and global breadcrumb before page content.
  *  - Vertical padding is asymmetric: smaller on top (the breadcrumb
  *    band already provides the visual break — adding 80px more felt
  *    like dead space), larger on the bottom for separation before the
@@ -50,8 +49,7 @@ const WIDTH_CLASS: Record<PageShellWidth, string> = {
   // content (blog post articles, etc.) where 60-80 chars per line is
   // the readability sweet spot.
   default: "max-w-3xl",
-  // Wide now spans the full container width (max-w-7xl == container max
-  // of 80rem). Pages that need a card grid, hero + grid combo, or
+  // Wide now spans the full container width. Pages that need a card grid, hero + grid combo, or
   // anything that fills the screen flow naturally use this. Previously
   // this was max-w-5xl which left a 256px gap on the right vs the
   // Join Waitlist button — felt misaligned. Pages that want a
@@ -106,13 +104,13 @@ export function PageShell({
     <div
       className={cn(
         // Tailwind v4's `.container` is 100% width with horizontal padding
-        // that scales with the viewport (1rem -> 2rem). It caps at 80rem.
+        // that scales with the viewport (1rem -> 2rem). It caps at 90rem.
         //
         // Vertical padding is split: pt-* (smaller, breadcrumb already
         // provides visual separation) + pb-* (larger, breathing room
-        // before footer / next section). Tuned to match the gap above
-        // the breadcrumb (pt-6 on the parent <main>) so the rhythm is
-        // consistent across the page: header | gap | breadcrumb |
+        // before footer / next section). Tuned to match the sticky
+        // chrome above so the rhythm is consistent across the page:
+        // header | tools | breadcrumb |
         // gap | content | ... | footer.
         "container pt-6 pb-12 sm:pt-6 sm:pb-16 md:pt-6 md:pb-20",
         className

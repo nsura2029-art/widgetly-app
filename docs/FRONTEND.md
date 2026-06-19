@@ -194,6 +194,10 @@ that powers `/api/openapi.json` and the Swagger UI at `/docs`.
 
 ## Styling
 
+The shared `.container` rail caps at 90rem (1440px) on wide viewports.
+Header, featured tools, breadcrumb, hero, PageShell, and footer content
+should use that rail so horizontal alignment stays consistent.
+
 Tailwind v4 reads the design tokens from `src/app/globals.css`
 via the `@theme` block. To add or change a color:
 
