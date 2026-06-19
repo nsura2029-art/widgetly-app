@@ -1,12 +1,11 @@
 import { setRequestLocale } from "next-intl/server";
-import { FAQS } from "@/lib/constants";
-import { softwareApplicationJsonLd, faqJsonLd } from "@/lib/seo";
+import { softwareApplicationJsonLd } from "@/lib/seo";
 import { Hero } from "@/components/landing/hero";
 import { Features } from "@/components/landing/features";
 import { Categories } from "@/components/landing/categories";
 import { SocialProof } from "@/components/landing/social-proof";
 import { Waitlist } from "@/components/landing/waitlist";
-import { FaqSection } from "@/components/landing/faq-section";
+import { CategoriesShowcase } from "@/components/landing/categories-showcase";
 import { SeoCopy } from "@/components/landing/seo-copy";
 // CtaStrip + AdZone are disabled pre-launch; kept here for easy re-enable.
 // import { CtaStrip } from "@/components/landing/cta-strip";
@@ -39,9 +38,18 @@ import { SeoCopy } from "@/components/landing/seo-copy";
 
 /**
  * Single-page landing — sections composed in a deliberate funnel:
- * Hero → Features → Categories → SocialProof → Waitlist → SEO copy → FAQ.
- * The SEO copy and FAQ are below the fold but are server-rendered, fully
- * indexable, and load instantly because they ship with the initial HTML.
+ * Hero → Features → Categories → SocialProof → Waitlist → SEO copy →
+ * CategoriesShowcase.
+ *
+ * The CategoriesShowcase (above the footer) replaces the previous
+ * `<FaqSection />`. Rationale: bottom-of-page decisions convert better
+ * than mid-page Q&A for a 500+ tools platform. The FAQ content still
+ * ships in the i18n bundle under `faq.items.*` and `home.faq.*` so it
+ * stays available for a dedicated `/faq` route (TODO) and for any
+ * later re-introduction.
+ *
+ * The SEO copy is below the fold but is server-rendered, fully
+ * indexable, and loads instantly because it ships with the initial HTML.
  *
  * `setRequestLocale` is required by next-intl for static rendering —
  * it scopes the in-request locale so server components can resolve
@@ -54,21 +62,17 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
   // JSON-LD for the home page only — moved out of the root layout
   // so they only appear where the visible content matches the
   // schema. See [locale]/layout.tsx for the rationale.
+  // (FAQPage schema removed in lockstep with the visible FAQ section —
+  // Google penalises schema that doesn't match visible content.)
   const jsonLdApp = softwareApplicationJsonLd();
-  const jsonLdFaq = faqJsonLd(FAQS);
 
   return (
     <>
-      {/* SoftwareApplication (the platform) + FAQPage (matches the
-          visible FAQ section below). WebSite + Organization are
+      {/* SoftwareApplication (the platform). WebSite + Organization are
           emitted by the root layout. */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdApp) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdFaq) }}
       />
       {/* No mascotSeed prop — RandomMascot falls back to useId() so
           every visitor sees the build-time pick. Stable for hydration. */}
@@ -78,7 +82,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
       <SocialProof />
       <Waitlist />
       <SeoCopy />
-      <FaqSection />
+      <CategoriesShowcase />
     </>
   );
 }
