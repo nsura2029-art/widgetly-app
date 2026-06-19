@@ -235,6 +235,11 @@
         "name": "Herramientas empresariales",
         "shortDesc": "Facturas, contratos, propuestas",
         "longDesc": "Herramientas de productividad empresarial: generador de facturas, plantillas de contratos, creador de propuestas, generador de acuerdos de confidencialidad, plantillas de planes de negocio, análisis DAFO, gestor de OKR."
+      },
+      "writing": {
+        "name": "Herramientas de redacción",
+        "shortDesc": "Palabras, gramática, paráfrasis",
+        "longDesc": "Herramientas de redacción gratuitas: contador de palabras, contador de caracteres, corrector gramatical, parafraseador, reescritor de tono, analizador de titulares, evaluador de legibilidad, generador de lorem ipsum."
       }
     }
   },

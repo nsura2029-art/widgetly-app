@@ -235,6 +235,11 @@
         "name": "Business Tools",
         "shortDesc": "Invoices, contracts, proposals",
         "longDesc": "Business productivity tools: invoice generator, contract templates, proposal builder, NDA generator, business plan templates, SWOT analysis, OKR tracker."
+      },
+      "writing": {
+        "name": "Writing Tools",
+        "shortDesc": "Words, grammar, paraphrase",
+        "longDesc": "Free writing tools: word counter, character counter, grammar checker, paraphraser, tone rewriter, headline analyzer, readability scorer, lorem ipsum generator."
       }
     }
   },

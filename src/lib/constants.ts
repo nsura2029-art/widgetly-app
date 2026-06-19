@@ -153,7 +153,7 @@ export const CATEGORIES: readonly Category[] = [
     slug: "pdf",
     longDescription:
       "Free online PDF tools: merge, split, compress, convert to Word/Excel/JPG/PNG, edit, sign, fill forms, request e-signatures, OCR, protect. No upload limits, no watermarks, runs in your browser.",
-    count: 37,
+    count: 38,
     icon: "FileText",
     href: "/tools/pdf",
     accent: "primary",
@@ -162,7 +162,7 @@ export const CATEGORIES: readonly Category[] = [
     slug: "image",
     longDescription:
       "Online image editor: resize, crop, compress, convert between JPG, PNG, WebP, SVG, AVIF. Background remover, watermark, filters, and batch processing.",
-    count: 35,
+    count: 12,
     icon: "Image",
     href: "/tools/image",
     accent: "secondary",
@@ -171,7 +171,7 @@ export const CATEGORIES: readonly Category[] = [
     slug: "video",
     longDescription:
       "Browser-based video tools: compress, trim, cut, merge, transcribe audio to text, generate subtitles, convert to MP4, WebM, GIF. No software to install.",
-    count: 18,
+    count: 10,
     icon: "Video",
     href: "/tools/video",
     accent: "accent",
@@ -180,7 +180,7 @@ export const CATEGORIES: readonly Category[] = [
     slug: "ai",
     longDescription:
       "Free AI tools for writing, summarizing, rewriting, translating, generating images, building resumes, and answering questions. Powered by the latest LLMs.",
-    count: 42,
+    count: 10,
     icon: "Sparkles",
     href: "/tools/ai",
     accent: "primary",
@@ -189,7 +189,7 @@ export const CATEGORIES: readonly Category[] = [
     slug: "calculators",
     longDescription:
       "Hundreds of free online calculators: mortgage, loan, BMI, calorie, tip, percentage, age, GPA, grade, scientific, financial, health, and math calculators.",
-    count: 64,
+    count: 7,
     icon: "Calculator",
     href: "/tools/calculators",
     accent: "secondary",
@@ -198,7 +198,7 @@ export const CATEGORIES: readonly Category[] = [
     slug: "converters",
     longDescription:
       "Free unit, currency, and file format converters: length, weight, temperature, area, volume, time, speed, data, color codes, and 150+ currencies with live rates.",
-    count: 51,
+    count: 7,
     icon: "ArrowLeftRight",
     href: "/tools/converters",
     accent: "accent",
@@ -207,7 +207,7 @@ export const CATEGORIES: readonly Category[] = [
     slug: "seo",
     longDescription:
       "Free SEO tools: meta tag generator, keyword density checker, sitemap generator, robots.txt tester, SERP preview, backlink checker, page speed insights.",
-    count: 24,
+    count: 7,
     icon: "Search",
     href: "/tools/seo",
     accent: "primary",
@@ -216,7 +216,7 @@ export const CATEGORIES: readonly Category[] = [
     slug: "education",
     longDescription:
       "Tools for teachers and students: lesson plan generator, quiz maker, flashcards, study timer, GPA calculator, citation generator, math solver, writing prompts.",
-    count: 39,
+    count: 7,
     icon: "GraduationCap",
     href: "/tools/education",
     accent: "secondary",
@@ -225,7 +225,7 @@ export const CATEGORIES: readonly Category[] = [
     slug: "developer",
     longDescription:
       "Free developer utilities: JSON formatter and validator, regex tester, Base64 encoder, URL encoder, JWT decoder, CSS minifier, diff checker, hash generator.",
-    count: 47,
+    count: 7,
     icon: "Code2",
     href: "/tools/developer",
     accent: "accent",
@@ -234,10 +234,19 @@ export const CATEGORIES: readonly Category[] = [
     slug: "business",
     longDescription:
       "Business productivity tools: invoice generator, contract templates, proposal builder, NDA generator, business plan templates, SWOT analysis, OKR tracker.",
-    count: 32,
+    count: 7,
     icon: "Briefcase",
     href: "/tools/business",
     accent: "primary",
+  },
+  {
+    slug: "writing",
+    longDescription:
+      "Free writing tools: word counter, character counter, grammar checker, paraphraser, tone rewriter, headline analyzer, readability scorer, lorem ipsum generator.",
+    count: 7,
+    icon: "PenLine",
+    href: "/tools/writing",
+    accent: "accent",
   },
 ] as const;
 

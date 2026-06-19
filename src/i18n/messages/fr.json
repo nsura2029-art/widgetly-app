@@ -235,6 +235,11 @@
         "name": "Outils professionnels",
         "shortDesc": "Factures, contrats, propositions",
         "longDesc": "Outils de productivité professionnelle : générateur de factures, modèles de contrats, créateur de propositions, générateur d'accords de confidentialité, modèles de business plans, analyse SWOT, suivi des OKR."
+      },
+      "writing": {
+        "name": "Outils de rédaction",
+        "shortDesc": "Mots, grammaire, reformulation",
+        "longDesc": "Outils de rédaction gratuits : compteur de mots, compteur de caractères, correcteur grammatical, reformulateur, réécriture de ton, analyseur de titres, score de lisibilité, générateur de lorem ipsum."
       }
     }
   },

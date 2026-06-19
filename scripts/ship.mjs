@@ -9,8 +9,10 @@
 // What it does:
 //   1. Lint (pnpm lint)
 //   2. Type-check (pnpm type-check)
-//   3. Test (if `pnpm test` is defined; otherwise skip with a notice)
-//   4. Build (pnpm exec opennextjs-cloudflare build) — only when --build
+//   3. Tool count verification (bash scripts/verify-counts.sh) — keeps
+//      `count` fields in sync with actual TOOLS_SUBGROUPS + examples data
+//   4. Test (if `pnpm test` is defined; otherwise skip with a notice)
+//   5. Build (pnpm exec opennextjs-cloudflare build) — only when --build
 //      is passed, because the build is expensive and the pre-push gate
 //      deliberately stops at type-check + lint + test for fast feedback.
 //
@@ -100,6 +102,13 @@ run("lint", runner, [...pnpmArgs, "run", "lint"], {
   env: { NODE_OPTIONS: "--max-old-space-size=8192" },
 });
 run("type-check", runner, [...pnpmArgs, "run", "type-check"]);
+
+// Tool count verification. The mega menu, /tools cards, and home page
+// all read counts from `tools-categories.ts` and `constants.ts`. If
+// those drift from the actual TOOLS_SUBGROUPS / examples data, the UI
+// shows wrong numbers ("37 tools" in a category with only 12). Catching
+// it here means it can't slip into a deploy.
+run("verify-counts", "bash", [resolve(ROOT, "scripts/verify-counts.sh")]);
 
 if (hasScript("test")) {
   run("test", runner, [...pnpmArgs, "run", "test"]);
