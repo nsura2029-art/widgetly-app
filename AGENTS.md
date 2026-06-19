@@ -92,6 +92,10 @@ This AGENTS.md is the binding work contract for the whole repository. Every chil
   rm -rf node_modules/lint-staged/node_modules/signal-exit
   ```
 
+  ```bash
+  rm -rf node_modules/lint-staged/node_modules/signal-exit
+  ```
+
   After this, `git commit` runs the full lint-staged pipeline cleanly.
   The dir does NOT reappear on `pnpm install --frozen-lockfile`
   (verified). If a future sandbox shows the same error again, just
