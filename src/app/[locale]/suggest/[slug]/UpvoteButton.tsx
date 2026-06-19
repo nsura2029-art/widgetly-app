@@ -20,10 +20,12 @@ import { cn } from "@/lib/utils";
  */
 export function UpvoteButton({
   slug,
+  id,
   initialCount,
   className,
 }: {
   slug: string;
+  id?: number;
   initialCount: number;
   className?: string;
 }) {
@@ -59,15 +61,26 @@ export function UpvoteButton({
     } catch {
       // Ignore storage failures; the in-memory state still updates.
     }
-    // Placeholder for the real API call. The shape will be:
-    //   await fetch(`/api/suggest/${slug}/upvote`, {
-    //     method: next ? "POST" : "DELETE",
-    //     headers: { "content-type": "application/json" },
-    //   });
-    // For now we no-op so the UI is honest about the optimistic
-    // behavior (no fake 200 from a non-existent endpoint).
-    await new Promise((r) => setTimeout(r, 120));
-    setPending(false);
+    try {
+      const res = await fetch(`/api/suggestions/${id ?? slug}/upvote`, {
+        method: next ? "POST" : "DELETE",
+        headers: { "content-type": "application/json" },
+      });
+      const body = await res.json();
+      if (!res.ok || !body.ok) throw new Error(body?.error?.message ?? "Vote failed");
+      setCount(Number(body.upvotes ?? count));
+    } catch {
+      setVoted(!next);
+      setCount((c) => c + (next ? -1 : 1));
+      try {
+        window.localStorage.setItem(storageKey(slug), next ? "0" : "1");
+      } catch {
+        // Ignore storage failures; the server-side failure has already
+        // been reflected by rolling back the in-memory state.
+      }
+    } finally {
+      setPending(false);
+    }
   }
 
   return (
@@ -105,7 +118,10 @@ export function UpvoteButton({
           <ThumbsUp className="h-4 w-4" aria-hidden="true" />
         )}
       </span>
-      <span className="flex flex-col items-start leading-tight">
+      <span
+        key={count}
+        className="flex animate-[bounce_0.35s_ease-out_1] flex-col items-start leading-tight"
+      >
         <span className="text-sm font-semibold">
           {voted ? "You upvoted this" : "Upvote this idea"}
         </span>

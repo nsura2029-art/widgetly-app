@@ -3,7 +3,7 @@
 > **One Search. Endless Possibilities.**
 > An AI-powered utility platform with 500+ tools — calculators, converters, generators, PDF tools, AI assistants, and more.
 
-A modern, premium Coming Soon landing page for [Widgetly](https://widgetly.app), built with **Next.js 15**, **TypeScript**, **Tailwind CSS**, **ShadCN UI**, and **Framer Motion**. Designed for **Cloudflare Pages** deployment.
+A modern, premium Coming Soon landing page for [Widgetly](https://widgetly.tech), built with **Next.js 15**, **TypeScript**, **Tailwind CSS**, **ShadCN UI**, and **Framer Motion**. Designed for **Cloudflare Pages** deployment.
 
 ---
 
@@ -41,6 +41,35 @@ pnpm build        # outputs to .vercel/output/static
 ```
 
 Open [http://localhost:3000](http://localhost:3000) to see the site.
+
+---
+
+## Suggest a Tool Feature
+
+The public suggestion board lives at `/suggest`, with submission at `/suggest/new` and
+individual suggestion pages at `/suggest/[id]` where `[id]` can be a numeric D1 id or a
+shareable slug.
+
+Local setup:
+
+```bash
+corepack pnpm@9.15.9 install
+corepack pnpm@9.15.9 db:migrate:local
+corepack pnpm@9.15.9 dev
+```
+
+Production rollout:
+
+```bash
+corepack pnpm@9.15.9 type-check
+corepack pnpm@9.15.9 test
+corepack pnpm@9.15.9 exec opennextjs-cloudflare build
+corepack pnpm@9.15.9 db:migrate:remote
+```
+
+The feature uses Cloudflare D1 tables `suggestions`, `upvotes`, and `email_queue`.
+Anonymous upvotes are tracked with a session cookie plus hashed IP, and submissions are
+rate-limited to 3 suggestions per email per UTC day.
 
 ---
 

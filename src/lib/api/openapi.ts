@@ -27,16 +27,16 @@ export const openapiSpec = {
       "Widgetly exposes a small set of public HTTP endpoints for the homepage forms: the launch waitlist, the tool-suggestion intake, and the contact form. All endpoints accept JSON, return JSON, run on the Cloudflare Workers edge runtime, and require no authentication.",
     contact: {
       name: "Widgetly Engineering",
-      email: "engineering@widgetly.app",
-      url: "https://widgetly.app/contact",
+      email: "engineering@widgetly.tech",
+      url: "https://widgetly.tech/contact",
     },
     license: {
       name: "Proprietary",
     },
   },
   servers: [
-    { url: "https://widgetly.app", description: "Production" },
-    { url: "https://staging.widgetly.app", description: "Staging" },
+    { url: "https://widgetly.tech", description: "Production" },
+    { url: "https://staging.widgetly.tech", description: "Staging" },
     { url: "http://localhost:3000", description: "Local development" },
   ],
   tags: [
@@ -160,6 +160,110 @@ export const openapiSpec = {
         },
       },
     },
+    "/api/suggestions": {
+      get: {
+        tags: ["Suggest"],
+        operationId: "listSuggestions",
+        summary: "List public suggestions",
+        description:
+          "Returns the public suggestion board with category/status filters, sort options, and 20-item pagination.",
+        parameters: [
+          { name: "category", in: "query", schema: { type: "string" } },
+          {
+            name: "status",
+            in: "query",
+            schema: { type: "string", enum: ["in_review", "building", "live", "rejected"] },
+          },
+          {
+            name: "sort",
+            in: "query",
+            schema: { type: "string", enum: ["most_voted", "newest", "recently_built"] },
+          },
+          { name: "page", in: "query", schema: { type: "integer", minimum: 1 } },
+        ],
+        responses: {
+          "200": {
+            description: "Paginated suggestion board.",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/SuggestionListResponse" },
+              },
+            },
+          },
+          "503": { $ref: "#/components/responses/ServiceUnavailable" },
+        },
+      },
+      post: {
+        tags: ["Suggest"],
+        operationId: "createSuggestion",
+        summary: "Create a public suggestion",
+        description:
+          "Creates a public suggestion, applies the 3-per-email-per-day D1 rate limit, and queues the received email notification.",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/SuggestionCreateRequest" },
+            },
+          },
+        },
+        responses: {
+          "201": {
+            description: "Suggestion created.",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/SuggestionCreateResponse" },
+              },
+            },
+          },
+          "400": { $ref: "#/components/responses/ValidationError" },
+          "429": { $ref: "#/components/responses/RateLimited" },
+          "503": { $ref: "#/components/responses/ServiceUnavailable" },
+        },
+      },
+    },
+    "/api/suggestions/{id}": {
+      get: {
+        tags: ["Suggest"],
+        operationId: "getSuggestion",
+        summary: "Get one public suggestion",
+        parameters: [{ name: "id", in: "path", required: true, schema: { type: "string" } }],
+        responses: {
+          "200": {
+            description: "Suggestion detail.",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/SuggestionCreateResponse" },
+              },
+            },
+          },
+          "404": { $ref: "#/components/responses/NotFound" },
+          "503": { $ref: "#/components/responses/ServiceUnavailable" },
+        },
+      },
+    },
+    "/api/suggestions/{id}/upvote": {
+      post: {
+        tags: ["Suggest"],
+        operationId: "upvoteSuggestion",
+        summary: "Upvote a suggestion",
+        parameters: [{ name: "id", in: "path", required: true, schema: { type: "string" } }],
+        responses: {
+          "200": { description: "Vote count updated." },
+          "404": { $ref: "#/components/responses/NotFound" },
+        },
+      },
+      delete: {
+        tags: ["Suggest"],
+        operationId: "removeSuggestionUpvote",
+        summary: "Remove an upvote",
+        parameters: [{ name: "id", in: "path", required: true, schema: { type: "string" } }],
+        responses: {
+          "200": { description: "Vote count updated." },
+          "404": { $ref: "#/components/responses/NotFound" },
+        },
+      },
+    },
     "/api/contact": {
       post: {
         tags: ["Contact"],
@@ -180,7 +284,7 @@ export const openapiSpec = {
                     email: "jane@acme.com",
                     message:
                       "Hi — evaluating Widgetly for a 12-person team. Can we schedule a 30-minute call this week?",
-                    referrer: "https://widgetly.app/about",
+                    referrer: "https://widgetly.tech/about",
                   },
                 },
               },
@@ -343,6 +447,87 @@ export const openapiSpec = {
           message: { type: "string" },
         },
       },
+      SuggestionCreateRequest: {
+        type: "object",
+        required: ["toolName", "description", "useCase", "category", "urgency", "email"],
+        additionalProperties: false,
+        properties: {
+          toolName: { type: "string", minLength: 3, maxLength: 50, example: "PDF Summarizer" },
+          description: { type: "string", minLength: 50, maxLength: 500 },
+          useCase: { type: "string", minLength: 20, maxLength: 300 },
+          category: {
+            type: "string",
+            enum: [
+              "PDF",
+              "Image",
+              "SEO",
+              "Dev",
+              "AI",
+              "Video",
+              "Calculators",
+              "Converters",
+              "Writing",
+              "Business",
+              "Education",
+            ],
+          },
+          urgency: { type: "string", enum: ["low", "medium", "high"] },
+          email: { type: "string", format: "email", maxLength: 254 },
+        },
+      },
+      Suggestion: {
+        type: "object",
+        required: [
+          "id",
+          "slug",
+          "toolName",
+          "description",
+          "useCase",
+          "category",
+          "urgency",
+          "status",
+          "upvotes",
+          "createdAt",
+          "updatedAt",
+        ],
+        properties: {
+          id: { type: "integer" },
+          slug: { type: "string" },
+          toolName: { type: "string" },
+          description: { type: "string" },
+          useCase: { type: "string" },
+          category: { type: "string" },
+          urgency: { type: "string", enum: ["low", "medium", "high"] },
+          status: { type: "string", enum: ["in_review", "building", "live", "rejected"] },
+          upvotes: { type: "integer" },
+          createdAt: { type: "string", format: "date-time" },
+          updatedAt: { type: "string", format: "date-time" },
+          builtAt: { type: "string", format: "date-time", nullable: true },
+        },
+      },
+      SuggestionCreateResponse: {
+        type: "object",
+        required: ["ok", "suggestion"],
+        properties: {
+          ok: { type: "boolean", enum: [true] },
+          suggestion: { $ref: "#/components/schemas/Suggestion" },
+        },
+      },
+      SuggestionListResponse: {
+        type: "object",
+        required: ["ok", "suggestions", "total", "page", "pageSize", "totalPages"],
+        properties: {
+          ok: { type: "boolean", enum: [true] },
+          suggestions: {
+            type: "array",
+            items: { $ref: "#/components/schemas/Suggestion" },
+          },
+          total: { type: "integer" },
+          page: { type: "integer" },
+          pageSize: { type: "integer" },
+          totalPages: { type: "integer" },
+        },
+      },
       ContactRequest: {
         type: "object",
         required: ["name", "email", "message"],
@@ -436,6 +621,48 @@ export const openapiSpec = {
               error: {
                 code: "method_not_allowed",
                 message: "GET is not allowed on this endpoint.",
+              },
+            },
+          },
+        },
+      },
+      NotFound: {
+        description: "The requested resource was not found.",
+        content: {
+          "application/json": {
+            schema: { $ref: "#/components/schemas/ApiError" },
+            example: {
+              ok: false,
+              error: { code: "not_found", message: "Suggestion not found." },
+            },
+          },
+        },
+      },
+      RateLimited: {
+        description: "The client hit a rate limit.",
+        content: {
+          "application/json": {
+            schema: { $ref: "#/components/schemas/ApiError" },
+            example: {
+              ok: false,
+              error: {
+                code: "rate_limited",
+                message: "You can submit up to 3 suggestions per email each day.",
+              },
+            },
+          },
+        },
+      },
+      ServiceUnavailable: {
+        description: "Backing storage or service is unavailable.",
+        content: {
+          "application/json": {
+            schema: { $ref: "#/components/schemas/ApiError" },
+            example: {
+              ok: false,
+              error: {
+                code: "d1_not_configured",
+                message: "Suggestion storage is not configured.",
               },
             },
           },

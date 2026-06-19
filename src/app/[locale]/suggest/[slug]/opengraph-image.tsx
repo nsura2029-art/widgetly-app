@@ -180,7 +180,7 @@ export default async function Image({ params }: { params: Promise<{ slug: string
           </div>
         </div>
         <div style={{ fontSize: 18, opacity: 0.8, display: "flex" }}>
-          widgetly.app/suggest/{slug}
+          widgetly.tech/suggest/{slug}
         </div>
       </div>
     </div>,
