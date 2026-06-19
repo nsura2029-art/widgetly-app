@@ -38,38 +38,44 @@ export function SocialProof() {
         </FadeIn>
 
         <Stagger className="mt-10 grid grid-cols-2 gap-6 sm:grid-cols-4" stagger={0.1}>
-          <Stat
-            key="tools"
-            icon={<Wrench className="h-4 w-4" />}
-            value={500}
-            suffix="+"
-            label={t("stats.tools")}
-            accent="text-primary"
-          />
-          <Stat
-            key="categories"
-            icon={<Layers className="h-4 w-4" />}
-            value={50}
-            suffix="+"
-            label={t("stats.categories")}
-            accent="text-secondary"
-          />
-          <Stat
-            key="stars"
-            icon={<Star className="h-4 w-4" />}
-            value={2400}
-            suffix="+"
-            label={t("stats.stars")}
-            accent="text-accent"
-          />
-          <Stat
-            key="waitlist"
-            icon={<Users className="h-4 w-4" />}
-            value={8500}
-            suffix="+"
-            label={t("stats.waitlist")}
-            accent="text-primary"
-          />
+          {(
+            [
+              {
+                id: "tools",
+                icon: <Wrench className="h-4 w-4" />,
+                value: 500,
+                suffix: "+",
+                label: t("stats.tools"),
+                accent: "text-primary",
+              },
+              {
+                id: "categories",
+                icon: <Layers className="h-4 w-4" />,
+                value: 50,
+                suffix: "+",
+                label: t("stats.categories"),
+                accent: "text-secondary",
+              },
+              {
+                id: "stars",
+                icon: <Star className="h-4 w-4" />,
+                value: 2400,
+                suffix: "+",
+                label: t("stats.stars"),
+                accent: "text-accent",
+              },
+              {
+                id: "waitlist",
+                icon: <Users className="h-4 w-4" />,
+                value: 8500,
+                suffix: "+",
+                label: t("stats.waitlist"),
+                accent: "text-primary",
+              },
+            ] as const
+          ).map((stat) => (
+            <Stat key={stat.id} {...stat} />
+          ))}
         </Stagger>
 
         <FadeIn delay={0.3} className="mt-12 text-center">
@@ -139,9 +145,19 @@ function Stat({
  * Subscribes to a MotionValue<string> and renders its current value as
  * a plain React text child. Avoids "Objects are not valid as a React child"
  * by never letting a MotionValue reach React's renderer directly.
+ *
+ * SSR-safe: initializes from a stable fallback ("0") rather than calling
+ * `value.get()` at render time. The fallback matches the server render, so
+ * hydration sees no mismatch; the first `useMotionValueEvent` tick on the
+ * client then pushes the real value without re-mounting the node.
  */
 function CountUp({ value }: { value: MotionValue<string> }) {
-  const [text, setText] = React.useState(value.get());
+  const [text, setText] = React.useState("0");
+  React.useEffect(() => {
+    // Sync to the current value as soon as we mount on the client.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setText(value.get());
+  }, [value]);
   useMotionValueEvent(value, "change", (latest) => setText(latest));
   return <>{text}</>;
 }
