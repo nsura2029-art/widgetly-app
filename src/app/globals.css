@@ -102,7 +102,7 @@
   );
 
   /* Container */
-  --container-2xl: 1440px;
+  --container-2xl: 1600px;
   --container-xl: 1120px;
   --container-lg: 1024px;
   --container-md: 768px;
@@ -117,8 +117,8 @@
  *
  * Behaviour:
  *  - 100% width with auto side margins -> always horizontally centered.
- *  - Responsive horizontal padding (1rem on phones, 1.5rem >=sm, 2rem >=lg).
- *  - Caps at 1440px on >=2xl viewports, scaling down at each breakpoint.
+ *  - Responsive horizontal padding (1rem on phones, 1.5rem >=sm).
+ *  - Caps at 1600px on >=2xl viewports, with full-width behaviour below.
  *  - `padding-inline` keeps content away from the viewport edges so the
  *    hero text, header items, and page cards never hug the screen edge.
  * --------------------------------------------------------------------- */
@@ -130,27 +130,9 @@
   @media (min-width: 640px) {
     padding-inline: 1.5rem;
   }
-  @media (min-width: 1024px) {
-    padding-inline: 2rem;
-  }
 
-  @media (min-width: 480px) {
-    max-width: 480px;
-  }
-  @media (min-width: 640px) {
-    max-width: 640px;
-  }
-  @media (min-width: 768px) {
-    max-width: 768px;
-  }
-  @media (min-width: 1024px) {
-    max-width: 1024px;
-  }
-  @media (min-width: 1280px) {
-    max-width: 1280px;
-  }
   @media (min-width: 1536px) {
-    max-width: 1440px;
+    max-width: 1600px;
   }
 }
 

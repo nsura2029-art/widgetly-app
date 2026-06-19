@@ -313,7 +313,7 @@ function MegaPanel({
     // Outer wrapper spans full viewport width and handles centering
     // + pointer-events passthrough. The actual visible panel (with
     // background, border, shadow) is the inner div, which is sized
-    // to its content via `w-fit max-w-[1440px]`. So when a category
+    // to its content via `w-fit max-w-[1600px]`. So when a category
     // has only 2-3 subgroups, the panel shrinks to fit those columns
     // instead of stretching across the whole viewport.
     <div className="pointer-events-none fixed inset-x-0 top-[calc(var(--wly-header-height)+var(--wly-tools-height))] z-40 flex justify-center">
@@ -321,7 +321,7 @@ function MegaPanel({
         onMouseEnter={onMouseEnter}
         onMouseLeave={onMouseLeave}
         className={cn(
-          "animate-fade-in pointer-events-auto w-fit max-w-[1440px]",
+          "animate-fade-in pointer-events-auto w-fit max-w-[1600px]",
           "border-border/60 bg-popover/98 supports-[backdrop-filter]:bg-popover/85",
           "rounded-b-xl border shadow-2xl backdrop-blur"
         )}
@@ -353,7 +353,7 @@ function MegaPanel({
 
             Why fixed-width columns instead of `grid auto-fit minmax`?
               - `auto-fit` stretches every column to fill available
-                space, which on a 7-subgroup category at 1440px gives
+                space, which on a 7-subgroup category at 1600px gives
                 6 thin columns (180px each). On a 3-subgroup category,
                 the 3 columns stretch to 400px each — too wide, with
                 dead space on the right.

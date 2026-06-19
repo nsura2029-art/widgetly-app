@@ -81,13 +81,14 @@ This AGENTS.md is the binding work contract for the whole repository. Every chil
 - Author: `Mavis <Mavis@local>` for AI-authored commits. Re-author with `--author` if you need a different identity.
 - Format: `<type>(<scope>): <imperative summary>`. Body explains _why_, not _what_.
 - One logical change per commit. Squash locally before merging.
+- User preference: when a requested change is complete, commit the scoped changes to the current branch before reporting done unless the user explicitly asks not to commit.
 
 ### Code style
 
 - TypeScript strict + `noUncheckedIndexedAccess`. Run `pnpm type-check` before committing.
 - ESLint config: `eslint-config-next`. Run `pnpm lint <path>` before committing.
 - Husky pre-commit: lint + type-check are enforced. Fix before pushing.
-- Tailwind v4. `container` class caps at 90rem (1440px) on wide viewports.
+- Tailwind v4. `container` class is full-width responsive and caps at 100rem (1600px) on wide viewports.
 
 ### Runtime
 
@@ -146,7 +147,7 @@ Each role defines: specialty, activates when, skills to load, owns (which child 
 
 - **Specialty:** Visual design, interaction design, accessibility, responsive layout, motion, design system consistency.
 - **Activates when:** task touches components under `src/components/`, layout primitives (PageShell, header, banner, breadcrumb), styling, framer-motion animations, responsive breakpoints, focus management, color/contrast, typography.
-- **Skills:** Tailwind v4 (container cap at 90rem / 1440px on wide viewports, no `tailwindcss-animate` plugin — use the project's own `.animate-fade-in` etc.), design tokens via globals.css `@theme`, framer-motion, WCAG 2.2 AA (focus rings, color contrast, semantic HTML, ARIA), responsive design (mobile-first, breakpoints `sm`/`md`/`lg`/`xl`), micro-interaction choreography, l10n text length tolerance (es/fr are ~30% longer than en).
+- **Skills:** Tailwind v4 (full-width responsive container with 100rem / 1600px cap on wide viewports, no `tailwindcss-animate` plugin — use the project's own `.animate-fade-in` etc.), design tokens via globals.css `@theme`, framer-motion, WCAG 2.2 AA (focus rings, color contrast, semantic HTML, ARIA), responsive design (mobile-first, breakpoints `sm`/`md`/`lg`/`xl`), micro-interaction choreography, l10n text length tolerance (es/fr are ~30% longer than en).
 - **Owns:** `docs/FRONTEND.md` (legacy; future migration to DOX child).
 - **Style:** every UI change is checked at 320px / 768px / 1280px / 1920px before declaring done; prefer building blocks (`<Link>` from `@/i18n/navigation`, `PageShell`, `Badge`) over raw HTML; ship the empty state, the loading state, and the error state in one commit; hover and focus states must be visible.
 

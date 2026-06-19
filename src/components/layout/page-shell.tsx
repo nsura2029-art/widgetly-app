@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
  * Canonical page-content wrapper.
  *
  * Every non-landing page should render its body inside `<PageShell>` so the
- * horizontal alignment (Tailwind's `.container`, 1440px max) matches the
+ * horizontal alignment (Tailwind's `.container`, 1600px max) matches the
  * sticky header, featured tools band, and breadcrumb band, all of which
  * also span the full container width. The container is the single source of truth for
  * "what horizontal edge content sits at" on the site.
@@ -104,7 +104,7 @@ export function PageShell({
     <div
       className={cn(
         // Tailwind v4's `.container` is 100% width with horizontal padding
-        // that scales with the viewport (1rem -> 2rem). It caps at 90rem.
+        // that scales with the viewport (1rem -> 1.5rem). It caps at 100rem.
         //
         // Vertical padding is split: pt-* (smaller, breadcrumb already
         // provides visual separation) + pb-* (larger, breathing room
