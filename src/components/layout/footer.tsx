@@ -1,46 +1,92 @@
 "use client";
 
 import { Link } from "@/i18n/navigation";
-import { Github, Twitter, Linkedin } from "lucide-react";
+import { Github, Twitter, Send } from "lucide-react";
 import { Logo } from "@/components/shared/logo";
 import { useTranslations } from "next-intl";
 import { FOOTER_LINKS } from "@/lib/constants";
-import { CookiePreferencesLink } from "@/components/consent/CookiePreferencesLink";
 
+/**
+ * Icon map for the social row in the brand column.
+ * Discord isn't in lucide-react's free set under that name; we render it
+ * as a `Send` icon (same brand mark on the legacy discord.gg/widgetly link)
+ * and reserve the `discord` key for any future migration to a custom SVG.
+ * Kept as a small typed object so `as keyof typeof SOCIAL_ICONS` keeps the
+ * compiler honest about typos in `FOOTER_LINKS.social[].icon`.
+ */
 const SOCIAL_ICONS = {
   github: Github,
   twitter: Twitter,
-  linkedin: Linkedin,
+  discord: Send,
 } as const;
 
+/**
+ * Site footer.
+ *
+ * Layout (top → bottom):
+ *  1. Brand column + 3 link columns (Tools / Company / Legal)
+ *  2. Subtle separator + bottom bar with copyright on the left and the
+ *     small Site links (Status / Contact / Feedback) on the right
+ *
+ * The whole footer renders on a light surface (`bg-background`) so it
+ * inherits the Widgetly theme tokens automatically — primary text uses
+ * `text-foreground`, muted link labels use `text-muted-foreground`, the
+ * brand logo keeps its purple gradient via `bg-brand-gradient`, and the
+ * divider uses `border-border`. No hard-coded colors that would drift
+ * from the rest of the site if the theme changes.
+ *
+ * All copy is i18n-keyed via next-intl. SEO-bearing links (privacy,
+ * terms, sitemap, etc.) keep their hrefs intact so this is a UI-only
+ * change — sitemap, JSON-LD, hreflang, and route keys are not touched.
+ */
 export function Footer() {
   const t = useTranslations("footer");
   const tLinks = useTranslations("footer.links");
   const tSite = useTranslations("site");
   const year = new Date().getFullYear();
+
   return (
     <footer
       id="contact"
-      className="border-border/60 bg-dark relative overflow-hidden border-t text-white"
+      aria-labelledby="footer-heading"
+      className="bg-background text-foreground border-border/60 border-t"
     >
-      {/* Soft brand glow */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 -z-0 opacity-40"
-        style={{
-          background: "radial-gradient(60% 50% at 50% 0%, rgba(91,108,255,0.25), transparent 60%)",
-        }}
-      />
-      <div className="relative z-10 container py-16">
-        <div className="grid gap-12 md:grid-cols-12">
-          <div className="md:col-span-5">
-            <div className="text-white">
-              <Logo className="text-white [&_span]:!text-white" showWordmark={false} />
-            </div>
-            <p className="mt-4 max-w-sm text-sm leading-relaxed text-white/60">
-              {tSite("description")}
+      <h2 id="footer-heading" className="sr-only">
+        Footer
+      </h2>
+
+      <div className="container py-12 sm:py-14 lg:py-16">
+        <div className="grid gap-10 md:grid-cols-12 md:gap-8">
+          {/* Brand column */}
+          <div className="md:col-span-3">
+            <Link
+              href="/"
+              aria-label={tSite("name")}
+              className="text-foreground inline-flex items-center gap-2 font-semibold tracking-tight"
+            >
+              <span
+                aria-hidden="true"
+                className="bg-brand-gradient shadow-glow-sm relative inline-flex h-9 w-9 items-center justify-center rounded-xl ring-1 ring-black/5"
+              >
+                <svg
+                  viewBox="0 0 32 32"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-6 w-6 text-white"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M3 6.5 L7 6.5 L12.5 21 L16 12 L19.5 21 L25 6.5 L29 6.5 L21.5 25.5 L18 25.5 L16 19.5 L14 25.5 L10.5 25.5 Z"
+                    fill="currentColor"
+                  />
+                </svg>
+              </span>
+              <span className="text-lg font-semibold">{tSite("name")}</span>
+            </Link>
+            <p className="text-muted-foreground mt-3 max-w-xs text-sm leading-relaxed">
+              {t("tagline")}
             </p>
-            <div className="mt-6 flex items-center gap-2">
+            <div className="mt-5 flex items-center gap-2">
               {FOOTER_LINKS.social.map((link) => {
                 const Icon = SOCIAL_ICONS[link.icon as keyof typeof SOCIAL_ICONS] ?? Github;
                 return (
@@ -50,7 +96,7 @@ export function Footer() {
                     target="_blank"
                     rel="noreferrer noopener"
                     aria-label={tLinks(link.labelKey)}
-                    className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white/80 transition-all hover:border-white/30 hover:bg-white/10 hover:text-white"
+                    className="border-border/80 text-muted-foreground hover:text-foreground hover:border-primary/40 hover:bg-primary/5 bg-background inline-flex h-9 w-9 items-center justify-center rounded-lg border transition-all"
                   >
                     <Icon className="h-4 w-4" />
                   </a>
@@ -59,33 +105,29 @@ export function Footer() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-8 md:col-span-7 md:grid-cols-4">
-            <FooterColumn key="product" title={t("columns.product")} links={FOOTER_LINKS.product} />
-            <FooterColumn
-              key="resources"
-              title={t("columns.resources")}
-              links={FOOTER_LINKS.resources}
-            />
-            <FooterColumn key="company" title={t("columns.company")} links={FOOTER_LINKS.company} />
-            <FooterColumn key="legal" title={t("columns.legal")} links={FOOTER_LINKS.legal} />
-          </div>
+          {/* Link columns */}
+          <FooterColumn key="tools" title={t("columns.tools")} links={FOOTER_LINKS.tools} />
+          <FooterColumn key="company" title={t("columns.company")} links={FOOTER_LINKS.company} />
+          <FooterColumn key="legal" title={t("columns.legal")} links={FOOTER_LINKS.legal} />
         </div>
 
-        <div className="mt-14 flex flex-col items-start justify-between gap-4 border-t border-white/10 pt-8 text-sm text-white/50 md:flex-row md:items-center">
-          <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
-            <p>
-              {t.rich("copyright", {
-                year,
-                siteName: tSite("name"),
-              })}
-            </p>
-            <CookiePreferencesLink />
-          </div>
-          <p>
-            {t.rich("builtWith", {
-              platform: (<span className="text-white/80">Cloudflare</span>) as unknown as string,
+        {/* Bottom bar */}
+        <div className="border-border/60 mt-10 flex flex-col items-start justify-between gap-4 border-t pt-6 text-xs sm:flex-row sm:items-center">
+          <p className="text-muted-foreground">
+            {t.rich("copyright", {
+              year,
+              siteName: tSite("name"),
             })}
           </p>
+          <ul className="text-muted-foreground flex items-center gap-5">
+            {FOOTER_LINKS.bottom.map((link) => (
+              <li key={link.labelKey}>
+                <Link href={link.href} className="hover:text-foreground transition-colors">
+                  {tLinks(link.labelKey)}
+                </Link>
+              </li>
+            ))}
+          </ul>
         </div>
       </div>
     </footer>
@@ -101,20 +143,20 @@ function FooterColumn({
 }) {
   const t = useTranslations("footer.links");
   return (
-    <div>
-      <h3 className="text-xs font-semibold tracking-wider text-white/50 uppercase">{title}</h3>
+    <nav aria-label={title} className="md:col-span-3">
+      <h3 className="text-foreground text-xs font-semibold tracking-[0.18em] uppercase">{title}</h3>
       <ul className="mt-4 space-y-2.5">
         {links.map((link) => (
           <li key={link.labelKey}>
             <Link
               href={link.href}
-              className="text-sm text-white/70 transition-colors hover:text-white"
+              className="text-muted-foreground hover:text-foreground text-sm transition-colors"
             >
               {t(link.labelKey)}
             </Link>
           </li>
         ))}
       </ul>
-    </div>
+    </nav>
   );
 }

@@ -31,9 +31,9 @@
     }
   },
   "footer": {
+    "tagline": "Plus de 500 outils gratuits. Une plateforme puissante. Rapide, pour tous. Confidentialité d'abord, zéro pub.",
     "columns": {
-      "product": "Produit",
-      "resources": "Ressources",
+      "tools": "Outils",
       "company": "Entreprise",
       "legal": "Mentions légales"
     },
@@ -52,12 +52,19 @@
       "about": "À propos",
       "contact": "Contact",
       "privacy": "Politique de confidentialité",
-      "terms": "Conditions générales",
-      "cookies": "Politique en matière de cookies",
+      "terms": "Conditions de Service",
+      "cookies": "Politique de Cookies",
       "security": "Sécurité",
       "github": "GitHub",
       "twitter": "Twitter",
-      "discord": "Discord"
+      "discord": "Discord",
+      "imageEditor": "Éditeur d'Images",
+      "seoSuite": "Suite SEO",
+      "developer": "Développement",
+      "videoTools": "Outils Vidéo",
+      "roadmap": "Feuille de Route",
+      "careers": "Carrières",
+      "feedback": "Retours"
     },
     "copyright": "© {year} {siteName}. Tous droits réservés.",
     "builtWith": "Conçu avec soin. Déployé sur {platform}."
