@@ -69,7 +69,7 @@ export function Breadcrumb({
           // in document flow, so page content naturally starts below
           // the breadcrumb on first paint, then scrolls beneath the
           // sticky chrome when the user moves through the page.
-          "border-border/60 sticky top-[7.25rem] z-30 w-full border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/85",
+          "border-border/60 sticky top-[calc(var(--wly-header-height)+var(--wly-tools-height))] z-30 w-full border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/85",
           className
         )}
       >

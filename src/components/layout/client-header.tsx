@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { motion, useScroll, useMotionValueEvent } from "framer-motion";
+import { motion } from "framer-motion";
 import { Github, Lightbulb, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/shared/logo";
@@ -11,9 +11,9 @@ import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 
 /**
- * Sticky, glassmorphic site header. Collapses the nav into a sheet on
- * small viewports and animates a backdrop blur on scroll. Includes a
- * `<LocalePicker />` so the user can switch languages from anywhere.
+ * Sticky site header. The surface stays solid and flat so it behaves
+ * like product chrome, while the existing mobile menu and action style
+ * remain Widgetly's.
  *
  * Localization:
  *   - Uses `next-intl`'s `<Link>` (re-exported from `@/i18n/navigation`)
@@ -22,15 +22,9 @@ import { cn } from "@/lib/utils";
  *     `header.*` namespace via `useTranslations()`.
  */
 export default function ClientHeader() {
-  const [scrolled, setScrolled] = React.useState(false);
   const [open, setOpen] = React.useState(false);
-  const { scrollY } = useScroll();
   const pathname = usePathname();
   const t = useTranslations();
-
-  useMotionValueEvent(scrollY, "change", (latest) => {
-    setScrolled(latest > 8);
-  });
 
   // Close sheet on resize-up past the breakpoint.
   React.useEffect(() => {
@@ -74,10 +68,7 @@ export default function ClientHeader() {
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
       className={cn(
-        "sticky top-0 z-50 w-full transition-all duration-300",
-        scrolled
-          ? "border-border/60 border-b bg-white/70 backdrop-blur-xl backdrop-saturate-150 supports-[backdrop-filter]:bg-white/60"
-          : "border-b border-transparent bg-transparent"
+        "border-border/70 sticky top-0 z-50 w-full border-b bg-white transition-shadow duration-300"
       )}
     >
       <div className="container flex h-16 items-center justify-between">
@@ -87,11 +78,11 @@ export default function ClientHeader() {
           aria-label={t("header.aria.homeLink", { siteName: t("site.name") })}
         >
           <Logo showWordmark={false} />
-          <span className="text-lg font-semibold tracking-tight">{t("site.name")}</span>
+          <span className="text-lg font-semibold">{t("site.name")}</span>
         </Link>
 
         <nav
-          className="hidden md:flex md:items-center md:gap-1"
+          className="hidden xl:flex xl:items-center xl:gap-1"
           aria-label={t("header.aria.mainNav")}
         >
           {navLinks.map((link) => (
@@ -105,7 +96,7 @@ export default function ClientHeader() {
           ))}
         </nav>
 
-        <div className="hidden items-center gap-2 md:flex">
+        <div className="hidden items-center gap-2 xl:flex">
           <LocalePicker />
           <a
             href="https://github.com/widgetly/widgetly"
@@ -134,7 +125,7 @@ export default function ClientHeader() {
         </div>
 
         {/* Mobile: locale picker + menu trigger */}
-        <div className="flex items-center gap-2 md:hidden">
+        <div className="flex items-center gap-2 xl:hidden">
           <LocalePicker />
           <button
             type="button"
@@ -157,7 +148,7 @@ export default function ClientHeader() {
       <div
         id="mobile-nav"
         className={cn(
-          "border-border/60 overflow-hidden border-t bg-white/95 backdrop-blur-xl transition-all md:hidden",
+          "border-border/60 overflow-hidden border-t bg-white/95 backdrop-blur-xl transition-all xl:hidden",
           open ? "max-h-[80vh] opacity-100" : "max-h-0 opacity-0"
         )}
       >

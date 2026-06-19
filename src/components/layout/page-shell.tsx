@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
  * Canonical page-content wrapper.
  *
  * Every non-landing page should render its body inside `<PageShell>` so the
- * horizontal alignment (Tailwind's `.container`, 1280px max) matches the
+ * horizontal alignment (Tailwind's `.container`, 1440px max) matches the
  * sticky header, featured tools band, and breadcrumb band, all of which
  * also span the full container width. The container is the single source of truth for
  * "what horizontal edge content sits at" on the site.
@@ -49,8 +49,7 @@ const WIDTH_CLASS: Record<PageShellWidth, string> = {
   // content (blog post articles, etc.) where 60-80 chars per line is
   // the readability sweet spot.
   default: "max-w-3xl",
-  // Wide now spans the full container width (max-w-7xl == container max
-  // of 80rem). Pages that need a card grid, hero + grid combo, or
+  // Wide now spans the full container width. Pages that need a card grid, hero + grid combo, or
   // anything that fills the screen flow naturally use this. Previously
   // this was max-w-5xl which left a 256px gap on the right vs the
   // Join Waitlist button — felt misaligned. Pages that want a
@@ -105,7 +104,7 @@ export function PageShell({
     <div
       className={cn(
         // Tailwind v4's `.container` is 100% width with horizontal padding
-        // that scales with the viewport (1rem -> 2rem). It caps at 80rem.
+        // that scales with the viewport (1rem -> 2rem). It caps at 90rem.
         //
         // Vertical padding is split: pt-* (smaller, breadcrumb already
         // provides visual separation) + pb-* (larger, breathing room
