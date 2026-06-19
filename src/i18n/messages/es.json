@@ -153,6 +153,12 @@
       "pill": "Preguntas frecuentes",
       "title": "Preguntas frecuentes",
       "subtitle": "Todo lo que necesitas saber sobre Widgetly, la plataforma y el lanzamiento."
+    },
+    "categoriesShowcase": {
+      "title": "Todas las herramientas que necesitas, en un solo lugar",
+      "subtitle": "Desde editores de PDF hasta redactores de IA — más de 500 herramientas gratis, sin instalaciones",
+      "badge": "Más de 500 herramientas disponibles",
+      "exploreCta": "Explorar todas las herramientas"
     }
   },
   "faq": {
@@ -196,57 +202,68 @@
       "pdf": {
         "name": "Herramientas para PDF",
         "shortDesc": "Combinar, dividir, comprimir, convertir",
-        "longDesc": "Herramientas PDF online gratuitas: fusionar, dividir, comprimir, convertir a Word/Excel/JPG, editar, firmar, proteger. Sin límites de subida, sin marcas de agua, funciona en tu navegador."
+        "longDesc": "Herramientas PDF online gratuitas: fusionar, dividir, comprimir, convertir a Word/Excel/JPG, editar, firmar, proteger. Sin límites de subida, sin marcas de agua, funciona en tu navegador.",
+        "shortName": "PDF"
       },
       "image": {
         "name": "Herramientas de imagen",
         "shortDesc": "Cambiar tamaño, recortar, convertir, optimizar",
-        "longDesc": "Editor de imágenes online: cambiar tamaño, recortar, comprimir, convertir entre JPG, PNG, WebP, SVG, AVIF. Eliminador de fondos, marcas de agua, filtros y procesamiento por lotes."
+        "longDesc": "Editor de imágenes online: cambiar tamaño, recortar, comprimir, convertir entre JPG, PNG, WebP, SVG, AVIF. Eliminador de fondos, marcas de agua, filtros y procesamiento por lotes.",
+        "shortName": "Imagen"
       },
       "video": {
         "name": "Herramientas de vídeo",
         "shortDesc": "Comprimir, recortar, transcribir",
-        "longDesc": "Herramientas de vídeo basadas en navegador: comprime, recorta, corta, fusiona, transcribe audio a texto, genera subtítulos, convierte a MP4, WebM, GIF. Sin necesidad de instalar software."
+        "longDesc": "Herramientas de vídeo basadas en navegador: comprime, recorta, corta, fusiona, transcribe audio a texto, genera subtítulos, convierte a MP4, WebM, GIF. Sin necesidad de instalar software.",
+        "shortName": "Vídeo"
       },
       "ai": {
         "name": "Herramientas de IA",
         "shortDesc": "Escribir, resumir, generar",
-        "longDesc": "Herramientas de IA gratuitas para escribir, resumir, reescribir, traducir, generar imágenes, crear currículos y responder preguntas. Con tecnología de los últimos modelos de lenguaje grande (LLM)."
+        "longDesc": "Herramientas de IA gratuitas para escribir, resumir, reescribir, traducir, generar imágenes, crear currículos y responder preguntas. Con tecnología de los últimos modelos de lenguaje grande (LLM).",
+        "shortName": "IA"
       },
       "calculators": {
         "name": "Calculadoras",
         "shortDesc": "Finanzas, matemáticas, salud y más",
-        "longDesc": "Cientos de calculadoras online gratuitas: hipotecas, préstamos, IMC, calorías, propinas, porcentajes, edad, nota media, calificaciones, científicas, financieras, de salud y matemáticas."
+        "longDesc": "Cientos de calculadoras online gratuitas: hipotecas, préstamos, IMC, calorías, propinas, porcentajes, edad, nota media, calificaciones, científicas, financieras, de salud y matemáticas.",
+        "shortName": "Calc"
       },
       "converters": {
         "name": "Convertidores",
         "shortDesc": "Unidades, divisas, formatos",
-        "longDesc": "Convertidores gratuitos de unidades, divisas y formatos de archivo: longitud, peso, temperatura, área, volumen, tiempo, velocidad, datos, códigos de color y más de 150 divisas con tipos de cambio en tiempo real."
+        "longDesc": "Convertidores gratuitos de unidades, divisas y formatos de archivo: longitud, peso, temperatura, área, volumen, tiempo, velocidad, datos, códigos de color y más de 150 divisas con tipos de cambio en tiempo real.",
+        "shortName": "Convertir"
       },
       "seo": {
         "name": "Herramientas SEO",
         "shortDesc": "Palabras clave, metaetiquetas, auditoría",
-        "longDesc": "Herramientas SEO gratuitas: generador de metaetiquetas, verificador de densidad de palabras clave, generador de mapas de sitio, comprobador de robots.txt, vista previa de SERP, verificador de backlinks, análisis de velocidad de página."
+        "longDesc": "Herramientas SEO gratuitas: generador de metaetiquetas, verificador de densidad de palabras clave, generador de mapas de sitio, comprobador de robots.txt, vista previa de SERP, verificador de backlinks, análisis de velocidad de página.",
+        "shortName": "SEO"
       },
       "education": {
         "name": "Herramientas educativas",
         "shortDesc": "Planes de clase, cuestionarios, estudio",
-        "longDesc": "Herramientas para profesores y estudiantes: generador de planes de clase, creador de cuestionarios, fichas de estudio, temporizador de estudio, calculadora de nota media, generador de citas, solucionador de matemáticas, temas de redacción."
+        "longDesc": "Herramientas para profesores y estudiantes: generador de planes de clase, creador de cuestionarios, fichas de estudio, temporizador de estudio, calculadora de nota media, generador de citas, solucionador de matemáticas, temas de redacción.",
+        "shortName": "Edu"
       },
       "developer": {
         "name": "Herramientas para desarrolladores",
         "shortDesc": "JSON, expresiones regulares, codificadores",
-        "longDesc": "Utilidades gratuitas para desarrolladores: formateador y validador de JSON, comprobador de expresiones regulares, codificador Base64, codificador de URL, decodificador JWT, minificador de CSS, comparador de diferencias, generador de hash."
+        "longDesc": "Utilidades gratuitas para desarrolladores: formateador y validador de JSON, comprobador de expresiones regulares, codificador Base64, codificador de URL, decodificador JWT, minificador de CSS, comparador de diferencias, generador de hash.",
+        "shortName": "Dev"
       },
       "business": {
         "name": "Herramientas empresariales",
         "shortDesc": "Facturas, contratos, propuestas",
-        "longDesc": "Herramientas de productividad empresarial: generador de facturas, plantillas de contratos, creador de propuestas, generador de acuerdos de confidencialidad, plantillas de planes de negocio, análisis DAFO, gestor de OKR."
+        "longDesc": "Herramientas de productividad empresarial: generador de facturas, plantillas de contratos, creador de propuestas, generador de acuerdos de confidencialidad, plantillas de planes de negocio, análisis DAFO, gestor de OKR.",
+        "shortName": "Neg"
       },
       "writing": {
         "name": "Herramientas de redacción",
         "shortDesc": "Palabras, gramática, paráfrasis",
-        "longDesc": "Herramientas de redacción gratuitas: contador de palabras, contador de caracteres, corrector gramatical, parafraseador, reescritor de tono, analizador de titulares, evaluador de legibilidad, generador de lorem ipsum."
+        "longDesc": "Herramientas de redacción gratuitas: contador de palabras, contador de caracteres, corrector gramatical, parafraseador, reescritor de tono, analizador de titulares, evaluador de legibilidad, generador de lorem ipsum.",
+        "shortName": "Escribir"
       }
     }
   },
