@@ -60,10 +60,14 @@ export function Footer() {
           </div>
 
           <div className="grid grid-cols-2 gap-8 md:col-span-7 md:grid-cols-4">
-            <FooterColumn title={t("columns.product")} links={FOOTER_LINKS.product} />
-            <FooterColumn title={t("columns.resources")} links={FOOTER_LINKS.resources} />
-            <FooterColumn title={t("columns.company")} links={FOOTER_LINKS.company} />
-            <FooterColumn title={t("columns.legal")} links={FOOTER_LINKS.legal} />
+            <FooterColumn key="product" title={t("columns.product")} links={FOOTER_LINKS.product} />
+            <FooterColumn
+              key="resources"
+              title={t("columns.resources")}
+              links={FOOTER_LINKS.resources}
+            />
+            <FooterColumn key="company" title={t("columns.company")} links={FOOTER_LINKS.company} />
+            <FooterColumn key="legal" title={t("columns.legal")} links={FOOTER_LINKS.legal} />
           </div>
         </div>
 
