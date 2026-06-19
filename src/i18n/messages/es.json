@@ -60,7 +60,7 @@
       "discord": "Discord"
     },
     "copyright": "© {year} {siteName}. Todos los derechos reservados.",
-    "builtWith": "Creado con esmero. Implementado en {platform}."
+    "builtWith": "Creado con esmero. Implementado en <platform>Cloudflare</platform>."
   },
   "home": {
     "hero": {

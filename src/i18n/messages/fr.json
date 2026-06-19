@@ -60,7 +60,7 @@
       "discord": "Discord"
     },
     "copyright": "© {year} {siteName}. Tous droits réservés.",
-    "builtWith": "Conçu avec soin. Déployé sur {platform}."
+    "builtWith": "Conçu avec soin. Déployé sur <platform>Cloudflare</platform>."
   },
   "home": {
     "hero": {

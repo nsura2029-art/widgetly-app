@@ -79,7 +79,7 @@ export function Footer() {
           </div>
           <p>
             {t.rich("builtWith", {
-              platform: (<span className="text-white/80">Cloudflare</span>) as unknown as string,
+              platform: (chunks) => <span className="text-white/80">{chunks}</span>,
             })}
           </p>
         </div>
