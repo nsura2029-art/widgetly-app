@@ -31,9 +31,9 @@
     }
   },
   "footer": {
+    "tagline": "500+ free tools. One powerful platform. Built for speed, designed for everyone. Privacy-first, zero ads.",
     "columns": {
-      "product": "Product",
-      "resources": "Resources",
+      "tools": "Tools",
       "company": "Company",
       "legal": "Legal"
     },
@@ -52,12 +52,19 @@
       "about": "About",
       "contact": "Contact",
       "privacy": "Privacy Policy",
-      "terms": "Terms & Conditions",
-      "cookies": "Cookies Policy",
+      "terms": "Terms of Service",
+      "cookies": "Cookie Policy",
       "security": "Security",
       "github": "GitHub",
       "twitter": "Twitter",
-      "discord": "Discord"
+      "discord": "Discord",
+      "imageEditor": "Image Editor",
+      "seoSuite": "SEO Suite",
+      "developer": "Developer",
+      "videoTools": "Video Tools",
+      "roadmap": "Roadmap",
+      "careers": "Careers",
+      "feedback": "Feedback"
     },
     "copyright": "© {year} {siteName}. All rights reserved.",
     "builtWith": "Built with care. Deployed on {platform}."

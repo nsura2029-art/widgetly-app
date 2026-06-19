@@ -68,24 +68,20 @@ export const NAV_LINKS = [
  * `icon` is only set for the `social` group (icon-only external links).
  */
 export const FOOTER_LINKS = {
-  product: [
-    { labelKey: "allTools", href: "/tools" },
+  tools: [
     { labelKey: "pdfTools", href: "/tools/pdf" },
-    { labelKey: "imageTools", href: "/tools/image" },
+    { labelKey: "imageEditor", href: "/tools/image" },
+    { labelKey: "seoSuite", href: "/tools/seo" },
+    { labelKey: "developer", href: "/tools/developer" },
     { labelKey: "aiTools", href: "/tools/ai" },
-    { labelKey: "developerTools", href: "/tools/developer" },
-    { labelKey: "suggest", href: "/suggest" },
-    { labelKey: "joinWaitlist", href: "/#waitlist" },
-  ],
-  resources: [
-    { labelKey: "blog", href: "/blog" },
-    { labelKey: "help", href: "/help" },
-    { labelKey: "changelog", href: "#" },
-    { labelKey: "status", href: "#" },
+    { labelKey: "videoTools", href: "/tools/video" },
   ],
   company: [
     { labelKey: "about", href: "/about" },
-    { labelKey: "contact", href: "/contact" },
+    { labelKey: "blog", href: "/blog" },
+    { labelKey: "roadmap", href: "#" },
+    { labelKey: "suggest", href: "/suggest" },
+    { labelKey: "careers", href: "#" },
   ],
   legal: [
     { labelKey: "privacy", href: "/privacy-policy" },
@@ -93,9 +89,14 @@ export const FOOTER_LINKS = {
     { labelKey: "cookies", href: "/cookies-policy" },
     { labelKey: "security", href: "/security" },
   ],
+  bottom: [
+    { labelKey: "status", href: "#" },
+    { labelKey: "contact", href: "/contact" },
+    { labelKey: "feedback", href: "#" },
+  ],
   social: [
-    { labelKey: "github", href: "https://github.com/widgetly", icon: "github" },
     { labelKey: "twitter", href: "https://twitter.com/widgetly", icon: "twitter" },
+    { labelKey: "github", href: "https://github.com/widgetly", icon: "github" },
     { labelKey: "discord", href: "https://discord.gg/widgetly", icon: "discord" },
   ],
 } as const;

@@ -31,9 +31,9 @@
     }
   },
   "footer": {
+    "tagline": "Más de 500 herramientas gratis. Una plataforma potente. Rápida, para todos. Privacidad primero, sin anuncios.",
     "columns": {
-      "product": "Producto",
-      "resources": "Recursos",
+      "tools": "Herramientas",
       "company": "Empresa",
       "legal": "Aviso legal"
     },
@@ -52,12 +52,19 @@
       "about": "Acerca de",
       "contact": "Contacto",
       "privacy": "Política de privacidad",
-      "terms": "Términos y condiciones",
-      "cookies": "Política de cookies",
+      "terms": "Términos de Servicio",
+      "cookies": "Política de Cookies",
       "security": "Seguridad",
       "github": "GitHub",
       "twitter": "Twitter",
-      "discord": "Discord"
+      "discord": "Discord",
+      "imageEditor": "Editor de Imágenes",
+      "seoSuite": "Suite SEO",
+      "developer": "Desarrollo",
+      "videoTools": "Herramientas de Vídeo",
+      "roadmap": "Hoja de Ruta",
+      "careers": "Empleo",
+      "feedback": "Comentarios"
     },
     "copyright": "© {year} {siteName}. Todos los derechos reservados.",
     "builtWith": "Creado con esmero. Implementado en {platform}."
