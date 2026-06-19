@@ -81,6 +81,21 @@ This AGENTS.md is the binding work contract for the whole repository. Every chil
 - Author: `Mavis <Mavis@local>` for AI-authored commits. Re-author with `--author` if you need a different identity.
 - Format: `<type>(<scope>): <imperative summary>`. Body explains _why_, not _what_.
 - One logical change per commit. Squash locally before merging.
+- **Local sandbox gotcha** (fixed 2026-06-18): the husky pre-commit
+  hook calls `npx lint-staged`, which fails on Node 22 with
+  `ERR_MODULE_NOT_FOUND: signal-exit/index.js`. The broken nested
+  copy at `node_modules/lint-staged/node_modules/signal-exit/` has
+  no `package.json` (only `dist/cjs/package.json`). Fix once per
+  sandbox:
+  ```bash
+  rm -rf node_modules/lint-staged/node_modules/signal-exit
+  ```
+  After this, `git commit` runs the full lint-staged pipeline cleanly.
+  The dir does NOT reappear on `pnpm install --frozen-lockfile`
+  (verified). If a future sandbox shows the same error again, just
+  re-run the rm. Don't paper over with `--no-verify` — the pre-commit
+  gate catches real issues (prettier violations, eslint errors).
+  CI uses Node 20 so it never hits this.
 
 ### Code style
 
