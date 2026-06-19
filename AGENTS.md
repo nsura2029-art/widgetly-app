@@ -87,15 +87,29 @@ This AGENTS.md is the binding work contract for the whole repository. Every chil
   copy at `node_modules/lint-staged/node_modules/signal-exit/` has
   no `package.json` (only `dist/cjs/package.json`). Fix once per
   sandbox:
+
   ```bash
   rm -rf node_modules/lint-staged/node_modules/signal-exit
   ```
+
   After this, `git commit` runs the full lint-staged pipeline cleanly.
   The dir does NOT reappear on `pnpm install --frozen-lockfile`
   (verified). If a future sandbox shows the same error again, just
   re-run the rm. Don't paper over with `--no-verify` — the pre-commit
   gate catches real issues (prettier violations, eslint errors).
   CI uses Node 20 so it never hits this.
+
+- **Husky pre-push (Node 22)**: `cross-spawn/lib/util/resolveCommand.js`
+  fails with `Cannot find module 'which'` because the nested copy at
+  `node_modules/cross-spawn/node_modules/which/` has no `package.json`
+  (only `bin/`). Same broken-nested-dep pattern as signal-exit. Fix:
+  ```bash
+  rm -rf node_modules/cross-spawn/node_modules/which
+  npm install --no-save --no-package-lock which@2
+  ```
+  After this, husky's `node scripts/ship.mjs --skip-build` (the pre-push
+  gate) runs cleanly. Don't paper over with `--no-verify` — the gate
+  is what stops broken commits from reaching CI in the first place.
 
 ### Code style
 
