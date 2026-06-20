@@ -95,11 +95,6 @@ export const FOOTER_LINKS = {
     { labelKey: "contact", href: "/contact" },
     { labelKey: "feedback", href: "#" },
   ],
-  bottom: [
-    { labelKey: "status", href: "#" },
-    { labelKey: "contact", href: "/contact" },
-    { labelKey: "feedback", href: "#" },
-  ],
   social: [
     { labelKey: "twitter", href: "https://twitter.com/widgetly", icon: "twitter" },
     { labelKey: "github", href: "https://github.com/widgetly", icon: "github" },
