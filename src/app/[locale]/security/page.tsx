@@ -16,14 +16,14 @@ const RELATED = [
     description: "How we collect, store, and protect your information.",
   },
   {
-    label: "Terms & Conditions",
+    label: "Terms of Service",
     href: "/terms-and-conditions",
     description: "The rules governing your use of Widgetly.",
   },
   {
-    label: "Cookies Policy",
-    href: "/cookies-policy",
-    description: "The specific cookies we set and why.",
+    label: "Data Processing Agreement",
+    href: "/dpa",
+    description: "The contractual terms for processing data on your behalf.",
   },
 ];
 
@@ -31,19 +31,18 @@ export default function SecurityPage() {
   return (
     <LegalLayout
       title="Security"
-      subtitle="How Widgetly protects user data and platform integrity — the architecture, the controls, and the disclosure program."
+      subtitle="Widgetly is built on the assumption that any tool can fail or be attacked. Here's exactly how we protect your data and your session — and how to report anything that worries you."
       toc={[
-        { id: "overview", label: "Overview" },
-        { id: "infrastructure", label: "Infrastructure" },
-        { id: "encryption", label: "Encryption" },
-        { id: "browser-side", label: "Browser-side tools" },
-        { id: "server-side", label: "Server-side tools" },
-        { id: "access-control", label: "Access controls" },
-        { id: "monitoring", label: "Monitoring & detection" },
-        { id: "incident-response", label: "Incident response" },
+        { id: "browser-side", label: "Browser-side processing" },
+        { id: "auto-delete", label: "Auto-expiry" },
+        { id: "scalable-edge", label: "Scalable edge network" },
+        { id: "certified", label: "Certified infrastructure" },
+        { id: "isolation", label: "Request isolation" },
+        { id: "transport", label: "Secure communication" },
+        { id: "no-signup", label: "No signup required" },
+        { id: "gdpr", label: "EU data & GDPR" },
+        { id: "session-binding", label: "Session-bound storage" },
         { id: "disclosure", label: "Responsible disclosure" },
-        { id: "compliance", label: "Compliance" },
-        { id: "reporting", label: "Reporting" },
       ]}
       plainEnglish={PLAIN_ENGLISH}
       related={RELATED}

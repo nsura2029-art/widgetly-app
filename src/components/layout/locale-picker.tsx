@@ -3,19 +3,21 @@
 import * as React from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
-import { Check, ChevronDown, Globe } from "lucide-react";
+import { ChevronDown, Globe } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { LOCALES, type LocaleCode } from "@/i18n/config";
 
 /**
- * Language picker for the header. Lists all 24 supported locales with
- * their native names; on selection, calls POST /api/locale to persist
- * the choice (cookie + KV), then navigates to the equivalent path under
- * the new locale prefix and refreshes server components.
+ * Language picker for the header. Borderless inline trigger in the style
+ * of Convertio's footer — just a globe icon + current locale's full
+ * native name + chevron. Click opens a popover with the full locale list
+ * for switching. On selection, POSTs /api/locale to persist (cookie +
+ * KV), then navigates to the equivalent path under the new locale and
+ * refreshes server components.
  *
  * Visual states:
- *   - Collapsed: globe icon + current shortLabel (e.g. "EN")
- *   - Open: popover with the full list, native names, current row checked
+ *   - Collapsed: globe icon + current nativeName (e.g. "English")
+ *   - Open: popover with the full list of 24 locales, current row checked
  *   - Pending: brief dim while the API call is in flight
  */
 export function LocalePicker() {
@@ -57,9 +59,6 @@ export function LocalePicker() {
    */
   function localizedPathname(target: LocaleCode): string {
     const segments = pathname.split("/").filter(Boolean);
-    // If the first segment is a supported locale, replace it. Otherwise
-    // (unprefixed URL, which shouldn't happen in [locale] routes but is
-    // defensive), prepend the target locale.
     if (segments[0] && LOCALES.some((l) => l.code === segments[0])) {
       segments[0] = target;
     } else {
@@ -85,8 +84,6 @@ export function LocalePicker() {
         return;
       }
       setOpen(false);
-      // Navigate to the equivalent path under the new locale, then
-      // refresh so server components re-render with the new messages.
       router.push(localizedPathname(target));
       router.refresh();
     } catch (err) {
@@ -107,14 +104,18 @@ export function LocalePicker() {
         aria-expanded={open}
         aria-haspopup="menu"
         className={cn(
-          "border-border/80 text-foreground inline-flex h-9 items-center gap-1.5 rounded-lg border bg-white/60 px-2.5 text-xs font-medium backdrop-blur transition-colors hover:bg-white",
-          "focus-visible:ring-ring focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+          // Borderless inline trigger — matches Convertio's footer pattern.
+          // No border, no background, just icon + native name + chevron.
+          // Sits inline with text content rather than as a button-shaped control.
+          "text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 text-xs font-medium transition-colors",
+          "focus-visible:ring-ring rounded-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none",
+          pending && "opacity-60"
         )}
       >
         <Globe className="h-3.5 w-3.5" aria-hidden="true" />
-        <span className="uppercase tabular-nums">{currentMeta.shortLabel}</span>
+        <span>{currentMeta.nativeName}</span>
         <ChevronDown
-          className={cn("text-muted h-3 w-3 transition-transform", open && "rotate-180")}
+          className={cn("h-3 w-3 transition-transform", open && "rotate-180")}
           aria-hidden="true"
         />
       </button>
@@ -148,7 +149,9 @@ export function LocalePicker() {
                     )}
                   </span>
                   {isCurrent && (
-                    <Check className="text-primary h-4 w-4 shrink-0" aria-hidden="true" />
+                    <span className="text-primary text-xs" aria-hidden="true">
+                      ✓
+                    </span>
                   )}
                   {isPending && <span className="text-muted text-xs">…</span>}
                 </button>
