@@ -16,7 +16,7 @@ const RELATED = [
     description: "How we collect, store, and protect your information.",
   },
   {
-    label: "Terms & Conditions",
+    label: "Terms of Service",
     href: "/terms-and-conditions",
     description: "The rules governing your use of Widgetly.",
   },
@@ -24,6 +24,11 @@ const RELATED = [
     label: "Security",
     href: "/security",
     description: "How we protect your data and the Service.",
+  },
+  {
+    label: "Data Processing Agreement",
+    href: "/dpa",
+    description: "If you process data on behalf of your users, this is for you.",
   },
 ];
 
