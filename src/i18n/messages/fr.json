@@ -269,36 +269,81 @@
     }
   },
   "about": {
-    "title": "À propos de nous",
-    "subtitle": "L'équipe qui développe la plateforme d'outils tout-en-un dont nous avons toujours rêvé.",
-    "missionTitle": "Notre mission",
-    "missionBody": "Nous développons Widgetly parce que le Web moderne est fragmenté. Vous avez besoin d'un éditeur de PDF ici, d'une calculatrice là, d'un rédacteur IA ailleurs, et d'un outil de développement à l'autre bout de la ville. Nous voulons regrouper tout cela — et des centaines d’autres outils — derrière une seule barre de recherche, avec la rapidité et le raffinement des meilleures applications natives.",
-    "howWeWork": {
-      "title": "Notre façon de travailler",
-      "tiles": {
-        "small": {
-          "title": "Petite équipe, expérimentée, asynchrone",
-          "body": "Chaque membre de l’équipe possède une grande expérience et gère son travail de bout en bout. Nous consignons tout par écrit afin que le contexte ne se perde pas à travers les fuseaux horaires."
-        },
-        "remote": {
-          "title": "Entièrement à distance",
-          "body": "Travaillez là où vous êtes le plus productif. Nous avons quelques heures de chevauchement avec la côte Est des États-Unis pour l’équipe qui le souhaite ; le reste est asynchrone."
-        },
-        "hours": {
-          "title": "Horaires raisonnables",
-          "body": "Nous protégeons le temps de concentration et respectons les soirées et les week-ends. Les outils qui « fonctionnent tout simplement » commencent par une équipe qui n’est pas épuisée."
-        },
-        "pay": {
-          "title": "Transparence salariale",
-          "body": "Les fourchettes salariales sont publiques au sein de l’entreprise et liées au poste et à l’expérience, et non à la négociation. Un même poste est rémunéré de la même manière, où que ce soit."
-        }
+    "title": "À propos de Widgetly",
+    "subtitle": "Une petite équipe qui crée des outils du quotidien qui respectent vos données par défaut.",
+    "intro": "Widgetly a démarré en 2025 avec une idée simple : les utilitaires que vous utilisez vraiment au quotidien ne devraient pas exiger de compte, d'envoi vers le serveur d'un inconnu ni de carte bancaire. Nous construisons des outils qui s'exécutent d'abord dans le navigateur, les faisons tourner sur l'edge global et ne nous mettons pas en travers de votre chemin.",
+    "statsTitle": "En chiffres",
+    "stats": {
+      "tools": {
+        "value": "500+",
+        "label": "Outils disponibles, gratuits"
+      },
+      "browserFirst": {
+        "value": "Dans le navigateur",
+        "label": "La plupart ne touche jamais un serveur"
+      },
+      "euHosted": {
+        "value": "Hébergé dans l'UE",
+        "label": "Francfort principal, RGPD d'abord"
+      },
+      "noSignup": {
+        "value": "Sans inscription",
+        "label": "Utilisez n'importe quel outil sans compte"
       }
     },
-    "teamTitle": "Rencontrez l’équipe",
-    "teamSubtitle": "Des développeurs seniors, principalement en télétravail, travaillant à travers les fuseaux horaires.",
-    "joinTitle": "Vous souhaitez développer avec nous ?",
-    "joinBody": "Nous recrutons dans les domaines du produit, de l’ingénierie, de l’IA et du design. Si vous produisez un travail dont vous êtes fier, contactez-nous.",
-    "joinCta": "Voir les postes à pourvoir"
+    "beliefsTitle": "Ce en quoi nous croyons",
+    "beliefsIntro": "Quatre principes sur lesquels nous revenons quand nous décidons quoi construire et quoi laisser de côté.",
+    "beliefs": {
+      "focus": {
+        "title": "Se concentrer sur ce que les gens utilisent vraiment",
+        "body": "Nous livrons des outils qui résolvent un vrai problème répété — pas des fonctionnalités qui font bien dans un communiqué de presse."
+      },
+      "privacy": {
+        "title": "Vie privée par défaut, pas en option",
+        "body": "Si un outil peut tourner entièrement dans votre navigateur, il le fait. S'il a besoin d'un serveur, la page Sécurité explique exactement ce qui se passe."
+      },
+      "free": {
+        "title": "Les outils gratuits et rapides ne devraient pas exiger de compte",
+        "body": "Pas d'email, pas de téléphone, pas de mur de paiement entre vous et la conversion que vous veniez faire. Les outils principaux restent gratuits, toujours."
+      },
+      "honest": {
+        "title": "Être honnête sur ce qui arrive à vos données",
+        "body": "Politiques en langage clair, chiffres réels de rétention, une adresse de contact qui fonctionne. Si on ne peut pas l'expliquer simplement, on ne le livre pas."
+      }
+    },
+    "whyTitle": "Pourquoi Widgetly",
+    "whyIntro": "Six choses qui distinguent Widgetly des outils que vous connaissez.",
+    "why": {
+      "browserFirst": {
+        "title": "D'abord dans le navigateur",
+        "body": "La plupart des outils tournent entièrement dans votre navigateur. Votre fichier ne quitte pas votre appareil sauf si l'outil en a vraiment besoin d'un serveur."
+      },
+      "noSignup": {
+        "title": "Aucune inscription requise",
+        "body": "Ouvrez n'importe quel outil et commencez à l'utiliser. Pas d'email, pas de téléphone, pas de relance marketing avant de faire ce que vous veniez faire."
+      },
+      "eu": {
+        "title": "Souveraineté des données dans l'UE",
+        "body": "Hébergement principal à Francfort, sauvegardes uniquement dans des régions européennes. Le RGPD est le plancher, pas le plafond."
+      },
+      "speed": {
+        "title": "Réponses en moins d'une seconde",
+        "body": "Construit sur le réseau edge mondial de Cloudflare. Les outils se chargent depuis le centre de données le plus proche et répondent en moins d'une seconde."
+      },
+      "free": {
+        "title": "Gratuit pour toujours",
+        "body": "Les outils principaux restent gratuits, sans quotas surprises. Les fonctionnalités payantes optionnelles, si nous en ajoutons un jour, seront clairement indiquées."
+      },
+      "transparent": {
+        "title": "Pratiques transparentes",
+        "body": "Notre page Sécurité liste chaque sous-traitant, chaque cookie et chaque règle de rétention. L'image complète, pas la version marketing."
+      }
+    },
+    "contactTitle": "Nous contacter",
+    "contactBody": "Questions, idées de partenariat, ou un outil que vous aimeriez voir — nous lisons tout.",
+    "contactEmail": "hello@widgetly.app",
+    "contactEmailLabel": "Nous écrire",
+    "footerNote": "Construit par une petite équipe. Hébergé sur Cloudflare Workers. Ouverts sur le fonctionnement."
   },
   "contact": {
     "title": "Contact",

@@ -269,36 +269,81 @@
     }
   },
   "about": {
-    "title": "Quiénes somos",
-    "subtitle": "El equipo que está creando la plataforma de herramientas todo en uno que siempre hemos deseado que existiera.",
-    "missionTitle": "Nuestra misión",
-    "missionBody": "Estamos creando Widgetly porque la web moderna está fragmentada. Necesitas un editor de PDF aquí, una calculadora allá, un generador de contenido con IA en otro sitio y una herramienta para desarrolladores al otro lado de la ciudad. Queremos reunir todo eso —y cientos de cosas más— en una sola barra de búsqueda, con la velocidad y el acabado de las mejores aplicaciones nativas.",
-    "howWeWork": {
-      "title": "Cómo trabajamos",
-      "tiles": {
-        "small": {
-          "title": "Pequeño, con experiencia, asíncrono",
-          "body": "Todos los miembros del equipo tienen una amplia experiencia y se responsabilizan de su trabajo de principio a fin. Anotamos todo para que el contexto no se pierda entre las diferentes zonas horarias."
-        },
-        "remote": {
-          "title": "Totalmente remoto",
-          "body": "Trabaja desde donde seas más productivo. Nos solapamos unas horas con la costa este de EE. UU. para el equipo que lo desee; el resto es asíncrono."
-        },
-        "hours": {
-          "title": "Horarios razonables",
-          "body": "Protegemos el tiempo de concentración y respetamos las tardes y los fines de semana. Las herramientas que «simplemente funcionan» comienzan con un equipo que no está agotado."
-        },
-        "pay": {
-          "title": "Transparencia salarial",
-          "body": "Los rangos salariales son públicos dentro de la empresa y están vinculados al puesto y la experiencia, no a la negociación. El mismo puesto se remunera igual, en cualquier lugar."
-        }
+    "title": "Sobre Widgetly",
+    "subtitle": "Un equipo pequeño que crea herramientas cotidianas que respetan tus datos por defecto.",
+    "intro": "Widgetly nació en 2025 con una idea simple: las utilidades que realmente usas a diario no deberían requerir una cuenta, una subida al servidor de un desconocido ni una tarjeta de crédito. Construimos herramientas que se ejecutan primero en el navegador, las llevamos al edge global y no nos interponemos en tu camino.",
+    "statsTitle": "En cifras",
+    "stats": {
+      "tools": {
+        "value": "500+",
+        "label": "Herramientas disponibles, gratis"
+      },
+      "browserFirst": {
+        "value": "En el navegador",
+        "label": "La mayoría nunca toca un servidor"
+      },
+      "euHosted": {
+        "value": "Alojado en la UE",
+        "label": "Fráncfort como centro, GDPR primero"
+      },
+      "noSignup": {
+        "value": "Sin registro",
+        "label": "Usa cualquier herramienta sin cuenta"
       }
     },
-    "teamTitle": "Conoce al equipo",
-    "teamSubtitle": "Desarrolladores sénior, en su mayoría a distancia, que trabajan en diferentes zonas horarias.",
-    "joinTitle": "¿Quieres crear con nosotros?",
-    "joinBody": "Estamos contratando en las áreas de producto, ingeniería, IA y diseño. Si realizas trabajos de los que te sientes orgulloso, ponte en contacto con nosotros.",
-    "joinCta": "Ver puestos vacantes"
+    "beliefsTitle": "Lo que creemos",
+    "beliefsIntro": "Cuatro principios que vuelven una y otra vez cuando decidimos qué construir y qué dejar fuera.",
+    "beliefs": {
+      "focus": {
+        "title": "Centrarse en lo que la gente realmente usa",
+        "body": "Lanzamos herramientas que resuelven un problema real y repetido, no funciones que quedan bien en una nota de prensa."
+      },
+      "privacy": {
+        "title": "Privacidad por defecto, no por opción",
+        "body": "Si una herramienta puede ejecutarse por completo en tu navegador, lo hace. Si necesita un servidor, la página de Seguridad explica exactamente qué ocurre."
+      },
+      "free": {
+        "title": "Las herramientas gratuitas y rápidas no deberían pedir cuenta",
+        "body": "Sin email, sin teléfono, sin muro de pago antes de hacer lo único que viniste a hacer. Las herramientas básicas siguen siendo gratis, siempre."
+      },
+      "honest": {
+        "title": "Ser honestos sobre qué pasa con tus datos",
+        "body": "Políticas en lenguaje claro, cifras reales de retención, una dirección de contacto que funciona. Si no podemos explicarlo simple, no lo lanzamos."
+      }
+    },
+    "whyTitle": "Por qué Widgetly",
+    "whyIntro": "Seis cosas que hacen que Widgetly sea distinto a las herramientas que conoces.",
+    "why": {
+      "browserFirst": {
+        "title": "Primero en el navegador",
+        "body": "La mayoría de las herramientas se ejecutan por completo en tu navegador. Tu archivo no sale del dispositivo a menos que la herramienta realmente lo necesite."
+      },
+      "noSignup": {
+        "title": "Sin registro",
+        "body": "Abre cualquier herramienta y empieza a usarla. Sin email, sin teléfono, sin empujón de marketing antes de hacer lo que viniste a buscar."
+      },
+      "eu": {
+        "title": "Soberanía de datos en la UE",
+        "body": "Alojamiento principal en Fráncfort, con respaldos solo en regiones europeas. El GDPR es el suelo, no el techo."
+      },
+      "speed": {
+        "title": "Respuestas en menos de un segundo",
+        "body": "Construido sobre la red edge global de Cloudflare. Las herramientas se cargan desde el centro de datos más cercano y responden en menos de un segundo."
+      },
+      "free": {
+        "title": "Gratis para siempre",
+        "body": "Las herramientas básicas siguen siendo gratis, sin cuotas sorpresa. Las funciones opcionales de pago, si algún día las añadimos, estarán claramente marcadas."
+      },
+      "transparent": {
+        "title": "Prácticas transparentes",
+        "body": "Nuestra página de Seguridad enumera cada sub-procesador, cada cookie y cada regla de retención. La imagen completa, no la versión de marketing."
+      }
+    },
+    "contactTitle": "Ponte en contacto",
+    "contactBody": "Preguntas, ideas de colaboración o una herramienta que te gustaría ver: lo leemos todo.",
+    "contactEmail": "hello@widgetly.app",
+    "contactEmailLabel": "Escríbenos",
+    "footerNote": "Construido por un equipo pequeño. Alojado en Cloudflare Workers. Abiertos sobre cómo funciona."
   },
   "contact": {
     "title": "Contacto",

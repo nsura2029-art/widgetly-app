@@ -269,36 +269,81 @@
     }
   },
   "about": {
-    "title": "About Us",
-    "subtitle": "The team building the all-in-one tools platform we always wished existed.",
-    "missionTitle": "Our mission",
-    "missionBody": "We're building Widgetly because the modern web is fragmented. You need a PDF editor here, a calculator there, an AI writer somewhere else, and a developer tool across town. We want to put all of those — and hundreds more — behind a single search bar, with the speed and polish of the best native apps.",
-    "howWeWork": {
-      "title": "How we work",
-      "tiles": {
-        "small": {
-          "title": "Small, senior, async",
-          "body": "Everyone on the team has deep experience and owns their work end-to-end. We write things down so context isn't lost across time zones."
-        },
-        "remote": {
-          "title": "Fully remote",
-          "body": "Work from wherever you're most productive. We overlap a few hours with US Eastern for the team that wants it; the rest is async."
-        },
-        "hours": {
-          "title": "Sensible hours",
-          "body": "We protect focus time and respect evenings and weekends. Tools that \"just work\" start with a team that isn't burned out."
-        },
-        "pay": {
-          "title": "Pay transparency",
-          "body": "Salary bands are public within the company and tied to role and experience, not negotiation. The same role pays the same, anywhere."
-        }
+    "title": "About Widgetly",
+    "subtitle": "A small team building everyday tools that respect your data by default.",
+    "intro": "Widgetly started in 2025 with a simple idea: the everyday utilities you actually use shouldn't require an account, an upload to a stranger's server, or a credit card. We build browser-first tools, run them on the global edge, and stay out of your way.",
+    "statsTitle": "By the numbers",
+    "stats": {
+      "tools": {
+        "value": "500+",
+        "label": "Tools available, free to use"
+      },
+      "browserFirst": {
+        "value": "Browser-first",
+        "label": "Most tools never touch a server"
+      },
+      "euHosted": {
+        "value": "EU hosted",
+        "label": "Frankfurt primary, GDPR-first"
+      },
+      "noSignup": {
+        "value": "No signup",
+        "label": "Use any tool without an account"
       }
     },
-    "teamTitle": "Meet the team",
-    "teamSubtitle": "Senior builders, mostly remote, working across time zones.",
-    "joinTitle": "Want to build with us?",
-    "joinBody": "We're hiring across product, engineering, AI, and design. If you ship work you're proud of, get in touch.",
-    "joinCta": "See open roles"
+    "beliefsTitle": "What we believe",
+    "beliefsIntro": "Four lines we keep coming back to when we decide what to build and what to leave out.",
+    "beliefs": {
+      "focus": {
+        "title": "Focus on what people actually use",
+        "body": "We ship tools that solve a real, repeated problem — not features that look good in a press release."
+      },
+      "privacy": {
+        "title": "Privacy by default, not by opt-in",
+        "body": "If a tool can run entirely in your browser, it does. If it needs a server, the Security page tells you exactly what happens."
+      },
+      "free": {
+        "title": "Free, fast tools shouldn't need an account",
+        "body": "No email, no phone number, no paywall between you and a one-off conversion. Core tools stay free, always."
+      },
+      "honest": {
+        "title": "Be honest about what happens to your data",
+        "body": "Plain-English policies, real retention numbers, a working contact address. If we can't explain it simply, we don't ship it."
+      }
+    },
+    "whyTitle": "Why Widgetly",
+    "whyIntro": "Six things that make Widgetly different from the tools you're used to.",
+    "why": {
+      "browserFirst": {
+        "title": "Browser-first",
+        "body": "Most tools run entirely in your browser. Your file never leaves your device unless the tool genuinely needs a server."
+      },
+      "noSignup": {
+        "title": "No signup required",
+        "body": "Open any tool and start using it. No email, no phone number, no marketing nudge before you can do the one thing you came for."
+      },
+      "eu": {
+        "title": "EU data sovereignty",
+        "body": "Primary hosting in Frankfurt, with backups only in EU regions. GDPR is the floor, not the ceiling."
+      },
+      "speed": {
+        "title": "Sub-second responses",
+        "body": "Built on Cloudflare's global edge network. Tools load from the data centre closest to you and respond in under a second."
+      },
+      "free": {
+        "title": "Free forever",
+        "body": "Core tools stay free, with no surprise quotas. Optional paid features, if we ever add them, will be clearly marked."
+      },
+      "transparent": {
+        "title": "Transparent practices",
+        "body": "Our Security page lists every sub-processor, every cookie, and every retention rule. The full picture, not the marketing version."
+      }
+    },
+    "contactTitle": "Get in touch",
+    "contactBody": "Questions, partnership ideas, or a tool you'd like to see — we read everything.",
+    "contactEmail": "hello@widgetly.app",
+    "contactEmailLabel": "Email us",
+    "footerNote": "Built by a small team. Hosted on Cloudflare Workers. Open about how it works."
   },
   "contact": {
     "title": "Contact",
