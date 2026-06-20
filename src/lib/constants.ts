@@ -88,6 +88,12 @@ export const FOOTER_LINKS = {
     { labelKey: "terms", href: "/terms-and-conditions" },
     { labelKey: "cookies", href: "/cookies-policy" },
     { labelKey: "security", href: "/security" },
+    { labelKey: "dpa", href: "/dpa" },
+  ],
+  bottom: [
+    { labelKey: "status", href: "#" },
+    { labelKey: "contact", href: "/contact" },
+    { labelKey: "feedback", href: "#" },
   ],
   bottom: [
     { labelKey: "status", href: "#" },
