@@ -37,49 +37,49 @@ const STMT = [
 
   // Aria — 8 contributions, spread across months.
   "INSERT OR IGNORE INTO contributions (user_id, tool_slug, tool_name, category, description, contributed_at) " +
-    "SELECT id, 'aria-image-compress', 'Image Compressor', 'image', 'Drop a photo, get a smaller one. Nothing leaves your browser.', contributed_at FROM users WHERE handle='seed-aria' UNION ALL " +
-    "SELECT id, 'aria-exif-strip', 'EXIF Stripper', 'image', 'Remove GPS and camera metadata from JPEGs in one click.', contributed_at FROM users WHERE handle='seed-aria' UNION ALL " +
-    "SELECT id, 'aria-bg-remover', 'Background Remover', 'image', 'Cut out the subject, keep the pixels that matter.', contributed_at FROM users WHERE handle='seed-aria'",
+    "SELECT id, 'aria-image-compress', 'Image Compressor', 'image', 'Drop a photo, get a smaller one. Nothing leaves your browser.', strftime('%Y-%m-%dT%H:%M:%fZ', 'now') FROM users WHERE handle='seed-aria' UNION ALL " +
+    "SELECT id, 'aria-exif-strip', 'EXIF Stripper', 'image', 'Remove GPS and camera metadata from JPEGs in one click.', strftime('%Y-%m-%dT%H:%M:%fZ', 'now') FROM users WHERE handle='seed-aria' UNION ALL " +
+    "SELECT id, 'aria-bg-remover', 'Background Remover', 'image', 'Cut out the subject, keep the pixels that matter.', strftime('%Y-%m-%dT%H:%M:%fZ', 'now') FROM users WHERE handle='seed-aria'",
 
   // Mateo — calculators (recent + historical).
   "INSERT OR IGNORE INTO contributions (user_id, tool_slug, tool_name, category, description, contributed_at) " +
-    "SELECT id, 'mateo-mortgage', 'Mortgage Calculator', 'calculators', 'Monthly payment + amortization schedule.', contributed_at FROM users WHERE handle='seed-mateo' UNION ALL " +
-    "SELECT id, 'mateo-loan-amort', 'Loan Amortization', 'calculators', 'See exactly where each payment goes.', contributed_at FROM users WHERE handle='seed-mateo' UNION ALL " +
-    "SELECT id, 'mateo-bmi', 'BMI Calculator', 'calculators', 'Body mass index + healthy range.', contributed_at FROM users WHERE handle='seed-mateo' UNION ALL " +
-    "SELECT id, 'mateo-tip', 'Tip Calculator', 'calculators', 'Split the bill without the awkward math.', contributed_at FROM users WHERE handle='seed-mateo'",
+    "SELECT id, 'mateo-mortgage', 'Mortgage Calculator', 'calculators', 'Monthly payment + amortization schedule.', strftime('%Y-%m-%dT%H:%M:%fZ', 'now') FROM users WHERE handle='seed-mateo' UNION ALL " +
+    "SELECT id, 'mateo-loan-amort', 'Loan Amortization', 'calculators', 'See exactly where each payment goes.', strftime('%Y-%m-%dT%H:%M:%fZ', 'now') FROM users WHERE handle='seed-mateo' UNION ALL " +
+    "SELECT id, 'mateo-bmi', 'BMI Calculator', 'calculators', 'Body mass index + healthy range.', strftime('%Y-%m-%dT%H:%M:%fZ', 'now') FROM users WHERE handle='seed-mateo' UNION ALL " +
+    "SELECT id, 'mateo-tip', 'Tip Calculator', 'calculators', 'Split the bill without the awkward math.', strftime('%Y-%m-%dT%H:%M:%fZ', 'now') FROM users WHERE handle='seed-mateo'",
 
   // Zara — PDF tools.
   "INSERT OR IGNORE INTO contributions (user_id, tool_slug, tool_name, category, description, contributed_at) " +
-    "SELECT id, 'zara-pdf-merge', 'PDF Merger', 'pdf', 'Combine PDFs without uploading them anywhere.', contributed_at FROM users WHERE handle='seed-zara' UNION ALL " +
-    "SELECT id, 'zara-pdf-split', 'PDF Splitter', 'pdf', 'Pick the pages you want, get a new PDF.', contributed_at FROM users WHERE handle='seed-zara' UNION ALL " +
-    "SELECT id, 'zara-pdf-compress', 'PDF Compressor', 'pdf', 'Smaller file, same content.', contributed_at FROM users WHERE handle='seed-zara' UNION ALL " +
-    "SELECT id, 'zara-pdf-to-word', 'PDF to Word', 'pdf', 'Editable .docx from a PDF.', contributed_at FROM users WHERE handle='seed-zara' UNION ALL " +
-    "SELECT id, 'zara-pdf-rotate', 'PDF Rotator', 'pdf', 'Rotate one page or all of them.', contributed_at FROM users WHERE handle='seed-zara'",
+    "SELECT id, 'zara-pdf-merge', 'PDF Merger', 'pdf', 'Combine PDFs without uploading them anywhere.', strftime('%Y-%m-%dT%H:%M:%fZ', 'now') FROM users WHERE handle='seed-zara' UNION ALL " +
+    "SELECT id, 'zara-pdf-split', 'PDF Splitter', 'pdf', 'Pick the pages you want, get a new PDF.', strftime('%Y-%m-%dT%H:%M:%fZ', 'now') FROM users WHERE handle='seed-zara' UNION ALL " +
+    "SELECT id, 'zara-pdf-compress', 'PDF Compressor', 'pdf', 'Smaller file, same content.', strftime('%Y-%m-%dT%H:%M:%fZ', 'now') FROM users WHERE handle='seed-zara' UNION ALL " +
+    "SELECT id, 'zara-pdf-to-word', 'PDF to Word', 'pdf', 'Editable .docx from a PDF.', strftime('%Y-%m-%dT%H:%M:%fZ', 'now') FROM users WHERE handle='seed-zara' UNION ALL " +
+    "SELECT id, 'zara-pdf-rotate', 'PDF Rotator', 'pdf', 'Rotate one page or all of them.', strftime('%Y-%m-%dT%H:%M:%fZ', 'now') FROM users WHERE handle='seed-zara'",
 
   // Jin — AI tools, lots of recent activity.
   "INSERT OR IGNORE INTO contributions (user_id, tool_slug, tool_name, category, description, contributed_at) " +
-    "SELECT id, 'jin-summarize', 'Text Summarizer', 'ai', 'TL;DR for any document.', contributed_at FROM users WHERE handle='seed-jin' UNION ALL " +
-    "SELECT id, 'jin-rewrite', 'Tone Rewriter', 'ai', 'Formal, casual, friendly — pick a vibe.', contributed_at FROM users WHERE handle='seed-jin' UNION ALL " +
-    "SELECT id, 'jin-translate', 'AI Translator', 'ai', 'Context-aware translation with glossary support.', contributed_at FROM users WHERE handle='seed-jin' UNION ALL " +
-    "SELECT id, 'jin-keywords', 'Keyword Extractor', 'ai', 'Pull the topics out of any text.', contributed_at FROM users WHERE handle='seed-jin' UNION ALL " +
-    "SELECT id, 'jin-headline', 'Headline Analyzer', 'ai', 'Score your headline for click-worthiness.', contributed_at FROM users WHERE handle='seed-jin' UNION ALL " +
-    "SELECT id, 'jin-resume', 'AI Resume Builder', 'ai', 'Tailored resume bullets from a job description.', contributed_at FROM users WHERE handle='seed-jin'",
+    "SELECT id, 'jin-summarize', 'Text Summarizer', 'ai', 'TL;DR for any document.', strftime('%Y-%m-%dT%H:%M:%fZ', 'now') FROM users WHERE handle='seed-jin' UNION ALL " +
+    "SELECT id, 'jin-rewrite', 'Tone Rewriter', 'ai', 'Formal, casual, friendly — pick a vibe.', strftime('%Y-%m-%dT%H:%M:%fZ', 'now') FROM users WHERE handle='seed-jin' UNION ALL " +
+    "SELECT id, 'jin-translate', 'AI Translator', 'ai', 'Context-aware translation with glossary support.', strftime('%Y-%m-%dT%H:%M:%fZ', 'now') FROM users WHERE handle='seed-jin' UNION ALL " +
+    "SELECT id, 'jin-keywords', 'Keyword Extractor', 'ai', 'Pull the topics out of any text.', strftime('%Y-%m-%dT%H:%M:%fZ', 'now') FROM users WHERE handle='seed-jin' UNION ALL " +
+    "SELECT id, 'jin-headline', 'Headline Analyzer', 'ai', 'Score your headline for click-worthiness.', strftime('%Y-%m-%dT%H:%M:%fZ', 'now') FROM users WHERE handle='seed-jin' UNION ALL " +
+    "SELECT id, 'jin-resume', 'AI Resume Builder', 'ai', 'Tailored resume bullets from a job description.', strftime('%Y-%m-%dT%H:%M:%fZ', 'now') FROM users WHERE handle='seed-jin'",
 
   // Leo — video/audio/convert.
   "INSERT OR IGNORE INTO contributions (user_id, tool_slug, tool_name, category, description, contributed_at) " +
-    "SELECT id, 'leo-video-compress', 'Video Compressor', 'video', 'Smaller file, same playback.', contributed_at FROM users WHERE handle='seed-leo' UNION ALL " +
-    "SELECT id, 'leo-video-trim', 'Video Trimmer', 'video', 'Cut the dead air from the start and end.', contributed_at FROM users WHERE handle='seed-leo' UNION ALL " +
-    "SELECT id, 'leo-video-to-gif', 'Video to GIF', 'video', 'Pick the segment, get the loop.', contributed_at FROM users WHERE handle='seed-leo' UNION ALL " +
-    "SELECT id, 'leo-audio-transcribe', 'Audio Transcriber', 'video', 'Speech to text with timestamps.', contributed_at FROM users WHERE handle='seed-leo' UNION ALL " +
-    "SELECT id, 'leo-unit-convert', 'Unit Converter', 'converters', 'Length, weight, temperature, time, and more.', contributed_at FROM users WHERE handle='seed-leo' UNION ALL " +
-    "SELECT id, 'leo-color-palette', 'Color Palette Generator', 'converters', 'Pull a palette from any image.', contributed_at FROM users WHERE handle='seed-leo'",
+    "SELECT id, 'leo-video-compress', 'Video Compressor', 'video', 'Smaller file, same playback.', strftime('%Y-%m-%dT%H:%M:%fZ', 'now') FROM users WHERE handle='seed-leo' UNION ALL " +
+    "SELECT id, 'leo-video-trim', 'Video Trimmer', 'video', 'Cut the dead air from the start and end.', strftime('%Y-%m-%dT%H:%M:%fZ', 'now') FROM users WHERE handle='seed-leo' UNION ALL " +
+    "SELECT id, 'leo-video-to-gif', 'Video to GIF', 'video', 'Pick the segment, get the loop.', strftime('%Y-%m-%dT%H:%M:%fZ', 'now') FROM users WHERE handle='seed-leo' UNION ALL " +
+    "SELECT id, 'leo-audio-transcribe', 'Audio Transcriber', 'video', 'Speech to text with timestamps.', strftime('%Y-%m-%dT%H:%M:%fZ', 'now') FROM users WHERE handle='seed-leo' UNION ALL " +
+    "SELECT id, 'leo-unit-convert', 'Unit Converter', 'converters', 'Length, weight, temperature, time, and more.', strftime('%Y-%m-%dT%H:%M:%fZ', 'now') FROM users WHERE handle='seed-leo' UNION ALL " +
+    "SELECT id, 'leo-color-palette', 'Color Palette Generator', 'converters', 'Pull a palette from any image.', strftime('%Y-%m-%dT%H:%M:%fZ', 'now') FROM users WHERE handle='seed-leo'",
 
   // Nia — education/writing (newest creator).
   "INSERT OR IGNORE INTO contributions (user_id, tool_slug, tool_name, category, description, contributed_at) " +
-    "SELECT id, 'nia-flashcards', 'Flashcard Maker', 'education', 'Spaced repetition, your way.', contributed_at FROM users WHERE handle='seed-nia' UNION ALL " +
-    "SELECT id, 'nia-lesson-plan', 'Lesson Plan Generator', 'education', 'Outline, objectives, activities — done.', contributed_at FROM users WHERE handle='seed-nia' UNION ALL " +
-    "SELECT id, 'nia-gpa', 'GPA Calculator', 'education', 'Weighted + unweighted, supports any scale.', contributed_at FROM users WHERE handle='seed-nia' UNION ALL " +
-    "SELECT id, 'nia-word-count', 'Word Counter', 'writing', 'Live count + reading time.', contributed_at FROM users WHERE handle='seed-nia'",
+    "SELECT id, 'nia-flashcards', 'Flashcard Maker', 'education', 'Spaced repetition, your way.', strftime('%Y-%m-%dT%H:%M:%fZ', 'now') FROM users WHERE handle='seed-nia' UNION ALL " +
+    "SELECT id, 'nia-lesson-plan', 'Lesson Plan Generator', 'education', 'Outline, objectives, activities — done.', strftime('%Y-%m-%dT%H:%M:%fZ', 'now') FROM users WHERE handle='seed-nia' UNION ALL " +
+    "SELECT id, 'nia-gpa', 'GPA Calculator', 'education', 'Weighted + unweighted, supports any scale.', strftime('%Y-%m-%dT%H:%M:%fZ', 'now') FROM users WHERE handle='seed-nia' UNION ALL " +
+    "SELECT id, 'nia-word-count', 'Word Counter', 'writing', 'Live count + reading time.', strftime('%Y-%m-%dT%H:%M:%fZ', 'now') FROM users WHERE handle='seed-nia'",
 
   // Backdate some contributions so time-window filtering has signal.
   // Jin's recent burst (today + this week).
