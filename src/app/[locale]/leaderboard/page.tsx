@@ -310,10 +310,7 @@ function TabBar({
   labels: Record<LeaderboardWindow, string>;
 }) {
   return (
-    <nav
-      aria-label={tabsLabel}
-      className="border-border/60 bg-muted/5 rounded-xl border p-1.5"
-    >
+    <nav aria-label={tabsLabel} className="border-border/60 bg-muted/5 rounded-xl border p-1.5">
       <ul className="grid grid-cols-2 gap-1.5 sm:flex sm:flex-wrap">
         {LEADERBOARD_WINDOWS.map((w) => {
           const Icon = TAB_ICONS[w];
@@ -354,7 +351,14 @@ export default async function LeaderboardPage({
   const window = normalizeLeaderboardWindow(sp.window);
   const t = await getTranslations("leaderboard");
 
-  const [featured, ranked] = await Promise.all([getFeaturedCreator(), getLeaderboard(window, 30)]);
+  let featured: Awaited<ReturnType<typeof getFeaturedCreator>> = null;
+  let ranked: Awaited<ReturnType<typeof getLeaderboard>> = [];
+  try {
+    [featured, ranked] = await Promise.all([getFeaturedCreator(), getLeaderboard(window, 30)]);
+  } catch (err) {
+    console.error("LEADERBOARD_FETCH_ERROR:", err instanceof Error ? err.message : String(err));
+    // Fall through with empty results — page renders the empty state.
+  }
 
   const baseHref = `/${locale}/leaderboard`;
 
