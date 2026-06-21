@@ -191,7 +191,7 @@ export async function getLeaderboard(
 
     const toolsRows = await db
       .prepare(
-        `SELECT user_id, slug, tool_name, category, description
+        `SELECT user_id, tool_slug AS slug, tool_name, category, description
        FROM contributions
        WHERE user_id IN (${placeholders})
        ORDER BY contributed_at DESC`
@@ -288,7 +288,7 @@ export async function getCreator(handle: string): Promise<CreatorProfile | null>
 
     const toolsRows = await db
       .prepare(
-        `SELECT slug, tool_name, category, description
+        `SELECT tool_slug AS slug, tool_name, category, description
        FROM contributions
        WHERE user_id = ?
        ORDER BY contributed_at DESC`
@@ -384,7 +384,7 @@ export async function getFeaturedCreator(): Promise<LeaderboardEntry | null> {
 
     const toolsRows = await db
       .prepare(
-        `SELECT slug, tool_name, category, description
+        `SELECT tool_slug AS slug, tool_name, category, description
        FROM contributions WHERE user_id = ?
        ORDER BY contributed_at DESC LIMIT 6`
       )
