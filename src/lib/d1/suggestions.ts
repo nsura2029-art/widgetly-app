@@ -1,177 +1,453 @@
 /**
- * Suggestions data access — thin wrapper around the D1 binding.
+ * Suggestions data access for Cloudflare D1.
  *
- * The API route already mints a server id (e.g. "sg_abc123") and a
- * slug from the user-supplied name; we persist both so the public
- * suggestion board can deep-link to `/suggest/[slug]` without an
- * extra id-resolution hop.
+ * The public board reads from D1 when the binding is available and
+ * falls back to seed content in server components when it is not.
+ * Route handlers should use these helpers instead of raw SQL so the
+ * response contracts, rate limits, and upvote invariants stay in one
+ * place.
  */
 
 import { log } from "@/lib/log";
 import { getD1 } from "./server";
 
-export type SuggestionInput = {
-  id: string; // server-minted, e.g. "sg_..."
+export const SUGGESTION_CATEGORIES = [
+  "PDF",
+  "Image",
+  "SEO",
+  "Dev",
+  "AI",
+  "Video",
+  "Calculators",
+  "Converters",
+  "Writing",
+  "Business",
+  "Education",
+] as const;
+
+export const SUGGESTION_STATUSES = ["in_review", "building", "live", "rejected"] as const;
+export const SUGGESTION_URGENCIES = ["low", "medium", "high"] as const;
+export const SUGGESTION_SORTS = ["most_voted", "newest", "recently_built"] as const;
+
+export type SuggestionCategory = (typeof SUGGESTION_CATEGORIES)[number];
+export type SuggestionStatus = (typeof SUGGESTION_STATUSES)[number];
+export type SuggestionUrgency = (typeof SUGGESTION_URGENCIES)[number];
+export type SuggestionSort = (typeof SUGGESTION_SORTS)[number];
+
+export type SuggestionRecord = {
+  id: number;
   slug: string;
+  toolName: string;
+  description: string;
+  useCase: string;
+  category: SuggestionCategory;
+  urgency: SuggestionUrgency;
+  email: string;
+  status: SuggestionStatus;
+  upvotes: number;
+  createdAt: string;
+  updatedAt: string;
+  builtAt: string | null;
+};
+
+export type SuggestionCreateInput = {
+  toolName: string;
+  description: string;
+  useCase: string;
+  category: SuggestionCategory;
+  urgency: SuggestionUrgency;
+  email: string;
+};
+
+export type SuggestionListInput = {
+  category?: string | null;
+  status?: string | null;
+  sort?: SuggestionSort;
+  page?: number;
+  pageSize?: number;
+};
+
+type SuggestionRow = {
+  id: number;
+  slug: string;
+  tool_name: string;
+  description: string;
+  use_case: string;
+  category: string;
+  urgency: string;
+  email: string;
+  status: string;
+  upvotes: number;
+  created_at: string;
+  updated_at: string;
+  built_at: string | null;
+};
+
+function mapRow(row: SuggestionRow): SuggestionRecord {
+  return {
+    id: Number(row.id),
+    slug: String(row.slug),
+    toolName: String(row.tool_name),
+    description: String(row.description),
+    useCase: String(row.use_case ?? ""),
+    category: normalizeCategory(row.category),
+    urgency: normalizeUrgency(row.urgency),
+    email: String(row.email ?? ""),
+    status: normalizeStatus(row.status),
+    upvotes: Number(row.upvotes ?? 0),
+    createdAt: String(row.created_at),
+    updatedAt: String(row.updated_at),
+    builtAt: row.built_at ? String(row.built_at) : null,
+  };
+}
+
+export function normalizeCategory(value: unknown): SuggestionCategory {
+  const raw = String(value ?? "")
+    .trim()
+    .toLowerCase();
+  return (
+    SUGGESTION_CATEGORIES.find((category) => category.toLowerCase() === raw) ??
+    SUGGESTION_CATEGORIES.find((category) => category.toLowerCase().startsWith(raw)) ??
+    "AI"
+  );
+}
+
+export function normalizeStatus(value: unknown): SuggestionStatus {
+  const raw = String(value ?? "")
+    .trim()
+    .toLowerCase();
+  if (raw === "pending_review" || raw === "in_queue") return "in_review";
+  if (raw === "declined") return "rejected";
+  if (raw === "in_progress" || raw === "in_development" || raw === "shipped") {
+    return raw === "shipped" ? "live" : "building";
+  }
+  return SUGGESTION_STATUSES.includes(raw as SuggestionStatus)
+    ? (raw as SuggestionStatus)
+    : "in_review";
+}
+
+export function normalizeUrgency(value: unknown): SuggestionUrgency {
+  const raw = String(value ?? "")
+    .trim()
+    .toLowerCase();
+  return SUGGESTION_URGENCIES.includes(raw as SuggestionUrgency)
+    ? (raw as SuggestionUrgency)
+    : "medium";
+}
+
+export function normalizeSort(value: unknown): SuggestionSort {
+  const raw = String(value ?? "")
+    .trim()
+    .toLowerCase();
+  return SUGGESTION_SORTS.includes(raw as SuggestionSort) ? (raw as SuggestionSort) : "most_voted";
+}
+
+export function suggestionStatusLabel(status: SuggestionStatus): string {
+  switch (status) {
+    case "in_review":
+      return "In Review";
+    case "building":
+      return "Building";
+    case "live":
+      return "Live";
+    case "rejected":
+      return "Rejected";
+  }
+}
+
+export function slugifySuggestionName(toolName: string): string {
+  const slug = toolName
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 64);
+  return slug || "suggested-tool";
+}
+
+async function uniqueSlug(baseSlug: string): Promise<string> {
+  const db = getD1();
+  const existing = await db
+    .prepare("SELECT slug FROM suggestions WHERE slug = ? OR slug LIKE ?")
+    .bind(baseSlug, `${baseSlug}-%`)
+    .all<{ slug: string }>();
+  const used = new Set((existing.results ?? []).map((row) => row.slug));
+  if (!used.has(baseSlug)) return baseSlug;
+  for (let i = 2; i < 1000; i++) {
+    const candidate = `${baseSlug}-${i}`;
+    if (!used.has(candidate)) return candidate;
+  }
+  return `${baseSlug}-${Date.now().toString(36)}`;
+}
+
+export async function countSuggestionsByEmailToday(email: string): Promise<number> {
+  const row = await getD1()
+    .prepare(
+      `SELECT COUNT(*) AS count
+       FROM suggestions
+       WHERE email = ?
+         AND created_at >= strftime('%Y-%m-%dT00:00:00.000Z', 'now')`
+    )
+    .bind(email.toLowerCase())
+    .first<{ count: number }>();
+  return Number(row?.count ?? 0);
+}
+
+export async function createSuggestion(input: SuggestionCreateInput): Promise<SuggestionRecord> {
+  const start = Date.now();
+  const baseSlug = slugifySuggestionName(input.toolName);
+  const slug = await uniqueSlug(baseSlug);
+  const now = new Date().toISOString();
+
+  const row = await getD1()
+    .prepare(
+      `INSERT INTO suggestions
+         (slug, tool_name, description, use_case, category, urgency, email, status, upvotes, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, 'in_review', 0, ?, ?)
+       RETURNING id, slug, tool_name, description, use_case, category, urgency, email, status, upvotes, created_at, updated_at, built_at`
+    )
+    .bind(
+      slug,
+      input.toolName,
+      input.description,
+      input.useCase,
+      normalizeCategory(input.category),
+      normalizeUrgency(input.urgency),
+      input.email.toLowerCase(),
+      now,
+      now
+    )
+    .first<SuggestionRow>();
+
+  if (!row) throw new Error("Suggestion insert returned no row.");
+
+  const suggestion = mapRow(row);
+  await enqueueSuggestionEmail(suggestion.id, "suggestion_received");
+  log.info("suggestions.create", "inserted", {
+    id: suggestion.id,
+    slug: suggestion.slug,
+    duration_ms: Date.now() - start,
+  });
+  return suggestion;
+}
+
+export async function listSuggestions(input: SuggestionListInput = {}): Promise<{
+  suggestions: SuggestionRecord[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}> {
+  const pageSize = Math.min(Math.max(input.pageSize ?? 20, 1), 50);
+  const page = Math.max(input.page ?? 1, 1);
+  const offset = (page - 1) * pageSize;
+  const where: string[] = [];
+  const bindings: unknown[] = [];
+
+  if (input.category) {
+    where.push("category = ?");
+    bindings.push(normalizeCategory(input.category));
+  }
+  if (input.status) {
+    where.push("status = ?");
+    bindings.push(normalizeStatus(input.status));
+  }
+
+  const whereSql = where.length > 0 ? `WHERE ${where.join(" AND ")}` : "";
+  const sort = normalizeSort(input.sort);
+  const orderSql =
+    sort === "newest"
+      ? "created_at DESC"
+      : sort === "recently_built"
+        ? "COALESCE(built_at, updated_at) DESC, upvotes DESC"
+        : "upvotes DESC, created_at DESC";
+
+  const db = getD1();
+  const [countRow, rows] = await Promise.all([
+    db
+      .prepare(`SELECT COUNT(*) AS count FROM suggestions ${whereSql}`)
+      .bind(...bindings)
+      .first<{ count: number }>(),
+    db
+      .prepare(
+        `SELECT id, slug, tool_name, description, use_case, category, urgency, email, status, upvotes, created_at, updated_at, built_at
+         FROM suggestions
+         ${whereSql}
+         ORDER BY ${orderSql}
+         LIMIT ? OFFSET ?`
+      )
+      .bind(...bindings, pageSize, offset)
+      .all<SuggestionRow>(),
+  ]);
+
+  const total = Number(countRow?.count ?? 0);
+  return {
+    suggestions: (rows.results ?? []).map(mapRow),
+    total,
+    page,
+    pageSize,
+    totalPages: Math.max(1, Math.ceil(total / pageSize)),
+  };
+}
+
+export async function getSuggestionByIdOrSlug(idOrSlug: string): Promise<SuggestionRecord | null> {
+  const isNumeric = /^\d+$/.test(idOrSlug);
+  const row = await getD1()
+    .prepare(
+      `SELECT id, slug, tool_name, description, use_case, category, urgency, email, status, upvotes, created_at, updated_at, built_at
+       FROM suggestions
+       WHERE ${isNumeric ? "id" : "slug"} = ?
+       LIMIT 1`
+    )
+    .bind(isNumeric ? Number(idOrSlug) : idOrSlug)
+    .first<SuggestionRow>();
+  return row ? mapRow(row) : null;
+}
+
+export async function enqueueSuggestionEmail(
+  suggestionId: number,
+  template: string
+): Promise<void> {
+  await getD1()
+    .prepare(
+      `INSERT INTO email_queue (suggestion_id, template, status, attempts, created_at)
+       VALUES (?, ?, 'pending', 0, ?)`
+    )
+    .bind(suggestionId, template, new Date().toISOString())
+    .run();
+}
+
+export async function setSuggestionStatus(
+  suggestionId: number,
+  status: SuggestionStatus
+): Promise<void> {
+  const templateByStatus: Record<SuggestionStatus, string> = {
+    in_review: "under_review",
+    building: "building_started",
+    live: "tool_live",
+    rejected: "suggestion_rejected",
+  };
+  const now = new Date().toISOString();
+  await getD1()
+    .prepare(
+      `UPDATE suggestions
+       SET status = ?, updated_at = ?, built_at = CASE WHEN ? = 'live' THEN COALESCE(built_at, ?) ELSE built_at END
+       WHERE id = ?`
+    )
+    .bind(status, now, status, now, suggestionId)
+    .run();
+  await enqueueSuggestionEmail(suggestionId, templateByStatus[status]);
+}
+
+export async function setSuggestionUpvote(input: {
+  suggestionId: number;
+  ipHash: string;
+  sessionId: string;
+  userId?: number | null;
+  weight?: number;
+}): Promise<{ upvotes: number; voted: boolean }> {
+  const weight = input.weight ?? (input.userId ? 2 : 1);
+  const now = new Date().toISOString();
+  await getD1()
+    .prepare(
+      `INSERT OR IGNORE INTO upvotes
+         (suggestion_id, ip_hash, session_id, user_id, weight, created_at)
+       VALUES (?, ?, ?, ?, ?, ?)`
+    )
+    .bind(input.suggestionId, input.ipHash, input.sessionId, input.userId ?? null, weight, now)
+    .run();
+  return recomputeUpvotes(input.suggestionId, true);
+}
+
+export async function removeSuggestionUpvote(input: {
+  suggestionId: number;
+  ipHash: string;
+  sessionId: string;
+  userId?: number | null;
+}): Promise<{ upvotes: number; voted: boolean }> {
+  const isRegistered = typeof input.userId === "number";
+  await getD1()
+    .prepare(
+      `DELETE FROM upvotes
+       WHERE suggestion_id = ?
+         AND ${isRegistered ? "user_id = ?" : "ip_hash = ? AND session_id = ?"}`
+    )
+    .bind(input.suggestionId, ...(isRegistered ? [input.userId] : [input.ipHash, input.sessionId]))
+    .run();
+  return recomputeUpvotes(input.suggestionId, false);
+}
+
+async function recomputeUpvotes(
+  suggestionId: number,
+  voted: boolean
+): Promise<{ upvotes: number; voted: boolean }> {
+  const row = await getD1()
+    .prepare("SELECT COALESCE(SUM(weight), 0) AS total FROM upvotes WHERE suggestion_id = ?")
+    .bind(suggestionId)
+    .first<{ total: number }>();
+  const total = Number(row?.total ?? 0);
+  await getD1()
+    .prepare("UPDATE suggestions SET upvotes = ?, updated_at = ? WHERE id = ?")
+    .bind(total, new Date().toISOString(), suggestionId)
+    .run();
+  return { upvotes: total, voted };
+}
+
+/**
+ * Backward-compatible helper for the older `/api/suggest` route.
+ */
+export async function recordSuggestion(input: {
+  id?: string;
+  slug?: string;
   name: string;
   pitch: string;
   description?: string | null;
   contact?: string | null;
-  locale: string;
-};
-
-export type SuggestionResult =
+  locale?: string;
+}): Promise<
   | { kind: "inserted"; id: string; slug: string; createdAt: string }
   | { kind: "duplicate_slug"; existingSlug: string }
-  | { kind: "error"; message: string };
-
-/**
- * Insert a new tool suggestion. The id and slug are unique constraints
- * so duplicate submissions surface as `duplicate_slug` rather than a
- * generic 500 — the route can return a friendly "this name is taken,
- * try rephrasing" message.
- */
-export async function recordSuggestion(input: SuggestionInput): Promise<SuggestionResult> {
-  const start = Date.now();
-
-  log.info("suggestions.insert", "start", {
-    id: input.id,
-    slug: input.slug,
-    name_len: input.name.length,
-    pitch_len: input.pitch.length,
-    locale: input.locale,
-  });
-
-  let db;
+  | { kind: "error"; message: string }
+> {
   try {
-    db = getD1();
-  } catch (e) {
-    const msg = e instanceof Error ? e.message : "d1 not configured";
-    log.error("suggestions.insert", "client unavailable", {
-      id: input.id,
-      err: msg,
-      duration_ms: Date.now() - start,
-    });
-    return { kind: "error", message: msg };
-  }
-
-  try {
-    const row = await db
-      .prepare(
-        `INSERT INTO suggestions
-           (id, slug, name, pitch, description, contact, locale, status)
-         VALUES (?, ?, ?, ?, ?, ?, ?, 'pending_review')
-         RETURNING id, slug, created_at`
-      )
-      .bind(
-        input.id,
-        input.slug,
-        input.name,
-        input.pitch,
-        input.description ?? null,
-        input.contact ?? null,
-        input.locale
-      )
-      .first<{ id: string; slug: string; created_at: string }>();
-
-    if (!row) {
-      // RETURNING returning null is unusual — D1 only does that on a
-      // constraint violation when there's no ON CONFLICT clause, in
-      // which case the underlying prepare() throws. Treat as unknown.
-      log.warn("suggestions.insert", "no row returned", {
-        id: input.id,
-        slug: input.slug,
-        duration_ms: Date.now() - start,
-      });
-      return { kind: "error", message: "insert returned no row" };
-    }
-
-    log.info("suggestions.insert", "inserted", {
-      id: String(row.id),
-      slug: String(row.slug),
-      duration_ms: Date.now() - start,
+    const suggestion = await createSuggestion({
+      toolName: input.name,
+      description: input.pitch,
+      useCase: input.description || input.pitch.slice(0, 300),
+      category: "AI",
+      urgency: "medium",
+      email: input.contact || "unknown@widgetly.tech",
     });
     return {
       kind: "inserted",
-      id: String(row.id),
-      slug: String(row.slug),
-      createdAt: String(row.created_at),
+      id: String(suggestion.id),
+      slug: suggestion.slug,
+      createdAt: suggestion.createdAt,
     };
-  } catch (e) {
-    const msg = e instanceof Error ? e.message : String(e);
-    // SQLite surfaces UNIQUE violations as errors with a recognizable
-    // message. Match on `UNIQUE constraint failed` so the route gets
-    // a structured `duplicate_slug` instead of a generic 500.
-    if (/UNIQUE constraint failed.*slug/i.test(msg)) {
-      log.warn("suggestions.insert", "duplicate slug", {
-        id: input.id,
-        slug: input.slug,
-        duration_ms: Date.now() - start,
-      });
-      return { kind: "duplicate_slug", existingSlug: input.slug };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (/UNIQUE constraint failed.*slug/i.test(message)) {
+      return {
+        kind: "duplicate_slug",
+        existingSlug: input.slug ?? slugifySuggestionName(input.name),
+      };
     }
-    log.error("suggestions.insert", "insert threw", {
-      id: input.id,
-      slug: input.slug,
-      err: msg,
-      duration_ms: Date.now() - start,
-    });
-    return { kind: "error", message: msg };
+    return { kind: "error", message };
   }
 }
 
-/**
- * Read the top N suggestions for the public leaderboard widget.
- * Hits the `top_suggestions` view (excludes declined, ordered by
- * votes then recency). Returns [] if the view is empty or the
- * query fails.
- */
 export async function readTopSuggestions(
   limit = 4
 ): Promise<
   Array<{ slug: string; name: string; voteCount: number; pitch: string; status: string }>
 > {
-  const start = Date.now();
-  log.debug("suggestions.read", "start", { limit });
-
-  let db;
-  try {
-    db = getD1();
-  } catch {
-    log.debug("suggestions.read", "d1 not configured, returning []");
-    return [];
-  }
-
-  try {
-    const result = await db
-      .prepare(
-        `SELECT slug, name, vote_count, pitch, status
-         FROM top_suggestions
-         ORDER BY vote_count DESC, created_at DESC
-         LIMIT ?`
-      )
-      .bind(limit)
-      .all<{ slug: string; name: string; vote_count: number; pitch: string; status: string }>();
-
-    log.info("suggestions.read", "ok", {
-      rows: result.results?.length ?? 0,
-      duration_ms: Date.now() - start,
-    });
-    return (result.results ?? []).map(
-      (row: { slug: string; name: string; vote_count: number; pitch: string; status: string }) => ({
-        slug: String(row.slug),
-        name: String(row.name),
-        voteCount: Number(row.vote_count ?? 0),
-        pitch: String(row.pitch ?? ""),
-        status: String(row.status ?? "pending_review"),
-      })
-    );
-  } catch (e) {
-    const msg = e instanceof Error ? e.message : String(e);
-    log.warn("suggestions.read", "read failed", {
-      err: msg,
-      duration_ms: Date.now() - start,
-    });
-    return [];
-  }
+  const result = await listSuggestions({ sort: "most_voted", pageSize: limit });
+  return result.suggestions.map((suggestion) => ({
+    slug: suggestion.slug,
+    name: suggestion.toolName,
+    voteCount: suggestion.upvotes,
+    pitch: suggestion.description,
+    status: suggestion.status,
+  }));
 }

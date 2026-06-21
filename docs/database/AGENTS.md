@@ -10,7 +10,7 @@ Owns the Cloudflare D1 persistence layer for Widgetly: schema, migrations, query
 
 - Store user-submitted data (waitlist signups, tool suggestions) in a low-latency edge database.
 - Use Cloudflare D1 (SQLite at the edge, 5-20ms reads vs 100-300ms for Supabase round-trip).
-- Keep the schema simple: two tables (`waitlist`, `suggestions`), one view (`top_suggestions`).
+- Keep the schema simple: `waitlist`, public suggestion-board tables (`suggestions`, `upvotes`, `email_queue`), and one view (`top_suggestions`).
 - Expose typed query helpers from `src/lib/d1/` so route handlers never write raw SQL.
 
 ---
@@ -23,7 +23,7 @@ Owns the Cloudflare D1 persistence layer for Widgetly: schema, migrations, query
 | Schema migrations         | `migrations/0001_init.sql`, `migrations/000N_<name>.sql`                  |
 | Query helpers             | `src/lib/d1/{server,waitlist,suggestions}.ts`                             |
 | TypeScript types          | inline in `src/lib/d1/server.ts` (avoids `@cloudflare/workers-types` dep) |
-| Routes that read/write D1 | `src/app/api/{waitlist,suggest,diag/d1}/route.ts`                         |
+| Routes that read/write D1 | `src/app/api/{waitlist,suggest,suggestions,diag/d1}/**/route.ts`          |
 | Operational CLI           | `pnpm db:*` scripts in `package.json`                                     |
 
 ---
@@ -39,10 +39,13 @@ Owns the Cloudflare D1 persistence layer for Widgetly: schema, migrations, query
 
 ### Schema
 
-- Two tables: `waitlist` and `suggestions`.
+- Four tables: `waitlist`, `suggestions`, `upvotes`, and `email_queue`.
 - Primary keys: `INTEGER PRIMARY KEY AUTOINCREMENT` for `waitlist.id` (used as user-visible position).
-- For `suggestions.id`: `TEXT PRIMARY KEY` (slug or generated ULID).
+- For `suggestions.id`: `INTEGER PRIMARY KEY AUTOINCREMENT`; `slug` is unique and powers `/suggest/[id]` SEO-friendly URLs.
 - Columns: `email` / `slug` columns use `COLLATE NOCASE` for case-insensitive uniqueness.
+- Public suggestion statuses are `in_review`, `building`, `live`, and `rejected`; urgency values are `low`, `medium`, and `high`.
+- Anonymous upvotes are stored in `upvotes` by `(suggestion_id, ip_hash, session_id)`; registered votes use `(suggestion_id, user_id)` and carry weight `2`.
+- `email_queue` stores retryable notification jobs for received/status-change emails.
 - No triggers. No RLS. Atomic dedup via `INSERT ... ON CONFLICT(...) DO NOTHING RETURNING ...`.
 - A single `top_suggestions` view exposes the top-N accepted suggestions.
 
@@ -68,10 +71,17 @@ recordWaitlist(input: { email: string; source?: string; locale?: string }):
   Promise<{ kind: "inserted" | "duplicate" | "error"; position?: number; id?: number; email?: string; message?: string }>
 
 // src/lib/d1/suggestions.ts
-recordSuggestion(input: { slug: string; name: string; pitch?: string; category?: string }):
-  Promise<{ kind: "inserted" | "duplicate" | "error"; ... }>
+createSuggestion(input: { toolName: string; description: string; useCase: string; category: string; urgency: string; email: string }):
+  Promise<SuggestionRecord>
 
-readTopSuggestions(limit: number): Promise<Suggestion[]>
+listSuggestions(input): Promise<{ suggestions: SuggestionRecord[]; total: number; page: number; pageSize: number; totalPages: number }>
+getSuggestionByIdOrSlug(idOrSlug: string): Promise<SuggestionRecord | null>
+setSuggestionUpvote(input): Promise<{ upvotes: number; voted: boolean }>
+removeSuggestionUpvote(input): Promise<{ upvotes: number; voted: boolean }>
+
+// Legacy compatibility for /api/suggest:
+recordSuggestion(...)
+readTopSuggestions(limit: number)
 ```
 
 ### Migrations
@@ -116,7 +126,7 @@ Inside the console:
 
 ```sql
 SELECT * FROM waitlist ORDER BY id DESC LIMIT 10;
-SELECT COUNT(*) FROM suggestions WHERE status = 'accepted';
+SELECT COUNT(*) FROM suggestions WHERE status = 'in_review';
 SELECT * FROM top_suggestions LIMIT 20;
 ```
 

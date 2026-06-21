@@ -165,12 +165,54 @@ Email signup. Writes to Cloudflare D1.
 
 ### `POST /api/suggest`
 
-Submit a tool idea. Writes to D1.
+Legacy tool-suggestion intake. Writes to D1 through the suggestion-board helper and remains for older clients.
 
 - Body: `{ slug: string, name: string, pitch?: string, category?: string }`.
 - Response (inserted): `{ ok: true, kind: "inserted", slug }`.
 - Response (duplicate): `{ ok: true, kind: "duplicate", slug, message: "Already suggested" }`.
 - `slug` must match `^[a-z0-9-]{3,40}$`.
+
+### `GET /api/suggestions`
+
+List the public suggestion board.
+
+- Query: `category`, `status`, `sort`, `page`.
+- `status`: `in_review | building | live | rejected`.
+- `sort`: `most_voted | newest | recently_built`.
+- Pagination: 20 per page.
+- Response: `{ ok: true, suggestions, total, page, pageSize, totalPages }`.
+- Cache: `s-maxage=60`, `stale-while-revalidate=300`.
+
+### `POST /api/suggestions`
+
+Create a public suggestion.
+
+- Body: `{ toolName: string, description: string, useCase: string, category: string, urgency: "low"|"medium"|"high", email: string }`.
+- Validation: tool name 3-50 chars, description 50-500 chars, use case 20-300 chars, valid email.
+- Rate limit: 3 suggestions per email per UTC day, tracked in D1.
+- Response: `{ ok: true, suggestion }` with status `201`.
+- 429 on rate limit. 503 if D1 is not configured.
+
+### `GET /api/suggestions/[id]`
+
+Read one public suggestion by numeric `id` or URL `slug`.
+
+- Response: `{ ok: true, suggestion }`.
+- 404 if the suggestion does not exist.
+
+### `POST /api/suggestions/[id]/upvote`
+
+Add an upvote.
+
+- Anonymous voters are tracked by hashed IP + `wly_suggest_session` cookie.
+- Registered vote support is reserved via `x-widgetly-user-id`; those votes count as weight 2.
+- Response: `{ ok: true, upvotes, voted: true }`.
+
+### `DELETE /api/suggestions/[id]/upvote`
+
+Remove an upvote for the current anonymous session or registered user.
+
+- Response: `{ ok: true, upvotes, voted: false }`.
 
 ### `POST /api/contact`
 

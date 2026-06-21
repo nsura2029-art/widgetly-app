@@ -68,6 +68,7 @@ Owns pnpm scripts, common command sequences, deploy workflow, and troubleshootin
 | `pnpm type-check`  | `tsc --noEmit`. No file output.                                      | Before commit, before PR.                                                         |
 | `pnpm lint`        | `eslint .` (whole project).                                          | Run with `NODE_OPTIONS="--max-old-space-size=8192"` to avoid OOM on big projects. |
 | `pnpm lint <path>` | Lint specific files.                                                 | Faster than full lint.                                                            |
+| `pnpm test`        | Run Vitest unit/component tests once.                                | Before committing feature logic with validation or UI state.                      |
 | `pnpm format`      | Prettier write.                                                      | Optional, mostly automatic via editor.                                            |
 | `pnpm ship`        | Local DOD gate (lint + type-check + test). Calls `scripts/ship.mjs`. | Before push. Same code path the husky pre-push hook runs.                         |
 | `pnpm ship:build`  | `pnpm ship` + `opennextjs-cloudflare build`.                         | Before merge to `develop` / `main`. Slow — CI also runs it.                       |
