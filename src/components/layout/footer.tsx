@@ -3,6 +3,7 @@
 import { Link } from "@/i18n/navigation";
 import { Github, Twitter, Send } from "lucide-react";
 import { Logo } from "@/components/shared/logo";
+import { LocalePicker } from "@/components/layout/locale-picker";
 import { useTranslations } from "next-intl";
 import { FOOTER_LINKS } from "@/lib/constants";
 
@@ -119,15 +120,23 @@ export function Footer() {
               siteName: tSite("name"),
             })}
           </p>
-          <ul className="text-muted-foreground flex items-center gap-5">
-            {FOOTER_LINKS.bottom.map((link) => (
-              <li key={link.labelKey}>
-                <Link href={link.href} className="hover:text-foreground transition-colors">
-                  {tLinks(link.labelKey)}
-                </Link>
-              </li>
-            ))}
-          </ul>
+          <div className="text-muted-foreground flex flex-wrap items-center gap-5">
+            {/* Language switcher lives at the very bottom of the page,
+                left of the utility links. Putting it here (instead of
+                in the header) keeps the header minimal and matches
+                every well-loved utility site — Vercel, Stripe, GitHub
+                all do it this way. */}
+            <LocalePicker />
+            <ul className="flex items-center gap-5">
+              {FOOTER_LINKS.bottom.map((link) => (
+                <li key={link.labelKey}>
+                  <Link href={link.href} className="hover:text-foreground transition-colors">
+                    {tLinks(link.labelKey)}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
       </div>
     </footer>
