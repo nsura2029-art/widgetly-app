@@ -353,10 +353,12 @@ export default async function LeaderboardPage({
 
   let featured: Awaited<ReturnType<typeof getFeaturedCreator>> = null;
   let ranked: Awaited<ReturnType<typeof getLeaderboard>> = [];
+  let fetchError: string | null = null;
   try {
     [featured, ranked] = await Promise.all([getFeaturedCreator(), getLeaderboard(window, 30)]);
   } catch (err) {
-    console.error("LEADERBOARD_FETCH_ERROR:", err instanceof Error ? err.message : String(err));
+    fetchError = err instanceof Error ? err.message : String(err);
+    console.error("LEADERBOARD_FETCH_ERROR:", fetchError);
     // Fall through with empty results — page renders the empty state.
   }
 
@@ -402,6 +404,11 @@ export default async function LeaderboardPage({
             <p className="text-muted mx-auto mt-2 max-w-md text-sm leading-relaxed">
               {t("noCreatorsBody")}
             </p>
+            {fetchError && (
+              <pre className="mt-4 max-w-2xl overflow-x-auto rounded-lg border border-rose-200 bg-rose-50 p-3 text-left text-xs text-rose-700">
+                {fetchError}
+              </pre>
+            )}
             <Button asChild className="mt-6">
               <Link href="/suggest">
                 {t("contributeCta")}
