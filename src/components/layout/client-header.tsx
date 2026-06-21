@@ -2,24 +2,25 @@
 
 import * as React from "react";
 import { motion } from "framer-motion";
-import { Github, Lightbulb, Menu, X } from "lucide-react";
+import { Lightbulb, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/shared/logo";
-import { LocalePicker } from "@/components/layout/locale-picker";
 import { Link, usePathname } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 
 /**
- * Sticky site header. The surface stays solid and flat so it behaves
- * like product chrome, while the existing mobile menu and action style
- * remain Widgetly's.
+ * Sticky site header. Intentionally minimal — the bulk of the site
+ * chrome (Tools, Features, Categories, Blog, About, language picker,
+ * GitHub star, Waitlist CTA) lives in the footer or on dedicated
+ * landing pages, so the header just needs the brand mark and the one
+ * link that genuinely belongs at the top of every page (Leaderboard).
  *
  * Localization:
  *   - Uses `next-intl`'s `<Link>` (re-exported from `@/i18n/navigation`)
  *     so all internal links automatically get the current locale prefix.
- *   - Nav labels, aria attributes, and CTA text are pulled from the
- *     `header.*` namespace via `useTranslations()`.
+ *   - Nav labels and aria attributes are pulled from the `header.*`
+ *     namespace via `useTranslations()`.
  */
 export default function ClientHeader() {
   const [open, setOpen] = React.useState(false);
@@ -53,15 +54,7 @@ export default function ClientHeader() {
     setOpen(false);
   }, [pathname]);
 
-  const navLinks = [
-    { href: "/tools", label: t("header.nav.tools") },
-    { href: "/leaderboard", label: t("header.nav.leaderboard") },
-    { href: "/#features", label: t("header.nav.features") },
-    { href: "/#categories", label: t("header.nav.categories") },
-    { href: "/blog", label: t("header.nav.blog") },
-    { href: "/about", label: t("header.nav.about") },
-    { href: "/contact", label: t("header.nav.contact") },
-  ];
+  const navLinks = [{ href: "/leaderboard", label: t("header.nav.leaderboard") }];
 
   return (
     <motion.header
@@ -83,7 +76,7 @@ export default function ClientHeader() {
         </Link>
 
         <nav
-          className="hidden xl:flex xl:items-center xl:gap-1"
+          className="hidden md:flex md:items-center md:gap-1"
           aria-label={t("header.aria.mainNav")}
         >
           {navLinks.map((link) => (
@@ -97,37 +90,18 @@ export default function ClientHeader() {
           ))}
         </nav>
 
-        <div className="hidden items-center gap-2 xl:flex">
-          <LocalePicker />
-          <a
-            href="https://github.com/widgetly/widgetly"
-            target="_blank"
-            rel="noreferrer noopener"
-            aria-label="Widgetly on GitHub"
-            className="border-border text-foreground hover:bg-muted/5 inline-flex h-9 items-center justify-center gap-2 rounded-lg border bg-transparent px-3.5 text-xs font-medium transition-colors"
-          >
-            <Github className="h-3.5 w-3.5" aria-hidden="true" />
-            <span>{t("header.actions.star")}</span>
-          </a>
+        <div className="hidden items-center gap-2 md:flex">
           <Button asChild variant="outline" size="sm" className="h-9 gap-2 rounded-lg">
             <Link href="/suggest" aria-label={t("header.aria.suggestTool")}>
               <Lightbulb className="h-3.5 w-3.5" aria-hidden="true" />
               <span>{t("header.actions.suggestTool")}</span>
             </Link>
           </Button>
-          <Button asChild size="sm" className="h-9 rounded-lg">
-            {/* Link to "/#waitlist" (not bare "#waitlist") so it works
-                from any page. Next.js handles both same-page scroll and
-                cross-page navigation+scroll correctly. The bare anchor
-                would just append the hash to the current URL (e.g.
-                /blog → /blog#waitlist) and find no target. */}
-            <Link href="/#waitlist">{t("header.actions.joinWaitlist")}</Link>
-          </Button>
         </div>
 
-        {/* Mobile: locale picker + menu trigger */}
-        <div className="flex items-center gap-2 xl:hidden">
-          <LocalePicker />
+        {/* Mobile: menu trigger only — language picker lives in the
+            footer bottom row on both mobile and desktop. */}
+        <div className="flex items-center gap-2 md:hidden">
           <button
             type="button"
             onClick={() => setOpen((o) => !o)}
@@ -149,7 +123,7 @@ export default function ClientHeader() {
       <div
         id="mobile-nav"
         className={cn(
-          "border-border/60 overflow-hidden border-t bg-white/95 backdrop-blur-xl transition-all xl:hidden",
+          "border-border/60 overflow-hidden border-t bg-white/95 backdrop-blur-xl transition-all md:hidden",
           open ? "max-h-[80vh] opacity-100" : "max-h-0 opacity-0"
         )}
       >
@@ -164,15 +138,6 @@ export default function ClientHeader() {
             </Link>
           ))}
           <div className="border-border/60 mt-3 flex flex-col gap-2 border-t pt-3">
-            <a
-              href="https://github.com/widgetly/widgetly"
-              target="_blank"
-              rel="noreferrer noopener"
-              className="border-border text-foreground hover:bg-muted/5 inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border px-5 text-sm font-medium transition-colors"
-            >
-              <Github className="h-4 w-4" aria-hidden="true" />
-              Widgetly on GitHub
-            </a>
             <Link
               href="/suggest"
               onClick={() => setOpen(false)}
@@ -180,13 +145,6 @@ export default function ClientHeader() {
             >
               <Lightbulb className="h-4 w-4" aria-hidden="true" />
               {t("header.actions.suggestTool")}
-            </Link>
-            <Link
-              href="/#waitlist"
-              onClick={() => setOpen(false)}
-              className="bg-brand-gradient shadow-glow-sm hover:shadow-glow inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl px-5 text-sm font-medium text-white transition-all hover:brightness-110"
-            >
-              {t("header.actions.joinWaitlist")}
             </Link>
           </div>
         </div>

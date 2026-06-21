@@ -6,18 +6,10 @@
   },
   "header": {
     "nav": {
-      "tools": "Outils",
-      "features": "Fonctionnalités",
-      "categories": "Catégories",
-      "blog": "Blog",
-      "about": "À propos",
-      "contact": "Contact",
       "leaderboard": "Classement"
     },
     "actions": {
-      "star": "Étoile",
-      "suggestTool": "Suggérer un outil",
-      "joinWaitlist": "S'inscrire sur la liste d'attente"
+      "suggestTool": "Suggérer un outil"
     },
     "aria": {
       "mainNav": "Navigation principale",
@@ -69,7 +61,8 @@
       "feedback": "Retours"
     },
     "copyright": "© {year} {siteName}. Tous droits réservés.",
-    "builtWith": "Conçu avec soin. Déployé sur {platform}."
+    "builtWith": "Conçu avec soin. Déployé sur {platform}.",
+    "localeLabel": "Langue"
   },
   "home": {
     "hero": {

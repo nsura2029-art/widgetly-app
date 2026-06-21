@@ -82,6 +82,7 @@ export const FOOTER_LINKS = {
     { labelKey: "roadmap", href: "#" },
     { labelKey: "suggest", href: "/suggest" },
     { labelKey: "careers", href: "#" },
+    { labelKey: "contact", href: "/contact" },
   ],
   legal: [
     { labelKey: "privacy", href: "/privacy-policy" },
@@ -90,9 +91,11 @@ export const FOOTER_LINKS = {
     { labelKey: "security", href: "/security" },
     { labelKey: "dpa", href: "/dpa" },
   ],
+  // Bottom row left-to-right: language picker, then utility links.
+  // The locale switcher is rendered first by the footer component
+  // (it's a popover, not a normal link), then these links flow in.
   bottom: [
     { labelKey: "status", href: "#" },
-    { labelKey: "contact", href: "/contact" },
     { labelKey: "feedback", href: "#" },
   ],
   social: [
