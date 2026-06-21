@@ -9,120 +9,173 @@
  * Usage:
  *   pnpm db:seed:local     # Miniflare local D1
  *   pnpm db:seed:remote    # Production D1 (CLOUDFLARE_API_TOKEN required)
+ *
+ * Why we use INSERT statements (not INSERT ... SELECT ... UNION ALL):
+ *   D1 / SQLite enforce a `SQLITE_MAX_COMPOUND_SELECT` cap on the
+ *   number of SELECTs that can be UNION'd together in a single query.
+ *   With 6 creators × ~5 tools each, a batched UNION ALL form tripped
+ *   the limit on some statements (errored with "too many terms in
+ *   compound SELECT"). Per-row INSERTs are slower in absolute terms
+ *   but each statement is independent — a single bad row doesn't fail
+ *   the whole batch, and there's no compound limit to worry about.
  */
 import { execSync } from "node:child_process";
 
 const isRemote = process.argv.includes("--remote");
 const target = isRemote ? "--remote" : "--local";
 
-// Run against the bound `widgetly` DB name (matches wrangler.toml).
-const cmd = (sql) => `wrangler d1 execute widgetly ${target} --command=${JSON.stringify(sql)}`;
+/** Run one SQL statement via wrangler. Logs success / throws on error. */
+function run(sql) {
+  const cmd = `wrangler d1 execute widgetly ${target} --command=${JSON.stringify(sql)}`;
+  try {
+    execSync(cmd, { stdio: "pipe" });
+  } catch (err) {
+    // Re-throw with the failing SQL prepended so logs make the culprit
+    // obvious without needing to enable wrangler verbose mode.
+    const snippet = sql.length > 120 ? sql.slice(0, 120) + "…" : sql;
+    throw new Error(`SQL failed: ${snippet}\n${err.stderr?.toString() || err.message}`);
+  }
+}
 
-const STMT = [
-  // Wipe existing seed data so we have a deterministic starting point.
-  // (Won't touch production data the user has added — these handles are
-  // fictional and uniquely tagged.)
-  "DELETE FROM badges WHERE user_id IN (SELECT id FROM users WHERE handle LIKE 'seed-%')",
-  "DELETE FROM contributions WHERE user_id IN (SELECT id FROM users WHERE handle LIKE 'seed-%')",
-  "DELETE FROM users WHERE handle LIKE 'seed-%'",
+// ---------------------------------------------------------------------------
+// Data: creators, contributions, badges
+// ---------------------------------------------------------------------------
 
-  // Creators (5 fictional ones with varied stats).
-  "INSERT OR IGNORE INTO users (handle, display_name, avatar_seed, bio) VALUES " +
-    "('seed-aria', 'Aria Sun', 'aria-sun', 'Privacy-first tools and image utilities.'), " +
-    "('seed-mateo', 'Mateo Reyes', 'mateo-reyes', 'Calculator nerd. Mortgage and finance specialist.'), " +
-    "('seed-zara', 'Zara Patel', 'zara-patel', 'PDF and document workflow enthusiast.'), " +
-    "('seed-jin', 'Jin Park', 'jin-park', 'AI tools, daily. Currently obsessed with summarization.'), " +
-    "('seed-leo', 'Leo Andersen', 'leo-andersen', 'Video, audio, and file format everything.'), " +
-    "('seed-nia', 'Nia Okafor', 'nia-okafor', 'Education + study tools. Beta tester in chief.')",
-
-  // Aria — 8 contributions, spread across months.
-  "INSERT OR IGNORE INTO contributions (user_id, tool_slug, tool_name, category, description, contributed_at) " +
-    "SELECT id, 'aria-image-compress', 'Image Compressor', 'image', 'Drop a photo, get a smaller one. Nothing leaves your browser.', strftime('%Y-%m-%dT%H:%M:%fZ', 'now') FROM users WHERE handle='seed-aria' UNION ALL " +
-    "SELECT id, 'aria-exif-strip', 'EXIF Stripper', 'image', 'Remove GPS and camera metadata from JPEGs in one click.', strftime('%Y-%m-%dT%H:%M:%fZ', 'now') FROM users WHERE handle='seed-aria' UNION ALL " +
-    "SELECT id, 'aria-bg-remover', 'Background Remover', 'image', 'Cut out the subject, keep the pixels that matter.', strftime('%Y-%m-%dT%H:%M:%fZ', 'now') FROM users WHERE handle='seed-aria'",
-
-  // Mateo — calculators (recent + historical).
-  "INSERT OR IGNORE INTO contributions (user_id, tool_slug, tool_name, category, description, contributed_at) " +
-    "SELECT id, 'mateo-mortgage', 'Mortgage Calculator', 'calculators', 'Monthly payment + amortization schedule.', strftime('%Y-%m-%dT%H:%M:%fZ', 'now') FROM users WHERE handle='seed-mateo' UNION ALL " +
-    "SELECT id, 'mateo-loan-amort', 'Loan Amortization', 'calculators', 'See exactly where each payment goes.', strftime('%Y-%m-%dT%H:%M:%fZ', 'now') FROM users WHERE handle='seed-mateo' UNION ALL " +
-    "SELECT id, 'mateo-bmi', 'BMI Calculator', 'calculators', 'Body mass index + healthy range.', strftime('%Y-%m-%dT%H:%M:%fZ', 'now') FROM users WHERE handle='seed-mateo' UNION ALL " +
-    "SELECT id, 'mateo-tip', 'Tip Calculator', 'calculators', 'Split the bill without the awkward math.', strftime('%Y-%m-%dT%H:%M:%fZ', 'now') FROM users WHERE handle='seed-mateo'",
-
-  // Zara — PDF tools.
-  "INSERT OR IGNORE INTO contributions (user_id, tool_slug, tool_name, category, description, contributed_at) " +
-    "SELECT id, 'zara-pdf-merge', 'PDF Merger', 'pdf', 'Combine PDFs without uploading them anywhere.', strftime('%Y-%m-%dT%H:%M:%fZ', 'now') FROM users WHERE handle='seed-zara' UNION ALL " +
-    "SELECT id, 'zara-pdf-split', 'PDF Splitter', 'pdf', 'Pick the pages you want, get a new PDF.', strftime('%Y-%m-%dT%H:%M:%fZ', 'now') FROM users WHERE handle='seed-zara' UNION ALL " +
-    "SELECT id, 'zara-pdf-compress', 'PDF Compressor', 'pdf', 'Smaller file, same content.', strftime('%Y-%m-%dT%H:%M:%fZ', 'now') FROM users WHERE handle='seed-zara' UNION ALL " +
-    "SELECT id, 'zara-pdf-to-word', 'PDF to Word', 'pdf', 'Editable .docx from a PDF.', strftime('%Y-%m-%dT%H:%M:%fZ', 'now') FROM users WHERE handle='seed-zara' UNION ALL " +
-    "SELECT id, 'zara-pdf-rotate', 'PDF Rotator', 'pdf', 'Rotate one page or all of them.', strftime('%Y-%m-%dT%H:%M:%fZ', 'now') FROM users WHERE handle='seed-zara'",
-
-  // Jin — AI tools, lots of recent activity.
-  "INSERT OR IGNORE INTO contributions (user_id, tool_slug, tool_name, category, description, contributed_at) " +
-    "SELECT id, 'jin-summarize', 'Text Summarizer', 'ai', 'TL;DR for any document.', strftime('%Y-%m-%dT%H:%M:%fZ', 'now') FROM users WHERE handle='seed-jin' UNION ALL " +
-    "SELECT id, 'jin-rewrite', 'Tone Rewriter', 'ai', 'Formal, casual, friendly — pick a vibe.', strftime('%Y-%m-%dT%H:%M:%fZ', 'now') FROM users WHERE handle='seed-jin' UNION ALL " +
-    "SELECT id, 'jin-translate', 'AI Translator', 'ai', 'Context-aware translation with glossary support.', strftime('%Y-%m-%dT%H:%M:%fZ', 'now') FROM users WHERE handle='seed-jin' UNION ALL " +
-    "SELECT id, 'jin-keywords', 'Keyword Extractor', 'ai', 'Pull the topics out of any text.', strftime('%Y-%m-%dT%H:%M:%fZ', 'now') FROM users WHERE handle='seed-jin' UNION ALL " +
-    "SELECT id, 'jin-headline', 'Headline Analyzer', 'ai', 'Score your headline for click-worthiness.', strftime('%Y-%m-%dT%H:%M:%fZ', 'now') FROM users WHERE handle='seed-jin' UNION ALL " +
-    "SELECT id, 'jin-resume', 'AI Resume Builder', 'ai', 'Tailored resume bullets from a job description.', strftime('%Y-%m-%dT%H:%M:%fZ', 'now') FROM users WHERE handle='seed-jin'",
-
-  // Leo — video/audio/convert.
-  "INSERT OR IGNORE INTO contributions (user_id, tool_slug, tool_name, category, description, contributed_at) " +
-    "SELECT id, 'leo-video-compress', 'Video Compressor', 'video', 'Smaller file, same playback.', strftime('%Y-%m-%dT%H:%M:%fZ', 'now') FROM users WHERE handle='seed-leo' UNION ALL " +
-    "SELECT id, 'leo-video-trim', 'Video Trimmer', 'video', 'Cut the dead air from the start and end.', strftime('%Y-%m-%dT%H:%M:%fZ', 'now') FROM users WHERE handle='seed-leo' UNION ALL " +
-    "SELECT id, 'leo-video-to-gif', 'Video to GIF', 'video', 'Pick the segment, get the loop.', strftime('%Y-%m-%dT%H:%M:%fZ', 'now') FROM users WHERE handle='seed-leo' UNION ALL " +
-    "SELECT id, 'leo-audio-transcribe', 'Audio Transcriber', 'video', 'Speech to text with timestamps.', strftime('%Y-%m-%dT%H:%M:%fZ', 'now') FROM users WHERE handle='seed-leo' UNION ALL " +
-    "SELECT id, 'leo-unit-convert', 'Unit Converter', 'converters', 'Length, weight, temperature, time, and more.', strftime('%Y-%m-%dT%H:%M:%fZ', 'now') FROM users WHERE handle='seed-leo' UNION ALL " +
-    "SELECT id, 'leo-color-palette', 'Color Palette Generator', 'converters', 'Pull a palette from any image.', strftime('%Y-%m-%dT%H:%M:%fZ', 'now') FROM users WHERE handle='seed-leo'",
-
-  // Nia — education/writing (newest creator).
-  "INSERT OR IGNORE INTO contributions (user_id, tool_slug, tool_name, category, description, contributed_at) " +
-    "SELECT id, 'nia-flashcards', 'Flashcard Maker', 'education', 'Spaced repetition, your way.', strftime('%Y-%m-%dT%H:%M:%fZ', 'now') FROM users WHERE handle='seed-nia' UNION ALL " +
-    "SELECT id, 'nia-lesson-plan', 'Lesson Plan Generator', 'education', 'Outline, objectives, activities — done.', strftime('%Y-%m-%dT%H:%M:%fZ', 'now') FROM users WHERE handle='seed-nia' UNION ALL " +
-    "SELECT id, 'nia-gpa', 'GPA Calculator', 'education', 'Weighted + unweighted, supports any scale.', strftime('%Y-%m-%dT%H:%M:%fZ', 'now') FROM users WHERE handle='seed-nia' UNION ALL " +
-    "SELECT id, 'nia-word-count', 'Word Counter', 'writing', 'Live count + reading time.', strftime('%Y-%m-%dT%H:%M:%fZ', 'now') FROM users WHERE handle='seed-nia'",
-
-  // Backdate some contributions so time-window filtering has signal.
-  // Jin's recent burst (today + this week).
-  "UPDATE contributions SET contributed_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-1 hours') WHERE tool_slug='jin-headline'",
-  "UPDATE contributions SET contributed_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-2 days') WHERE tool_slug='jin-keywords'",
-  "UPDATE contributions SET contributed_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-4 days') WHERE tool_slug='jin-translate'",
-  "UPDATE contributions SET contributed_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-6 days') WHERE tool_slug='jin-rewrite'",
-  "UPDATE contributions SET contributed_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-12 days') WHERE tool_slug='jin-summarize'",
-  // Mateo backdated (this month, outside week).
-  "UPDATE contributions SET contributed_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-15 days') WHERE tool_slug='mateo-tip'",
-  "UPDATE contributions SET contributed_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-22 days') WHERE tool_slug='mateo-bmi'",
-  // Zara backdated further (this month but not recent).
-  "UPDATE contributions SET contributed_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-10 days') WHERE tool_slug='zara-pdf-rotate'",
-  "UPDATE contributions SET contributed_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-18 days') WHERE tool_slug='zara-pdf-to-word'",
-  // Aria and Leo backdated well into the past (so they only show in all-time).
-  "UPDATE contributions SET contributed_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-90 days') WHERE user_id IN (SELECT id FROM users WHERE handle='seed-aria')",
-  "UPDATE contributions SET contributed_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-60 days') WHERE user_id IN (SELECT id FROM users WHERE handle='seed-leo')",
-  // Nia is the newest creator (joined yesterday).
-  "UPDATE users SET joined_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-1 days') WHERE handle='seed-nia'",
-  // Nia's recent contributions (this week + today).
-  "UPDATE contributions SET contributed_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-3 hours') WHERE tool_slug='nia-word-count'",
-  "UPDATE contributions SET contributed_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-2 days') WHERE tool_slug='nia-gpa'",
-  "UPDATE contributions SET contributed_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-5 days') WHERE tool_slug='nia-lesson-plan'",
-  "UPDATE contributions SET contributed_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-3 days') WHERE tool_slug='nia-flashcards'",
-
-  // Award badges based on the contribution patterns we just seeded.
-  // INSERT OR IGNORE so re-running the seed is a no-op.
-  "INSERT OR IGNORE INTO badges (user_id, badge) SELECT id, 'first-tool' FROM users WHERE handle LIKE 'seed-%'",
-  "INSERT OR IGNORE INTO badges (user_id, badge) SELECT id, 'pioneer' FROM users WHERE handle='seed-zara'",
-  // Jin is top-week + top-month (6 contributions in the last 30 days).
-  "INSERT OR IGNORE INTO badges (user_id, badge) SELECT id, 'top-week' FROM users WHERE handle='seed-jin'",
-  "INSERT OR IGNORE INTO badges (user_id, badge) SELECT id, 'top-month' FROM users WHERE handle='seed-jin'",
-  // Mateo has tools in 1 category, Jin in 1 — none get polyglot.
-  // Nia has 4 contributions in <30 days but only 1 category.
+const CREATORS = [
+  { handle: "seed-aria",  display_name: "Aria Sun",      avatar_seed: "aria-sun",      bio: "Privacy-first tools and image utilities." },
+  { handle: "seed-mateo", display_name: "Mateo Reyes",   avatar_seed: "mateo-reyes",   bio: "Calculator nerd. Mortgage and finance specialist." },
+  { handle: "seed-zara",  display_name: "Zara Patel",    avatar_seed: "zara-patel",    bio: "PDF and document workflow enthusiast." },
+  { handle: "seed-jin",   display_name: "Jin Park",      avatar_seed: "jin-park",      bio: "AI tools, daily. Currently obsessed with summarization." },
+  { handle: "seed-leo",   display_name: "Leo Andersen",  avatar_seed: "leo-andersen",  bio: "Video, audio, and file format everything." },
+  { handle: "seed-nia",   display_name: "Nia Okafor",    avatar_seed: "nia-okafor",    bio: "Education + study tools. Beta tester in chief." },
 ];
 
-for (const sql of STMT) {
-  try {
-    execSync(cmd(sql), { stdio: "inherit" });
-  } catch (err) {
-    console.error(`Failed: ${sql.split("\n")[0].slice(0, 80)}…`);
-    throw err;
-  }
+// Each contribution has a tool_slug (unique key), name, category, description,
+// and a `delayDays` offset from now — positive means "in the past", 0 = now.
+// Backdating is applied via UPDATE statements after the INSERTs so each
+// creator gets a realistic contribution timeline.
+const CONTRIBUTIONS = [
+  // Aria — 3 tools, all backdated 90 days so she's only in all-time.
+  { handle: "seed-aria", slug: "aria-image-compress", name: "Image Compressor", category: "image", description: "Drop a photo, get a smaller one. Nothing leaves your browser.", delayDays: 90 },
+  { handle: "seed-aria", slug: "aria-exif-strip",     name: "EXIF Stripper",     category: "image", description: "Remove GPS and camera metadata from JPEGs in one click.",       delayDays: 90 },
+  { handle: "seed-aria", slug: "aria-bg-remover",     name: "Background Remover",category: "image", description: "Cut out the subject, keep the pixels that matter.",              delayDays: 90 },
+
+  // Mateo — 4 calculators, mix of past + recent.
+  { handle: "seed-mateo", slug: "mateo-mortgage",  name: "Mortgage Calculator",  category: "calculators", description: "Monthly payment + amortization schedule.", delayDays: 30 },
+  { handle: "seed-mateo", slug: "mateo-loan-amort",name: "Loan Amortization",    category: "calculators", description: "See exactly where each payment goes.",     delayDays: 30 },
+  { handle: "seed-mateo", slug: "mateo-bmi",       name: "BMI Calculator",       category: "calculators", description: "Body mass index + healthy range.",         delayDays: 22 },
+  { handle: "seed-mateo", slug: "mateo-tip",       name: "Tip Calculator",       category: "calculators", description: "Split the bill without the awkward math.", delayDays: 15 },
+
+  // Zara — 5 PDF tools, mid-range dates.
+  { handle: "seed-zara", slug: "zara-pdf-merge",    name: "PDF Merger",    category: "pdf", description: "Combine PDFs without uploading them anywhere.", delayDays: 25 },
+  { handle: "seed-zara", slug: "zara-pdf-split",    name: "PDF Splitter",  category: "pdf", description: "Pick the pages you want, get a new PDF.",     delayDays: 25 },
+  { handle: "seed-zara", slug: "zara-pdf-compress", name: "PDF Compressor",category: "pdf", description: "Smaller file, same content.",                delayDays: 20 },
+  { handle: "seed-zara", slug: "zara-pdf-to-word",  name: "PDF to Word",   category: "pdf", description: "Editable .docx from a PDF.",                 delayDays: 18 },
+  { handle: "seed-zara", slug: "zara-pdf-rotate",   name: "PDF Rotator",   category: "pdf", description: "Rotate one page or all of them.",            delayDays: 10 },
+
+  // Jin — 6 AI tools, recent burst (today + this week).
+  { handle: "seed-jin", slug: "jin-summarize", name: "Text Summarizer",     category: "ai", description: "TL;DR for any document.",                       delayDays: 12 },
+  { handle: "seed-jin", slug: "jin-rewrite",   name: "Tone Rewriter",       category: "ai", description: "Formal, casual, friendly — pick a vibe.",       delayDays: 6 },
+  { handle: "seed-jin", slug: "jin-translate", name: "AI Translator",       category: "ai", description: "Context-aware translation with glossary support.", delayDays: 4 },
+  { handle: "seed-jin", slug: "jin-keywords",  name: "Keyword Extractor",   category: "ai", description: "Pull the topics out of any text.",             delayDays: 2 },
+  { handle: "seed-jin", slug: "jin-headline",  name: "Headline Analyzer",   category: "ai", description: "Score your headline for click-worthiness.",    delayDays: 0 },
+  { handle: "seed-jin", slug: "jin-resume",    name: "AI Resume Builder",   category: "ai", description: "Tailored resume bullets from a job description.", delayDays: 8 },
+
+  // Leo — 6 video/audio/convert tools, all backdated 60 days.
+  { handle: "seed-leo", slug: "leo-video-compress",   name: "Video Compressor",       category: "video", description: "Smaller file, same playback.",                delayDays: 60 },
+  { handle: "seed-leo", slug: "leo-video-trim",       name: "Video Trimmer",          category: "video", description: "Cut the dead air from the start and end.",    delayDays: 60 },
+  { handle: "seed-leo", slug: "leo-video-to-gif",     name: "Video to GIF",           category: "video", description: "Pick the segment, get the loop.",             delayDays: 60 },
+  { handle: "seed-leo", slug: "leo-audio-transcribe", name: "Audio Transcriber",      category: "video", description: "Speech to text with timestamps.",             delayDays: 60 },
+  { handle: "seed-leo", slug: "leo-unit-convert",     name: "Unit Converter",         category: "converters", description: "Length, weight, temperature, time, and more.", delayDays: 60 },
+  { handle: "seed-leo", slug: "leo-color-palette",    name: "Color Palette Generator",category: "converters", description: "Pull a palette from any image.",              delayDays: 60 },
+
+  // Nia — 4 education/writing tools, very recent (she's the newest creator).
+  { handle: "seed-nia", slug: "nia-flashcards",   name: "Flashcard Maker",      category: "education", description: "Spaced repetition, your way.",         delayDays: 3 },
+  { handle: "seed-nia", slug: "nia-lesson-plan",  name: "Lesson Plan Generator",category: "education", description: "Outline, objectives, activities — done.", delayDays: 5 },
+  { handle: "seed-nia", slug: "nia-gpa",          name: "GPA Calculator",       category: "education", description: "Weighted + unweighted, supports any scale.", delayDays: 2 },
+  { handle: "seed-nia", slug: "nia-word-count",   name: "Word Counter",         category: "writing",  description: "Live count + reading time.",            delayDays: 0 },
+];
+
+// Badges awarded to creators based on their contribution patterns.
+// `seed-nia` has joined_at = now-1 day, others default to now (so she's
+// always the "featured" creator at the top of the page).
+const BADGES = [
+  // Every creator gets first-tool.
+  ...CREATORS.map((c) => ({ handle: c.handle, badge: "first-tool" })),
+  // Zara is a pioneer (early contributor).
+  { handle: "seed-zara", badge: "pioneer" },
+  // Jin is ranked #1 this week and this month.
+  { handle: "seed-jin", badge: "top-week" },
+  { handle: "seed-jin", badge: "top-month" },
+];
+
+// ---------------------------------------------------------------------------
+// Apply the seed
+// ---------------------------------------------------------------------------
+
+console.log(`Seeding widgetly D1 (${target})...`);
+
+// 1. Wipe existing seed data so re-runs are deterministic.
+console.log("  → wiping previous seed data");
+run("DELETE FROM badges WHERE user_id IN (SELECT id FROM users WHERE handle LIKE 'seed-%')");
+run("DELETE FROM contributions WHERE user_id IN (SELECT id FROM users WHERE handle LIKE 'seed-%')");
+run("DELETE FROM users WHERE handle LIKE 'seed-%'");
+
+// 2. Insert creators.
+console.log(`  → inserting ${CREATORS.length} creators`);
+for (const c of CREATORS) {
+  const sql =
+    `INSERT OR IGNORE INTO users (handle, display_name, avatar_seed, bio) VALUES ` +
+    `('${c.handle}', '${c.display_name.replace(/'/g, "''")}', '${c.avatar_seed}', '${c.bio.replace(/'/g, "''")}')`;
+  run(sql);
+}
+
+// 3. Insert contributions one row at a time.
+//    We use a temp user_id lookup via the unique handle — SQLite doesn't
+//    support INSERT ... SELECT ... with a runtime param in wrangler's
+//    --command mode, so the simplest approach is: insert, then UPDATE
+//    contributed_at to backdate.
+console.log(`  → inserting ${CONTRIBUTIONS.length} contributions`);
+for (const c of CONTRIBUTIONS) {
+  const sql =
+    `INSERT OR IGNORE INTO contributions (user_id, tool_slug, tool_name, category, description) ` +
+    `SELECT id, '${c.slug}', '${c.name.replace(/'/g, "''")}', '${c.category}', ` +
+    `'${c.description.replace(/'/g, "''")}' FROM users WHERE handle = '${c.handle}'`;
+  run(sql);
+}
+
+// 4. Backdate each contribution to its `delayDays` offset from now.
+console.log("  → backdating contributed_at");
+for (const c of CONTRIBUTIONS) {
+  const days = c.delayDays;
+  const offset =
+    days === 0
+      ? "0 hours"
+      : days < 1
+        ? `${Math.round(days * 24)} hours`
+        : `-${days} days`;
+  const sql =
+    `UPDATE contributions SET contributed_at = ` +
+    `strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '${offset}') ` +
+    `WHERE tool_slug = '${c.slug}'`;
+  run(sql);
+}
+
+// 5. Backdate Nia's joined_at to yesterday (she's the newest creator, so
+//    she shows up as the "featured" creator at the top of the leaderboard).
+console.log("  → backdating Nia's joined_at to yesterday");
+run(
+  "UPDATE users SET joined_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-1 days') " +
+    "WHERE handle = 'seed-nia'"
+);
+
+// 6. Award badges.
+console.log(`  → awarding ${BADGES.length} badges`);
+for (const b of BADGES) {
+  const sql =
+    `INSERT OR IGNORE INTO badges (user_id, badge) ` +
+    `SELECT id, '${b.badge}' FROM users WHERE handle = '${b.handle}'`;
+  run(sql);
 }
 
 console.log("Leaderboard seed complete.");
