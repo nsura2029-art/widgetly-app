@@ -310,10 +310,7 @@ function TabBar({
   labels: Record<LeaderboardWindow, string>;
 }) {
   return (
-    <nav
-      aria-label={tabsLabel}
-      className="border-border/60 bg-muted/5 rounded-xl border p-1.5"
-    >
+    <nav aria-label={tabsLabel} className="border-border/60 bg-muted/5 rounded-xl border p-1.5">
       <ul className="grid grid-cols-2 gap-1.5 sm:flex sm:flex-wrap">
         {LEADERBOARD_WINDOWS.map((w) => {
           const Icon = TAB_ICONS[w];
