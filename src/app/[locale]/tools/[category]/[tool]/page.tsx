@@ -5,6 +5,7 @@ import { ArrowRight, Bell, Sparkles, Zap, Lock, Smartphone, Check } from "lucide
 import { getTranslations } from "next-intl/server";
 
 import { PageShell } from "@/components/layout/page-shell";
+import { BreadcrumbConfig } from "@/components/layout/breadcrumb-nav";
 import { Badge } from "@/components/ui/badge";
 import { buildMetadata } from "@/lib/seo";
 import {
@@ -175,34 +176,22 @@ export default async function ToolDetailPage({ params }: { params: Promise<Param
 
   return (
     <PageShell width="wide" asArticle>
+      {/* Override the global breadcrumb so it uses the same proper
+          category/tool names the visible breadcrumb shows below. Without
+          this, the global breadcrumb renders a duplicate "Home > Tools >
+          calculators > Bmi Calculator" trail using the raw slugs. */}
+      <BreadcrumbConfig
+        customLabels={{
+          tools: "Tools",
+          [cat.slug]: cat.name,
+          [toolPage.slug]: toolPage.name,
+        }}
+        suppressSchema
+      />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-
-      {/* Breadcrumb (visible) */}
-      <nav
-        aria-label="Breadcrumb"
-        className="text-muted-foreground mb-6 flex flex-wrap items-center gap-1.5 text-xs"
-      >
-        <Link href="/" className="hover:text-foreground transition-colors">
-          Home
-        </Link>
-        <span aria-hidden="true">/</span>
-        <Link href="/tools" className="hover:text-foreground transition-colors">
-          Tools
-        </Link>
-        <span aria-hidden="true">/</span>
-        <Link
-          href={`/tools/${cat.slug}`}
-          prefetch={false}
-          className="hover:text-foreground transition-colors"
-        >
-          {cat.name}
-        </Link>
-        <span aria-hidden="true">/</span>
-        <span className="text-foreground font-medium">{toolPage.name}</span>
-      </nav>
 
       {/* Hero */}
       <header className="grid items-start gap-8 md:grid-cols-[auto_minmax(0,1fr)] md:gap-10">

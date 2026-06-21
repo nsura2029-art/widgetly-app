@@ -1,4 +1,5 @@
-import { SITE_CONFIG, CATEGORIES } from "./constants";
+import { SITE_CONFIG } from "./constants";
+import { TOOLS_CATEGORIES } from "./tools-categories";
 import { isSupportedLocale } from "@/i18n/config";
 
 /**
@@ -69,10 +70,11 @@ export type GenerateBreadcrumbsOptions = {
  */
 const KNOWN_LABELS: Record<string, string> = {
   home: "Home",
-  // Categories (auto-derived from CATEGORIES below for type safety)
-  ...Object.fromEntries(
-    CATEGORIES.map((c) => [c.slug, c.slug] as const) // category names resolved at render time via t(),
-  ),
+  // Categories — use the display name from TOOLS_CATEGORIES so the
+  // global breadcrumb shows "Calculators" not "calculators". The
+  // tool page passes `cat.name` too, but until its BreadcrumbConfig
+  // takes effect after hydration, this is what users see.
+  ...Object.fromEntries(TOOLS_CATEGORIES.map((c) => [c.slug, c.name] as const)),
   // Top-level sections
   blog: "Blog",
   about: "About",
@@ -143,6 +145,8 @@ const UPPERCASE_ALLOWLIST = new Set([
   "yaml",
   "dom",
   "sql",
+  "bmi",
+  "ocr",
   "xml",
   "rest",
   "gps",

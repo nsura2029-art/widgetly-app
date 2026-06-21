@@ -55,6 +55,7 @@ export default function ClientHeader() {
 
   const navLinks = [
     { href: "/tools", label: t("header.nav.tools") },
+    { href: "/leaderboard", label: t("header.nav.leaderboard") },
     { href: "/#features", label: t("header.nav.features") },
     { href: "/#categories", label: t("header.nav.categories") },
     { href: "/blog", label: t("header.nav.blog") },

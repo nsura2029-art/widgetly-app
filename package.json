@@ -41,7 +41,9 @@
     "db:create": "wrangler d1 create widgetly",
     "db:info": "wrangler d1 info widgetly",
     "db:console:local": "wrangler d1 execute widgetly --local --command",
-    "db:console:remote": "wrangler d1 execute widgetly --remote --command"
+    "db:console:remote": "wrangler d1 execute widgetly --remote --command",
+    "db:seed:local": "node scripts/seed-leaderboard.mjs",
+    "db:seed:remote": "node scripts/seed-leaderboard.mjs --remote"
   },
   "remotion": {
     "webpackOverride": "./remotion/webpack.override.js"
