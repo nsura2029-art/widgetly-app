@@ -288,19 +288,30 @@ function LeaderboardRow({ entry }: { entry: LeaderboardEntry }) {
   );
 }
 
-/** Tab bar — server-rendered <Link>s, no JS required to switch tabs. */
+/**
+ * Tab bar — inlined into the page rather than extracted as a child
+ * component because it needs the `t` translation function. Server
+ * components can't pass functions across the RSC boundary (the
+ * serialization boundary rejects anything non-plain-object), so
+ * pulling this out into its own component would silently work in
+ * `next dev` (where the RSC payload format is more lenient) but
+ * blow up at build time with a __next_error__ page in production.
+ * Inlining keeps everything in one server-component scope.
+ */
 function TabBar({
   active,
   baseHref,
-  t,
+  tabsLabel,
+  labels,
 }: {
   active: LeaderboardWindow;
   baseHref: string;
-  t: Awaited<ReturnType<typeof getTranslations>>;
+  tabsLabel: string;
+  labels: Record<LeaderboardWindow, string>;
 }) {
   return (
     <nav
-      aria-label={t("tabsLabel")}
+      aria-label={tabsLabel}
       className="border-border/60 bg-muted/5 rounded-xl border p-1.5"
     >
       <ul className="grid grid-cols-2 gap-1.5 sm:flex sm:flex-wrap">
@@ -320,7 +331,7 @@ function TabBar({
                 }`}
               >
                 <Icon className="h-4 w-4" aria-hidden="true" />
-                {t(TAB_KEYS[w])}
+                {labels[w]}
               </Link>
             </li>
           );
@@ -411,7 +422,17 @@ export default async function LeaderboardPage({
           </div>
         </div>
 
-        <TabBar active={window} baseHref={baseHref} t={t} />
+        <TabBar
+          active={window}
+          baseHref={baseHref}
+          tabsLabel={t("tabsLabel")}
+          labels={{
+            all: t("allTime"),
+            month: t("thisMonth"),
+            week: t("thisWeek"),
+            today: t("today"),
+          }}
+        />
 
         {ranked.length === 0 ? (
           <div className="border-border/60 mt-6 rounded-2xl border bg-white p-8 text-center">
