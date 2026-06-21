@@ -19,6 +19,7 @@ import { PageShell } from "@/components/layout/page-shell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { buildMetadata } from "@/lib/seo";
+import { ExpandableTools } from "./expandable-tools";
 import {
   getFeaturedCreator,
   getLeaderboard,
@@ -238,28 +239,7 @@ function LeaderboardRow({ entry }: { entry: LeaderboardEntry }) {
         </div>
       </div>
 
-      {entry.tools.length > 0 && (
-        <div className="border-border/60 border-t pt-3">
-          <div className="text-muted mb-2 text-[10px] font-semibold tracking-wider uppercase">
-            Recent tools
-          </div>
-          <ul className="flex flex-wrap gap-1.5">
-            {entry.tools.slice(0, 4).map((t) => (
-              <li key={t.slug}>
-                <Link
-                  href={`/tools/${t.category}/${t.slug}`}
-                  className="border-border bg-muted/5 hover:bg-muted/10 text-foreground inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs transition-colors"
-                >
-                  {t.name}
-                </Link>
-              </li>
-            ))}
-            {entry.tools.length > 4 && (
-              <li className="text-muted self-center text-xs">+{entry.tools.length - 4} more</li>
-            )}
-          </ul>
-        </div>
-      )}
+      {entry.tools.length > 0 && <ExpandableTools tools={entry.tools} />}
 
       {entry.badges.length > 0 && (
         <div className="border-border/60 border-t pt-3">
@@ -351,16 +331,7 @@ export default async function LeaderboardPage({
   const window = normalizeLeaderboardWindow(sp.window);
   const t = await getTranslations("leaderboard");
 
-  let featured: Awaited<ReturnType<typeof getFeaturedCreator>> = null;
-  let ranked: Awaited<ReturnType<typeof getLeaderboard>> = [];
-  let fetchError: string | null = null;
-  try {
-    [featured, ranked] = await Promise.all([getFeaturedCreator(), getLeaderboard(window, 30)]);
-  } catch (err) {
-    fetchError = err instanceof Error ? err.message : String(err);
-    console.error("LEADERBOARD_FETCH_ERROR:", fetchError);
-    // Fall through with empty results — page renders the empty state.
-  }
+  const [featured, ranked] = await Promise.all([getFeaturedCreator(), getLeaderboard(window, 30)]);
 
   const baseHref = `/${locale}/leaderboard`;
 
@@ -404,11 +375,7 @@ export default async function LeaderboardPage({
             <p className="text-muted mx-auto mt-2 max-w-md text-sm leading-relaxed">
               {t("noCreatorsBody")}
             </p>
-            {fetchError && (
-              <pre className="mt-4 max-w-2xl overflow-x-auto rounded-lg border border-rose-200 bg-rose-50 p-3 text-left text-xs text-rose-700">
-                {fetchError}
-              </pre>
-            )}
+
             <Button asChild className="mt-6">
               <Link href="/suggest">
                 {t("contributeCta")}

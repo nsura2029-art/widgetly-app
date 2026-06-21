@@ -389,7 +389,21 @@
     },
     "topTitle": "Solicitudes más populares en este momento",
     "topSubtitle": "Lo que está votando la comunidad. Elige una herramienta para ver su página completa y votar a favor.",
-    "upvoteCta": "Votar a favor"
+    "upvoteCta": "Votar a favor",
+    "filters": {
+      "label": "Filtrar y ordenar sugerencias",
+      "allCategories": "Todas las categorías",
+      "allStatuses": "Todos los estados",
+      "sortMostVoted": "Más votadas",
+      "sortNewest": "Más recientes",
+      "sortRecentlyBuilt": "Construidas recientemente",
+      "statusInReview": "En revisión",
+      "statusBuilding": "En construcción",
+      "statusLive": "En vivo",
+      "statusRejected": "Rechazadas",
+      "live": "Resultados en vivo",
+      "updating": "Actualizando…"
+    }
   },
   "blog": {
     "posts": {
