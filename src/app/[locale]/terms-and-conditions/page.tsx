@@ -4,7 +4,7 @@ import TermsContent, { lastUpdated, PLAIN_ENGLISH } from "@/content/legal/terms-
 import { buildMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = buildMetadata({
-  title: "Terms & Conditions",
+  title: "Terms of Service",
   description: "Review the terms governing your use of Widgetly.",
   path: "/terms-and-conditions",
 });
@@ -25,12 +25,17 @@ const RELATED = [
     href: "/security",
     description: "How we protect your data and the Service.",
   },
+  {
+    label: "Data Processing Agreement",
+    href: "/dpa",
+    description: "If you process data on behalf of your users, this is for you.",
+  },
 ];
 
 export default function TermsPage() {
   return (
     <LegalLayout
-      title="Terms & Conditions"
+      title="Terms of Service"
       subtitle="The rules that govern your use of Widgetly. Plain-English summary at the top — the legal version below."
       toc={[
         { id: "acceptance", label: "Acceptance of terms" },

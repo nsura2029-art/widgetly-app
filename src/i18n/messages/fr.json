@@ -31,9 +31,9 @@
     }
   },
   "footer": {
+    "tagline": "Plus de 500 outils gratuits. Une plateforme puissante. Rapide, pour tous. Confidentialité d'abord, zéro pub.",
     "columns": {
-      "product": "Produit",
-      "resources": "Ressources",
+      "tools": "Outils",
       "company": "Entreprise",
       "legal": "Mentions légales"
     },
@@ -52,12 +52,20 @@
       "about": "À propos",
       "contact": "Contact",
       "privacy": "Politique de confidentialité",
-      "terms": "Conditions générales",
-      "cookies": "Politique en matière de cookies",
+      "terms": "Conditions de Service",
+      "cookies": "Politique de Cookies",
       "security": "Sécurité",
+      "dpa": "Accord de Traitement des Données",
       "github": "GitHub",
       "twitter": "Twitter",
-      "discord": "Discord"
+      "discord": "Discord",
+      "imageEditor": "Éditeur d'Images",
+      "seoSuite": "Suite SEO",
+      "developer": "Développement",
+      "videoTools": "Outils Vidéo",
+      "roadmap": "Feuille de Route",
+      "careers": "Carrières",
+      "feedback": "Retours"
     },
     "copyright": "© {year} {siteName}. Tous droits réservés.",
     "builtWith": "Conçu avec soin. Déployé sur {platform}."
@@ -146,6 +154,12 @@
       "pill": "FAQ",
       "title": "Foire aux questions",
       "subtitle": "Tout ce que vous devez savoir sur Widgetly, la plateforme et son lancement."
+    },
+    "categoriesShowcase": {
+      "title": "Tous les outils qu'il vous faut, au même endroit",
+      "subtitle": "Des éditeurs PDF aux rédacteurs IA — plus de 500 outils gratuits, zéro installation",
+      "badge": "Plus de 500 outils disponibles",
+      "exploreCta": "Explorer tous les outils"
     }
   },
   "faq": {
@@ -189,57 +203,68 @@
       "pdf": {
         "name": "Outils PDF",
         "shortDesc": "Fusionner, diviser, compresser, convertir",
-        "longDesc": "Outils PDF en ligne gratuits : fusionner, diviser, compresser, convertir en Word/Excel/JPG, modifier, signer, protéger. Aucune limite de téléchargement, aucun filigrane, fonctionne dans votre navigateur."
+        "longDesc": "Outils PDF en ligne gratuits : fusionner, diviser, compresser, convertir en Word/Excel/JPG, modifier, signer, protéger. Aucune limite de téléchargement, aucun filigrane, fonctionne dans votre navigateur.",
+        "shortName": "PDF"
       },
       "image": {
         "name": "Outils d'image",
         "shortDesc": "Redimensionner, recadrer, convertir, optimiser",
-        "longDesc": "Éditeur d'images en ligne : redimensionner, recadrer, compresser, convertir entre JPG, PNG, WebP, SVG, AVIF. Suppression d'arrière-plan, filigranes, filtres et traitement par lots."
+        "longDesc": "Éditeur d'images en ligne : redimensionner, recadrer, compresser, convertir entre JPG, PNG, WebP, SVG, AVIF. Suppression d'arrière-plan, filigranes, filtres et traitement par lots.",
+        "shortName": "Image"
       },
       "video": {
         "name": "Outils vidéo",
         "shortDesc": "Compresser, découper, transcrire",
-        "longDesc": "Outils vidéo basés sur navigateur : compresser, découper, couper, fusionner, transcrire l'audio en texte, générer des sous-titres, convertir en MP4, WebM, GIF. Aucun logiciel à installer."
+        "longDesc": "Outils vidéo basés sur navigateur : compresser, découper, couper, fusionner, transcrire l'audio en texte, générer des sous-titres, convertir en MP4, WebM, GIF. Aucun logiciel à installer.",
+        "shortName": "Vidéo"
       },
       "ai": {
         "name": "Outils IA",
         "shortDesc": "Rédiger, résumer, générer",
-        "longDesc": "Outils IA gratuits pour rédiger, résumer, réécrire, traduire, générer des images, créer des CV et répondre à des questions. Optimisés par les derniers modèles de langage (LLM)."
+        "longDesc": "Outils IA gratuits pour rédiger, résumer, réécrire, traduire, générer des images, créer des CV et répondre à des questions. Optimisés par les derniers modèles de langage (LLM).",
+        "shortName": "IA"
       },
       "calculators": {
         "name": "Calculatrices",
         "shortDesc": "Finance, mathématiques, santé, et plus encore",
-        "longDesc": "Des centaines de calculatrices en ligne gratuites : hypothèque, prêt, IMC, calories, pourboire, pourcentage, âge, moyenne générale, notes, calculatrices scientifiques, financières, de santé et mathématiques."
+        "longDesc": "Des centaines de calculatrices en ligne gratuites : hypothèque, prêt, IMC, calories, pourboire, pourcentage, âge, moyenne générale, notes, calculatrices scientifiques, financières, de santé et mathématiques.",
+        "shortName": "Calc"
       },
       "converters": {
         "name": "Convertisseurs",
         "shortDesc": "Unités, devises, formats",
-        "longDesc": "Convertisseurs gratuits d'unités, de devises et de formats de fichiers : longueur, poids, température, surface, volume, temps, vitesse, données, codes couleur et plus de 150 devises avec des taux en temps réel."
+        "longDesc": "Convertisseurs gratuits d'unités, de devises et de formats de fichiers : longueur, poids, température, surface, volume, temps, vitesse, données, codes couleur et plus de 150 devises avec des taux en temps réel.",
+        "shortName": "Convertir"
       },
       "seo": {
         "name": "Outils SEO",
         "shortDesc": "Mots-clés, balises méta, audit",
-        "longDesc": "Outils SEO gratuits : générateur de balises méta, vérificateur de densité de mots-clés, générateur de plan du site, testeur de robots.txt, aperçu SERP, vérificateur de backlinks, analyse de la vitesse des pages."
+        "longDesc": "Outils SEO gratuits : générateur de balises méta, vérificateur de densité de mots-clés, générateur de plan du site, testeur de robots.txt, aperçu SERP, vérificateur de backlinks, analyse de la vitesse des pages.",
+        "shortName": "SEO"
       },
       "education": {
         "name": "Outils pédagogiques",
         "shortDesc": "Plans de cours, quiz, révision",
-        "longDesc": "Outils pour enseignants et élèves : générateur de plans de cours, créateur de quiz, fiches de révision, minuteur d'étude, calculateur de moyenne générale, générateur de citations, solveur mathématique, sujets de rédaction."
+        "longDesc": "Outils pour enseignants et élèves : générateur de plans de cours, créateur de quiz, fiches de révision, minuteur d'étude, calculateur de moyenne générale, générateur de citations, solveur mathématique, sujets de rédaction.",
+        "shortName": "Édu"
       },
       "developer": {
         "name": "Outils pour développeurs",
         "shortDesc": "JSON, expressions régulières, encodeurs",
-        "longDesc": "Utilitaires gratuits pour développeurs : formateur et validateur JSON, testeur d'expressions régulières, encodeur Base64, encodeur d'URL, décodeur JWT, minificateur CSS, vérificateur de différences, générateur de hachage."
+        "longDesc": "Utilitaires gratuits pour développeurs : formateur et validateur JSON, testeur d'expressions régulières, encodeur Base64, encodeur d'URL, décodeur JWT, minificateur CSS, vérificateur de différences, générateur de hachage.",
+        "shortName": "Dev"
       },
       "business": {
         "name": "Outils professionnels",
         "shortDesc": "Factures, contrats, propositions",
-        "longDesc": "Outils de productivité professionnelle : générateur de factures, modèles de contrats, créateur de propositions, générateur d'accords de confidentialité, modèles de business plans, analyse SWOT, suivi des OKR."
+        "longDesc": "Outils de productivité professionnelle : générateur de factures, modèles de contrats, créateur de propositions, générateur d'accords de confidentialité, modèles de business plans, analyse SWOT, suivi des OKR.",
+        "shortName": "Pro"
       },
       "writing": {
         "name": "Outils de rédaction",
         "shortDesc": "Mots, grammaire, reformulation",
-        "longDesc": "Outils de rédaction gratuits : compteur de mots, compteur de caractères, correcteur grammatical, reformulateur, réécriture de ton, analyseur de titres, score de lisibilité, générateur de lorem ipsum."
+        "longDesc": "Outils de rédaction gratuits : compteur de mots, compteur de caractères, correcteur grammatical, reformulateur, réécriture de ton, analyseur de titres, score de lisibilité, générateur de lorem ipsum.",
+        "shortName": "Écrire"
       }
     }
   },
