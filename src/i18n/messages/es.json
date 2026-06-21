@@ -11,7 +11,8 @@
       "categories": "Categorías",
       "blog": "Blog",
       "about": "Acerca de",
-      "contact": "Contacto"
+      "contact": "Contacto",
+      "leaderboard": "Clasificación"
     },
     "actions": {
       "star": "Estrella",
@@ -482,5 +483,61 @@
     "exploreOtherCategoriesTitle": "Explore other categories",
     "schemaBreadcrumbCategory": "{categoryName}",
     "schemaBreadcrumbTool": "{toolName}"
+  },
+  "leaderboard": {
+    "title": "Clasificación",
+    "subtitle": "Las personas que construyen herramientas en Widgetly. Clasificadas por contribuciones, con insignias por hitos.",
+    "featuredHeading": "Destacado de la semana",
+    "featuredSubtitle": "Creador más reciente en la clasificación.",
+    "tabsLabel": "Time window",
+    "allTime": "Todo el tiempo",
+    "thisMonth": "Este mes",
+    "thisWeek": "Esta semana",
+    "today": "Hoy",
+    "contributions_one": "{count} contribution",
+    "contributions_other": "{count} contributions",
+    "tools_one": "{count} tool",
+    "tools_other": "{count} tools",
+    "rank": "Rank",
+    "creator": "Creator",
+    "badges": "Badges",
+    "noCreatorsTitle": "No contributors yet",
+    "noCreatorsBody": "Be the first to ship a tool to the Widgetly library. Your name will land at the top.",
+    "contributeCta": "Sugerir una herramienta",
+    "empty": "No creators ranked in this window yet.",
+    "badge": {
+      "first-tool": {
+        "name": "First Tool",
+        "description": "Shipped their first tool to the platform."
+      },
+      "pioneer": {
+        "name": "Pioneer",
+        "description": "Early contributor to the Widgetly library."
+      },
+      "top-week": {
+        "name": "Top This Week",
+        "description": "Ranked #1 in the last 7 days."
+      },
+      "top-month": {
+        "name": "Top This Month",
+        "description": "Ranked #1 in the last 30 days."
+      },
+      "top-all": {
+        "name": "All-Time #1",
+        "description": "Top of the all-time leaderboard."
+      },
+      "polyglot": {
+        "name": "Polyglot",
+        "description": "Contributed tools across 4+ categories."
+      },
+      "streak-7": {
+        "name": "7-Day Streak",
+        "description": "Contributed on 7+ distinct days in a month."
+      },
+      "streak-30": {
+        "name": "30-Day Streak",
+        "description": "Contributed on 20+ distinct days in a quarter."
+      }
+    }
   }
 }
