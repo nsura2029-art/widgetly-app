@@ -389,7 +389,21 @@
     },
     "topTitle": "Demandes les plus populaires du moment",
     "topSubtitle": "Ce sur quoi la communauté vote. Choisissez un outil pour voir sa page complète et voter pour lui.",
-    "upvoteCta": "Voter pour"
+    "upvoteCta": "Voter pour",
+    "filters": {
+      "label": "Filtrer et trier les suggestions",
+      "allCategories": "Toutes les catégories",
+      "allStatuses": "Tous les statuts",
+      "sortMostVoted": "Les plus votées",
+      "sortNewest": "Les plus récentes",
+      "sortRecentlyBuilt": "Récemment construites",
+      "statusInReview": "En revue",
+      "statusBuilding": "En construction",
+      "statusLive": "En ligne",
+      "statusRejected": "Rejetées",
+      "live": "Résultats en direct",
+      "updating": "Mise à jour…"
+    }
   },
   "blog": {
     "posts": {

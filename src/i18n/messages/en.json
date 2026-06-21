@@ -389,7 +389,21 @@
     },
     "topTitle": "Top requests right now",
     "topSubtitle": "What the community is voting on. Pick a tool to see its full page and upvote.",
-    "upvoteCta": "Upvote"
+    "upvoteCta": "Upvote",
+    "filters": {
+      "label": "Filter and sort suggestions",
+      "allCategories": "All categories",
+      "allStatuses": "All statuses",
+      "sortMostVoted": "Most voted",
+      "sortNewest": "Newest",
+      "sortRecentlyBuilt": "Recently built",
+      "statusInReview": "In review",
+      "statusBuilding": "Building",
+      "statusLive": "Live",
+      "statusRejected": "Rejected",
+      "live": "Live results",
+      "updating": "Updating…"
+    }
   },
   "blog": {
     "posts": {

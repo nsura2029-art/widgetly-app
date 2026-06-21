@@ -18,6 +18,7 @@ import {
 import { buildMetadata } from "@/lib/seo";
 import { SUGGESTIONS } from "@/lib/suggestions-seed";
 import { SuggestionBoardClient } from "./suggestion-board-client";
+import { SuggestionFilters } from "./suggestion-filters";
 import type { PublicSuggestion } from "./suggestion-ui";
 
 export const revalidate = 60;
@@ -173,44 +174,7 @@ export default async function SuggestPage({
         </Button>
       </header>
 
-      <form className="border-border/60 shadow-soft mt-8 grid gap-3 rounded-2xl border bg-white/75 p-4 backdrop-blur md:grid-cols-4">
-        <select
-          name="category"
-          defaultValue={category ?? "all"}
-          className="border-border h-11 rounded-xl border bg-white px-3 text-sm"
-        >
-          <option value="all">All categories</option>
-          {SUGGESTION_CATEGORIES.map((item) => (
-            <option key={item} value={item}>
-              {item}
-            </option>
-          ))}
-        </select>
-        <select
-          name="status"
-          defaultValue={status ?? "all"}
-          className="border-border h-11 rounded-xl border bg-white px-3 text-sm"
-        >
-          <option value="all">All statuses</option>
-          {SUGGESTION_STATUSES.map((item) => (
-            <option key={item} value={item}>
-              {suggestionStatusLabel(item)}
-            </option>
-          ))}
-        </select>
-        <select
-          name="sort"
-          defaultValue={sort}
-          className="border-border h-11 rounded-xl border bg-white px-3 text-sm"
-        >
-          <option value="most_voted">Most Voted</option>
-          <option value="newest">Newest</option>
-          <option value="recently_built">Recently Built</option>
-        </select>
-        <Button type="submit" variant="secondary">
-          Apply filters
-        </Button>
-      </form>
+      <SuggestionFilters />
 
       <div className="text-muted mt-5 text-sm">
         Showing {suggestions.length.toLocaleString()} of {total.toLocaleString()} suggestions
