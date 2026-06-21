@@ -351,7 +351,14 @@ export default async function LeaderboardPage({
   const window = normalizeLeaderboardWindow(sp.window);
   const t = await getTranslations("leaderboard");
 
-  const [featured, ranked] = await Promise.all([getFeaturedCreator(), getLeaderboard(window, 30)]);
+  let featured: Awaited<ReturnType<typeof getFeaturedCreator>> = null;
+  let ranked: Awaited<ReturnType<typeof getLeaderboard>> = [];
+  try {
+    [featured, ranked] = await Promise.all([getFeaturedCreator(), getLeaderboard(window, 30)]);
+  } catch (err) {
+    console.error("LEADERBOARD_FETCH_ERROR:", err instanceof Error ? err.message : String(err));
+    // Fall through with empty results — page renders the empty state.
+  }
 
   const baseHref = `/${locale}/leaderboard`;
 
