@@ -1,0 +1,54 @@
+name: Seed Leaderboard (D1)
+
+# Manually-triggered workflow that populates the remote D1 with the
+# demo leaderboard data (6 fictional creators, 30 tools, badges).
+#
+# Why workflow_dispatch only:
+#   - Running `pnpm db:seed:remote` needs a CLOUDFLARE_API_TOKEN, which
+#     only lives in GitHub Actions secrets (not the developer's shell
+#     or the chat tool).
+#   - Putting the workflow behind a manual trigger means we never seed
+#     accidentally on a push. Seeding rewrites seed-* users/contributions;
+#     production user data (added later) isn't touched because the seed
+#     filters by `handle LIKE 'seed-%'`.
+#
+# Re-runnable: the underlying script (scripts/seed-leaderboard.mjs) is
+# idempotent — uses INSERT OR IGNORE on unique slugs/handles plus the
+# uq_badges_user_kind unique index, so re-running just refreshes the
+# backdated contributed_at timestamps.
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: seed-leaderboard
+  cancel-in-progress: false
+
+jobs:
+  seed:
+    name: Seed D1 with leaderboard demo data
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Seed remote D1
+        run: pnpm db:seed:remote
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
