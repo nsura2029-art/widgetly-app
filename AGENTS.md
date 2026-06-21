@@ -81,6 +81,7 @@ This AGENTS.md is the binding work contract for the whole repository. Every chil
 - Author: `Mavis <Mavis@local>` for AI-authored commits. Re-author with `--author` if you need a different identity.
 - Format: `<type>(<scope>): <imperative summary>`. Body explains _why_, not _what_.
 - One logical change per commit. Squash locally before merging.
+- User preference: when requested work is complete, commit the changes to the active branch unless the user explicitly says not to commit.
 - **Local sandbox gotcha** (fixed 2026-06-18): the husky pre-commit
   hook calls `npx lint-staged`, which fails on Node 22 with
   `ERR_MODULE_NOT_FOUND: signal-exit/index.js`. The broken nested

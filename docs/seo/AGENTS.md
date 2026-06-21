@@ -65,7 +65,8 @@ Owns the SEO surface of Widgetly: how the site is crawled, indexed, ranked, and 
 
 - `dynamic = "force-static"` — sitemap is built at deploy time, not per-request.
 - One entry per locale-variant of every static page.
-- Includes home, marketing anchors (#features, #categories, #waitlist, #faq), /tools index, every /tools/[category], every /tools/[category]/[tool], every blog post, every suggestion.
+- Includes home, marketing anchors (#features, #categories, #waitlist, #faq), /tools index, every /tools/[category], every /tools/[category]/[tool], every blog post, `/suggest`, `/suggest/new`, and every seeded suggestion page.
+- Live D1-created suggestions render with dynamic metadata at `/suggest/[id]`; add high-value live suggestion URLs to IndexNow after deploy when they are accepted or promoted.
 - Per-tool URL priority: 0.7 (below category pages at 0.8).
 
 ### Robots
