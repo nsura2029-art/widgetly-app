@@ -41,8 +41,14 @@ const intl = createIntlMiddleware(routing);
 
 export const config = {
   // Match every path EXCEPT: API routes, Next internals, static files
-  // (anything with a file extension).
-  matcher: ["/((?!api|_next|.*\\..*).*)"],
+  // (anything with a file extension), and the admin dashboard.
+  //
+  // The admin lives at /admin/* (no locale prefix) — it's a separate
+  // surface that doesn't go through next-intl. Bypassing the locale
+  // middleware here also means the admin URLs stay stable across
+  // locale changes (e.g. /admin/sign-in works the same for an admin
+  // whose browser is set to French).
+  matcher: ["/((?!api|_next|admin|.*\\..*).*)"],
 };
 
 function resolveLocaleFromRequest(req: NextRequest): LocaleCode {
