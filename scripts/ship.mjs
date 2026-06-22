@@ -61,11 +61,31 @@ function hasScript(name) {
 
 function run(label, cmd, cmdArgs, opts = {}) {
   log("info", `${label} …`);
-  const result = spawnSync(cmd, cmdArgs, {
+  // On Windows we have to spawn through a shell because:
+  //   - the `corepack` shim is `corepack.cmd` and Node's `shell: false`
+  //     mode does not resolve `.cmd` extensions (Windows `CreateProcessW`
+  //     expects you to either pass the full path with the extension OR
+  //     go through cmd.exe);
+  //   - the absolute path we resolved above contains a space
+  //     (`C:\Program Files\nodejs\corepack.cmd`), and Node refuses to
+  //     spawn paths-with-spaces that end in `.cmd` via `shell: false`
+  //     (it returns `EINVAL` rather than risk the silent no-op).
+  // `shell: true` on *nix is also fine — the bare command is in PATH
+  // and `cmd` is `corepack` (not a shell built-in), so cmd.exe
+  // dispatches to the same binary.
+  //
+  // When going through a shell we have to quote the command if the
+  // path contains spaces; Node does NOT do that for us when shell:true
+  // (it just concatenates `cmd + " " + args` and hands the string to
+  // cmd.exe, which then tokenizes by whitespace and chokes on
+  // `C:\Program`).
+  const useShell = needsShell || /[ "]/.test(cmd);
+  const finalCmd = useShell && cmd.includes(" ") ? `"${cmd}"` : cmd;
+  const result = spawnSync(finalCmd, cmdArgs, {
     cwd: ROOT,
     stdio: verbose ? "inherit" : "pipe",
     env: { ...process.env, ...(opts.env ?? {}) },
-    shell: false,
+    shell: useShell,
   });
   if (result.error) {
     log("err", `${label} failed to start: ${result.error.message}`);
@@ -80,6 +100,11 @@ function run(label, cmd, cmdArgs, opts = {}) {
   log("ok", `${label} passed`);
 }
 
+// Whether we have to spawn through a shell. On Windows: yes (see run()
+// for the full rationale). On *nix: only when the command path has a
+// space (rare; most commands are bare names from PATH).
+const needsShell = process.platform === "win32";
+
 const pm = (process.env.npm_command ?? "pnpm").trim() || "pnpm";
 // Always invoke pnpm through `corepack` so this works in environments
 // where pnpm is not on the bare PATH (e.g. the husky pre-push hook,
@@ -92,8 +117,25 @@ const pm = (process.env.npm_command ?? "pnpm").trim() || "pnpm";
 //
 // Cost: one extra process hop per command (~5-15ms). Negligible vs.
 // the 30+ seconds lint + type-check take anyway.
-const runner = "corepack";
+let runner = "corepack";
 const pnpmArgs = ["pnpm"];
+
+// Windows fix: `corepack` is installed as `corepack.cmd` next to
+// `node.exe`. Node's `spawnSync(..., { shell: false })` will not resolve
+// the `.cmd` shim on Windows even when `C:\Program Files\nodejs` is on
+// PATH — `shell: false` calls `CreateProcessW` directly which doesn't
+// look up PATHEXT. Without this, the husky pre-push hook on Windows
+// fails with `spawnSync corepack ENOENT` even though `corepack` is
+// installed. We resolve the absolute path of the `corepack.cmd` shim
+// once at startup and pass it to every spawn.
+if (process.platform === "win32") {
+  const path = await import("node:path");
+  const { existsSync } = await import("node:fs");
+  const nodeDir = path.dirname(process.execPath);
+  const candidates = [path.join(nodeDir, "corepack.cmd"), path.join(nodeDir, "corepack")];
+  const found = candidates.find((p) => existsSync(p));
+  if (found) runner = found;
+}
 
 log("info", `runner=${runner} (via corepack) root=${ROOT}`);
 
@@ -108,7 +150,46 @@ run("type-check", runner, [...pnpmArgs, "run", "type-check"]);
 // those drift from the actual TOOLS_SUBGROUPS / examples data, the UI
 // shows wrong numbers ("37 tools" in a category with only 12). Catching
 // it here means it can't slip into a deploy.
-run("verify-counts", "bash", [resolve(ROOT, "scripts/verify-counts.sh")]);
+// Tool count verification. The mega menu, /tools cards, home page cards,
+// and JSON-LD all read counts from `tools-categories.ts` and
+// `constants.ts`. If those drift from the actual TOOLS_SUBGROUPS /
+// examples data, the UI shows wrong numbers ("37 tools" in a category
+// with only 12). Catching it here means it can't slip into a deploy.
+//
+// This is a bash script. On *nix the bare `bash` is on PATH. On Windows
+// we look for git-bash (Git for Windows) at the canonical install paths.
+// If we can't find bash on a Windows dev box we skip with a clear
+// notice (the user can install Git for Windows to enable the check
+// locally); CI on Ubuntu always runs it.
+let bashBin = null;
+const bashProbe = spawnSync("bash", ["--version"], { shell: needsShell, stdio: "pipe" });
+if (bashProbe.status === 0) {
+  bashBin = "bash";
+} else if (process.platform === "win32") {
+  const fs = await import("node:fs");
+  const candidates = [
+    "C:\\Program Files\\Git\\bin\\bash.exe",
+    "C:\\Program Files (x86)\\Git\\bin\\bash.exe",
+  ];
+  for (const p of candidates) {
+    try {
+      if (fs.existsSync(p)) {
+        bashBin = p;
+        break;
+      }
+    } catch {
+      // ignore
+    }
+  }
+}
+if (bashBin) {
+  run("verify-counts", bashBin, [resolve(ROOT, "scripts/verify-counts.sh")]);
+} else {
+  log(
+    "warn",
+    "verify-counts skipped: bash not available. Install Git for Windows or run it manually: bash scripts/verify-counts.sh"
+  );
+}
 
 if (hasScript("test")) {
   run("test", runner, [...pnpmArgs, "run", "test"]);
