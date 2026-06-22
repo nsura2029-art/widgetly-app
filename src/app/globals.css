@@ -244,8 +244,6 @@
   :root {
     --font-inter: "Inter", system-ui, sans-serif;
     --wly-header-height: 4rem;
-    --wly-tools-height: 2.75rem;
-    --wly-breadcrumb-height: 3rem;
   }
 
   * {
@@ -621,7 +619,13 @@
  * ----------------------------------------------------------------------- */
 section[id],
 main[id] {
-  scroll-margin-top: calc(
-    var(--wly-header-height) + var(--wly-tools-height) + var(--wly-breadcrumb-height) + 1.5rem
-  );
+  /*
+   * Only the brand header is sticky. Tools banner + breadcrumb now
+   * scroll away with the page (see comments in client-header.tsx,
+   * tools-banner.tsx, breadcrumb.tsx), so the only viewport chrome
+   * we have to clear on hash navigation is the header itself.
+   * Add a 1.5rem breathing buffer so the anchored heading isn't
+   * pinned directly under the header bottom edge.
+   */
+  scroll-margin-top: calc(var(--wly-header-height) + 1.5rem);
 }

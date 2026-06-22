@@ -163,7 +163,7 @@ export default async function LocaleLayout({
             </a>
             <ClientHeader />
 
-            <main id="main" className="pt-5">
+            <main id="main">
               <ToolsBanner />
               <BreadcrumbNav />
               {children}

@@ -91,7 +91,13 @@ export default function ClientHeader() {
         </nav>
 
         <div className="hidden items-center gap-2 md:flex">
-          <Button asChild variant="outline" size="sm" className="h-9 gap-2 rounded-lg">
+          {/*
+            Suggest-a-tool is the header's primary action — the only
+            CTA we surface at the top of every page. Promote it to the
+            gradient "default" variant so it pops on the white header
+            and reads as a real CTA, not a utility link.
+          */}
+          <Button asChild variant="default" size="sm" className="h-9 gap-2 rounded-lg px-4">
             <Link href="/suggest" aria-label={t("header.aria.suggestTool")}>
               <Lightbulb className="h-3.5 w-3.5" aria-hidden="true" />
               <span>{t("header.actions.suggestTool")}</span>
