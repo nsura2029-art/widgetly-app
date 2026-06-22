@@ -5,9 +5,9 @@ ongoing workflow for keeping it in sync with `widgetly.tech`.
 
 ## Overview
 
-| Environment | Domain                | Worker name      | Branch    | D1 database      | KV namespace                |
-| ----------- | --------------------- | ---------------- | --------- | ---------------- | --------------------------- |
-| Production  | `widgetly.tech`       | `widgetly`       | `main`    | `widgetly`       | `NEXT_INC_CACHE_KV` (prod)  |
+| Environment | Domain               | Worker name      | Branch    | D1 database      | KV namespace                |
+| ----------- | -------------------- | ---------------- | --------- | ---------------- | --------------------------- |
+| Production  | `widgetly.tech`      | `widgetly`       | `main`    | `widgetly`       | `NEXT_INC_CACHE_KV` (prod)  |
 | Stage       | `beta.widgetly.tech` | `widgetly-stage` | `develop` | `widgetly-stage` | `NEXT_INC_CACHE_KV` (stage) |
 
 Deploys:
