@@ -20,6 +20,16 @@ set -euo pipefail
 
 cd "$(dirname -- "$0")/.."
 
+# Normalize CRLF -> LF. The data files in this repo are tracked with
+# mixed line endings (some LF, some CRLF) depending on which editor
+# last touched them. Bash's `[[ $line =~ $regex ]]` anchors with `$`
+# match end-of-line but NOT end-of-string, so a trailing `\r` makes
+# `\[$` (end-of-line `[`) silently fail. Stripping `\r` from every
+# line keeps the regex happy and the script portable.
+crlf_to_lf() {
+  sed 's/\r$//'
+}
+
 # ---------------------------------------------------------------------------
 # Parse TOOLS_SUBGROUPS — count items per category.
 # Each category block looks like:
@@ -58,7 +68,7 @@ while IFS= read -r line; do
   if [[ "$in_subgroups" == "true" && -n "$current_cat" && "$line" =~ name:[[:space:]]*\" ]]; then
     ACTUAL_COUNTS["$current_cat"]=$(( ${ACTUAL_COUNTS["$current_cat"]} + 1 ))
   fi
-done < src/lib/tools-subgroups.ts
+done < <(crlf_to_lf < src/lib/tools-subgroups.ts)
 
 # ---------------------------------------------------------------------------
 # Parse TOOLS_CATEGORIES — for non-featured categories (no subgroups),
@@ -98,7 +108,7 @@ while IFS= read -r line; do
     n=$(echo "$line" | grep -o '"' | wc -l | tr -d ' ')
     examples_quote_count=$(( examples_quote_count + n ))
   fi
-done < src/lib/tools-categories.ts
+done < <(crlf_to_lf < src/lib/tools-categories.ts)
 
 # Use examples count for categories that don't have subgroups
 for slug in "${!EXAMPLES_COUNT[@]}"; do
@@ -126,7 +136,7 @@ while IFS= read -r line; do
       current_slug=""
     fi
   fi
-done < src/lib/tools-categories.ts
+done < <(crlf_to_lf < src/lib/tools-categories.ts)
 
 current_slug=""
 while IFS= read -r line; do
@@ -140,7 +150,7 @@ while IFS= read -r line; do
       current_slug=""
     fi
   fi
-done < src/lib/constants.ts
+done < <(crlf_to_lf < src/lib/constants.ts)
 
 # ---------------------------------------------------------------------------
 # Compare and report

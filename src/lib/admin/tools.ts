@@ -133,6 +133,83 @@ export async function listTools(opts: ListToolsOptions = {}): Promise<{
   );
 }
 
+/**
+ * Lightweight row shape used by the grouped dashboard. Excludes the
+ * heavy text fields (long_description, notes) so we can return the
+ * full catalog (109+ tools across 11 categories) in one query without
+ * hauling megabytes of HTML through the network.
+ */
+export type AdminToolRow = Omit<AdminTool, "long_description" | "notes">;
+
+/**
+ * Fetch every tool in the catalog grouped by category, ordered by
+ * `category ASC, sort_order ASC, name ASC`. No pagination — the full
+ * catalog is small (~120 rows × a few hundred bytes per row ≈ 50 KB
+ * total) and the admin dashboard wants to see them all at once.
+ *
+ * Used by `/admin/tools` to render category sections. Excludes the
+ * long text columns (`long_description`, `notes`) because the dashboard
+ * only displays the short metadata fields.
+ */
+export async function listToolsGroupedByCategory(): Promise<{
+  groups: Array<{
+    category: string;
+    tools: AdminToolRow[];
+    counts: Record<ToolStatus, number>;
+  }>;
+  total: number;
+}> {
+  const db = getDb();
+  return safeQuery(
+    async () => {
+      const rows = await db
+        .prepare(
+          `SELECT id, slug, category, name, description, api_endpoint,
+                  pricing_tier, icon_url, accent_color, sort_order,
+                  status, created_by, created_at, updated_at, live_at
+             FROM admin_tools
+            ORDER BY category ASC, sort_order ASC, name COLLATE NOCASE ASC`
+        )
+        .all<AdminToolRow>();
+      const list = rows.results ?? [];
+      // Bucket by category, preserving D1's order (which is alpha-sorted
+      // by category thanks to the ORDER BY).
+      const map = new Map<string, { tools: AdminToolRow[]; counts: Record<ToolStatus, number> }>();
+      for (const t of list) {
+        let g = map.get(t.category);
+        if (!g) {
+          g = {
+            tools: [],
+            counts: {
+              suggested: 0,
+              under_review: 0,
+              in_progress: 0,
+              live: 0,
+              deprecated: 0,
+              rejected: 0,
+            },
+          };
+          map.set(t.category, g);
+        }
+        g.tools.push(t);
+        g.counts[t.status]++;
+      }
+      return {
+        groups: Array.from(map.entries()).map(([category, v]) => ({
+          category,
+          tools: v.tools,
+          counts: v.counts,
+        })),
+        total: list.length,
+      };
+    },
+    {
+      groups: [],
+      total: 0,
+    }
+  );
+}
+
 export async function getTool(id: number): Promise<AdminTool | null> {
   const db = getDb();
   return safeQuery(

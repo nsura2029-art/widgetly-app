@@ -76,25 +76,42 @@ export default async function ToolsCategoryPage({ params }: { params: Promise<Pa
 
   const Icon = ICONS[cat.icon] ?? FileText;
 
-  // Live tools for this category, pulled from D1 admin_tools where
-  // status = 'live'. Falls back to [] on D1-not-bound (so the static
-  // catalog remains the source of truth for SEO). The list is
-  // deduped against the static examples to avoid showing the same
-  // tool twice.
-  let liveTools: { slug: string; name: string }[] = [];
+  // Tools shown in the right-rail menu grid. Two sources, in order:
+  //   1. D1 admin_tools where status='live' for this category — the
+  //      canonical source once the admin pipeline is seeded.
+  //   2. The static catalog in src/lib/tools-categories.ts — used as
+  //      a fallback while the D1 table is still empty (during the
+  //      initial seeding window) and as the SEO baseline.
+  //
+  // The "DB is source of truth" decision: if D1 returns ANY live rows
+  // for this category, we render only those (no static dedup, no
+  // 8-item cap). The static catalog is only rendered when D1 is
+  // empty/not-bound — that's the explicit fallback for the migration
+  // window between "table exists" and "table seeded".
+  let liveTools: Array<{ slug: string; name: string; source: "db" | "static" }> = [];
   try {
     const { getLiveToolsForCategoryPublic } = await import("@/lib/d1/public-tools");
     const rows = await getLiveToolsForCategoryPublic(cat.slug);
-    const staticSlugs = new Set(
-      cat.examples.map((n) => n.toLowerCase().replace(/[^a-z0-9]+/g, "-"))
-    );
-    liveTools = rows
-      .filter((r) => !staticSlugs.has(r.slug))
-      .map((r) => ({ slug: r.slug, name: r.name }))
-      .slice(0, 8);
+    if (rows.length > 0) {
+      liveTools = rows.map((r) => ({ slug: r.slug, name: r.name, source: "db" as const }));
+    } else {
+      // Empty D1 → render the static catalog as the visible menu so
+      // the page never looks broken.
+      liveTools = cat.examples.map((name) => ({
+        slug: name.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+        name,
+        source: "static" as const,
+      }));
+    }
   } catch {
     // D1 not bound → static catalog only, no error.
+    liveTools = cat.examples.map((name) => ({
+      slug: name.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+      name,
+      source: "static" as const,
+    }));
   }
+  const usingStaticFallback = liveTools.length > 0 && liveTools[0]!.source === "static";
   // Sibling categories for the "explore more" rail.
   const others = TOOLS_CATEGORIES.filter((c) => c.slug !== cat.slug).slice(0, 4);
 
@@ -129,11 +146,14 @@ export default async function ToolsCategoryPage({ params }: { params: Promise<Pa
       "@context": "https://schema.org",
       "@type": "ItemList",
       name: cat.name,
-      itemListElement: cat.examples.map((name, i) => ({
+      // JSON-LD ItemList must match what the user sees on the page —
+      // so when D1 is the source, we emit the D1 list; when we're on
+      // the static fallback, we emit the static catalog.
+      itemListElement: liveTools.map((t, i) => ({
         "@type": "ListItem",
         position: i + 1,
-        name,
-        url: `${SITE_CONFIG.url}/tools/${cat.slug}#${name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`,
+        name: t.name,
+        url: `${SITE_CONFIG.url}/tools/${cat.slug}/${t.slug}`,
       })),
     },
   ];
@@ -185,47 +205,31 @@ export default async function ToolsCategoryPage({ params }: { params: Promise<Pa
 
         {/* Right — examples list */}
         <div className="border-border/60 shadow-soft rounded-2xl border bg-white p-6 sm:p-8">
-          <h2 className="text-foreground text-xl font-semibold">
-            {cat.examples.length}+ tools in {cat.name.toLowerCase()}
-          </h2>
+          <div className="flex items-baseline justify-between gap-2">
+            <h2 className="text-foreground text-xl font-semibold">
+              {liveTools.length}+ tools in {cat.name.toLowerCase()}
+            </h2>
+            {usingStaticFallback && (
+              <span
+                className="inline-flex items-center rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold tracking-wider text-amber-700 uppercase"
+                title="Showing the static catalog because admin_tools has no live rows for this category yet."
+              >
+                Static catalog
+              </span>
+            )}
+          </div>
           <p className="text-muted mt-1.5 text-sm">
-            A handful of the most-used tools in this category. New ones ship every month.
+            {usingStaticFallback
+              ? "A handful of the most-used tools in this category. New ones ship every month."
+              : "Every tool currently live in this category. New ones ship every month."}
           </p>
           <ul className="mt-6 grid gap-2 sm:grid-cols-2">
-            {cat.examples.map((name) => {
-              const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
-              return (
-                <li key={name} id={slug}>
-                  <Link
-                    href={`/tools/${cat.slug}/${slug}`}
-                    prefetch={false}
-                    className="border-border/60 bg-muted/5 hover:border-primary/40 hover:bg-muted/10 group flex items-center gap-2.5 rounded-lg border px-3 py-2.5 text-sm transition-colors"
-                  >
-                    <span
-                      className={cn(
-                        "flex h-7 w-7 shrink-0 items-center justify-center rounded-md",
-                        ACCENT_CLASSES[cat.accent]
-                      )}
-                    >
-                      <Icon className="h-3.5 w-3.5" aria-hidden="true" />
-                    </span>
-                    <span className="text-foreground flex-1 font-medium">{name}</span>
-                    <span
-                      className="text-muted-foreground group-hover:text-primary text-xs font-medium transition-colors"
-                      aria-hidden="true"
-                    >
-                      →
-                    </span>
-                  </Link>
-                </li>
-              );
-            })}
             {liveTools.map((t) => (
-              <li key={`live-${t.slug}`} id={t.slug}>
+              <li key={t.slug} id={t.slug}>
                 <Link
                   href={`/tools/${cat.slug}/${t.slug}`}
                   prefetch={false}
-                  className="border-primary/30 bg-primary/5 hover:border-primary/50 group flex items-center gap-2.5 rounded-lg border px-3 py-2.5 text-sm transition-colors"
+                  className="border-border/60 bg-muted/5 hover:border-primary/40 hover:bg-muted/10 group flex items-center gap-2.5 rounded-lg border px-3 py-2.5 text-sm transition-colors"
                 >
                   <span
                     className={cn(
@@ -237,10 +241,10 @@ export default async function ToolsCategoryPage({ params }: { params: Promise<Pa
                   </span>
                   <span className="text-foreground flex-1 font-medium">{t.name}</span>
                   <span
-                    className="inline-flex items-center rounded-full border border-emerald-500/20 bg-emerald-500/10 px-1.5 py-0.5 text-[9px] font-semibold tracking-wider text-emerald-700 uppercase"
-                    aria-label="Newly live in the admin pipeline"
+                    className="text-muted-foreground group-hover:text-primary text-xs font-medium transition-colors"
+                    aria-hidden="true"
                   >
-                    New
+                    →
                   </span>
                 </Link>
               </li>

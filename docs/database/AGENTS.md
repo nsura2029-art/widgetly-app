@@ -82,6 +82,28 @@ removeSuggestionUpvote(input): Promise<{ upvotes: number; voted: boolean }>
 // Legacy compatibility for /api/suggest:
 recordSuggestion(...)
 readTopSuggestions(limit: number)
+
+// src/lib/d1/public-tools.ts (public catalog reads — used by /tools/[category])
+getLiveToolsForCategoryPublic(category: string): Promise<PublicTool[]>
+getLiveToolCountsByCategory(): Promise<Record<category, number>>
+
+// src/lib/admin/tools.ts (admin catalog writes/reads — see docs/admin/AGENTS.md)
+listTools(opts): Promise<{ rows: AdminTool[]; total: number }>
+listToolsGroupedByCategory(): Promise<{
+  groups: Array<{
+    category: string;
+    tools: AdminToolRow[];
+    counts: Record<ToolStatus, number>;
+  }>;
+  total: number;
+}>
+getTool(id: number): Promise<AdminTool | null>
+createTool(input, actorId): Promise<AdminTool>
+updateTool(id, patch, actorId): Promise<AdminTool>
+deleteTool(id): Promise<void>
+setToolStatus(id, newStatus, actorId, notes): Promise<AdminTool>
+getStatusHistoryForTool(id): Promise<AdminStatusHistory[]>
+getToolStats(): Promise<Record<ToolStatus | "total", number>>
 ```
 
 ### Migrations

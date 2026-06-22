@@ -14,11 +14,15 @@
  *   ADMIN_PASSWORD       — required (≥ 10 chars)
  *   ADMIN_DISPLAY_NAME   — optional
  *   ADMIN_EMAIL          — optional
- *   D1_BINDING           — 'local' (default) or 'remote'
+ *
+ * Target (local vs remote D1) is selected by:
+ *   --local / --remote   CLI flag (preferred, cross-platform)
+ *   D1_BINDING           env var ('local' | 'remote'); legacy fallback
  *
  * Usage:
  *   pnpm seed:admin:local
- *   D1_BINDING=remote pnpm seed:admin:remote
+ *   pnpm seed:admin:remote            (passes --remote to the script)
+ *   node scripts/seed-admin.mjs --remote   (direct invocation on Windows)
  *
  * Implementation note: we write a single .sql file and pass it to
  * `wrangler d1 execute --file=`. That avoids the per-row execSync
@@ -31,7 +35,15 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { execSync } from "node:child_process";
 
-const D1_BINDING = process.env.D1_BINDING ?? "local";
+// Parse --remote / --local as a CLI flag (preferred on Windows /
+// PowerShell where the `KEY=value command` idiom doesn't work) and
+// fall back to the D1_BINDING env var for backwards compatibility.
+function parseTarget() {
+  const cliFlag = process.argv.find((a) => a === "--remote" || a === "--local");
+  if (cliFlag) return cliFlag.slice(2);
+  return process.env.D1_BINDING ?? "local";
+}
+const D1_BINDING = parseTarget();
 const USERNAME = process.env.ADMIN_USERNAME ?? "admin";
 const PASSWORD = process.env.ADMIN_PASSWORD ?? "";
 const DISPLAY_NAME = process.env.ADMIN_DISPLAY_NAME ?? "Admin";
@@ -39,7 +51,12 @@ const EMAIL = process.env.ADMIN_EMAIL ?? null;
 
 if (!PASSWORD || PASSWORD.length < 10) {
   console.error("✗ Set ADMIN_PASSWORD (≥ 10 chars) before running this script.");
-  console.error("  Example: ADMIN_PASSWORD='your-strong-password' pnpm seed:admin:local");
+  // Cross-platform examples: PowerShell needs `$env:VAR = "value"`, bash/zsh
+  // accepts the `VAR=value command` form inline. Show both so either shell
+  // can copy-paste the right one.
+  console.error("");
+  console.error("  PowerShell:  $env:ADMIN_PASSWORD = 'your-strong-password'; pnpm seed:admin:remote");
+  console.error("  bash / zsh:  ADMIN_PASSWORD='your-strong-password' pnpm seed:admin:remote");
   process.exit(1);
 }
 

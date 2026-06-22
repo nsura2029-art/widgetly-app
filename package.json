@@ -45,7 +45,7 @@
     "db:seed:local": "node scripts/seed-leaderboard.mjs",
     "db:seed:remote": "node scripts/seed-leaderboard.mjs --remote",
     "seed:admin:local": "node scripts/seed-admin.mjs",
-    "seed:admin:remote": "D1_BINDING=remote node scripts/seed-admin.mjs",
+    "seed:admin:remote": "node scripts/seed-admin.mjs --remote",
     "deploy:stage": "opennextjs-cloudflare build && wrangler deploy --env stage",
     "db:migrate:stage": "wrangler d1 migrations apply widgetly-stage --remote --env stage"
   },
