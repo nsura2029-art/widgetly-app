@@ -41,6 +41,8 @@ CHECKS=(
   "/en/about|200|About page"
   "/en/security|200|Security page"
   "/admin/sign-in|200|Admin sign-in (no Clerk)"
+  "/admin/forgot-password|200|Forgot password page"
+  "/admin/reset-password|200|Reset password page (no token)"
   "/api/public/tools|200|Public tools API"
   "/api/admin/auth/me|401|Admin auth rejects anon"
   "/robots.txt|200|robots.txt"

@@ -51,6 +51,38 @@ export const LoginBody = z.object({
 });
 export type LoginBody = z.infer<typeof LoginBody>;
 
+/** PATCH /api/admin/account/password body. */
+export const ChangePasswordBody = z
+  .object({
+    current_password: z.string().min(1).max(200),
+    new_password: z.string().min(10).max(200),
+    confirm_password: z.string().min(10).max(200),
+  })
+  .refine((d) => d.new_password === d.confirm_password, {
+    message: "Passwords do not match",
+    path: ["confirm_password"],
+  });
+export type ChangePasswordBody = z.infer<typeof ChangePasswordBody>;
+
+/** POST /api/admin/account/forgot-password body. */
+export const ForgotPasswordBody = z.object({
+  username: z.string().trim().min(1).max(100),
+});
+export type ForgotPasswordBody = z.infer<typeof ForgotPasswordBody>;
+
+/** POST /api/admin/account/reset-password body. */
+export const ResetPasswordBody = z
+  .object({
+    token: z.string().min(64).max(128), // 32 bytes hex = 64 chars
+    new_password: z.string().min(10).max(200),
+    confirm_password: z.string().min(10).max(200),
+  })
+  .refine((d) => d.new_password === d.confirm_password, {
+    message: "Passwords do not match",
+    path: ["confirm_password"],
+  });
+export type ResetPasswordBody = z.infer<typeof ResetPasswordBody>;
+
 // ---------------------------------------------------------------------------
 // Tools
 // ---------------------------------------------------------------------------

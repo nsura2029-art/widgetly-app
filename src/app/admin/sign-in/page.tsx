@@ -67,6 +67,17 @@ function AdminSignInForm() {
         setError(data.error || "Sign-in failed");
         return;
       }
+      // If must_change_password, force a password rotation first.
+      const data = (await r.json().catch(() => ({}))) as {
+        user?: { must_change_password?: number };
+      };
+      if (data.user?.must_change_password === 1) {
+        // Preserve `next=` so the user lands where they intended
+        // after the forced change.
+        const sep = next.includes("?") ? "&" : "?";
+        router.replace(`/admin/account/password${sep}first=1&next=${encodeURIComponent(next)}`);
+        return;
+      }
       router.replace(next);
     } catch (err) {
       setError("Couldn't reach the server. Check your connection and try again.");
@@ -157,11 +168,20 @@ function AdminSignInForm() {
             )}
           </button>
 
-          <p className="text-muted-foreground pt-1 text-center text-xs">
-            <Link href="/" className="hover:text-foreground underline-offset-2 hover:underline">
+          <div className="flex items-center justify-between pt-1 text-xs">
+            <Link
+              href="/admin/forgot-password"
+              className="text-muted-foreground hover:text-foreground underline-offset-2 hover:underline"
+            >
+              Forgot password?
+            </Link>
+            <Link
+              href="/"
+              className="text-muted-foreground hover:text-foreground underline-offset-2 hover:underline"
+            >
               ← Back to widgetly.tech
             </Link>
-          </p>
+          </div>
         </form>
       </div>
     </div>
