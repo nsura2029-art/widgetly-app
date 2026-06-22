@@ -65,11 +65,14 @@ export function Breadcrumb({
       <nav
         aria-label="Breadcrumb"
         className={cn(
-          // Sticky under the header + featured tools band. It remains
-          // in document flow, so page content naturally starts below
-          // the breadcrumb on first paint, then scrolls beneath the
-          // sticky chrome when the user moves through the page.
-          "border-border/60 sticky top-[calc(var(--wly-header-height)+var(--wly-tools-height))] z-30 w-full border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/85",
+          // Non-sticky. The breadcrumb sits in normal document flow
+          // directly under the tools banner and scrolls away with the
+          // page. Rationale: only the brand mark belongs at the top of
+          // every viewport; a sticky breadcrumb triples the chrome the
+          // user has to mentally filter on every scroll. The trail is
+          // still discoverable on first paint and reappears whenever
+          // the user scrolls back up.
+          "border-border/60 w-full border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/85",
           className
         )}
       >

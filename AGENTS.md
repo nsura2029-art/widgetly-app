@@ -131,6 +131,34 @@ This AGENTS.md is the binding work contract for the whole repository. Every chil
 - i18n: next-intl with `localePrefix: "always"` (en/es/fr). Use `Link` from `@/i18n/navigation` for all internal links.
 - OpenNext Cloudflare adapter: D1 bindings exposed via `getCloudflareContext().env.DB`, not `globalThis.DB`.
 
+### Layout chrome (sticky / scroll behavior)
+
+The visible chrome above every page is `<ClientHeader>` + `<ToolsBanner>` +
+`<BreadcrumbNav>`. Sticky behavior is intentionally minimal — only the
+brand header stays pinned:
+
+- **Header (`ClientHeader`)** — `sticky top-0 z-50`. Always visible. Holds
+  the brand mark, the "Suggest a tool" primary CTA (gradient `default`
+  variant — the only CTA in the header), and the mobile menu trigger.
+- **Tools banner (`ToolsBanner`)** — **non-sticky** (in normal document
+  flow). The category chip row sits directly under the header on first
+  paint and scrolls away with the page. Mega panels are anchored
+  `absolute top-full` to the banner so they follow it in flow (no longer
+  `fixed` to the viewport). Rationale: only the brand mark belongs at
+  the top of every viewport; a sticky menu fights the user's eye for
+  attention and pins real estate that would otherwise be content.
+- **Breadcrumb (`BreadcrumbNav`)** — **non-sticky**. Same rationale as
+  the banner: reappears whenever the user scrolls back up.
+- **Footer language picker (`LocalePicker`)** — the popover opens
+  **upward** (`bottom-full mb-2`) because the trigger sits at the very
+  bottom of the page; opening downward would push the menu off-screen.
+- **Document scroll** is the only scroll context. There is no separate
+  scroll container for "content area". The only sticky element is the
+  header, so by construction, all scrollbar travel affects page content.
+- **Hash navigation `scroll-margin-top`** in `globals.css` is sized for
+  the header only (`var(--wly-header-height) + 1.5rem`) since the banner
+  and breadcrumb no longer occupy viewport space during scroll.
+
 ### Forbidden
 
 - Never commit plaintext secrets. `.env*` files are gitignored. Use `pnpm setup:secrets`.

@@ -141,8 +141,13 @@ const MEGA_PANEL_ID = "tools-mega-panel";
  *    so the band reads as a continuous global utility surface.
  *    The chip row inside is wrapped in a container so the chips
  *    themselves stay aligned with the rest of the page.
- *  - sticky top-[var(--wly-header-height)] z-40: parks the band
- *    directly under the sticky header.
+ *  - **Non-sticky by design.** The band sits in normal document
+ *    flow directly under the sticky header and scrolls away with
+ *    the page. Rationale: only the brand mark belongs at the top
+ *    of every viewport; a sticky menu bar fights the user's eye
+ *    for attention and pins real estate that would otherwise be
+ *    content. With mega menus still openable on hover/click, the
+ *    menu is always one tap away without taking viewport space.
  *  - bg-primary-50: the brand theme color, very light. Distinct
  *    from the white header above and the white page content
  *    below, so the band reads as its own layer.
@@ -219,7 +224,7 @@ export function ToolsBanner() {
         onMouseLeave={scheduleClose}
         className={cn(
           "bg-primary-50/85 supports-[backdrop-filter]:bg-primary-50/70",
-          "border-primary-100/80 sticky top-[var(--wly-header-height)] z-40 border-b backdrop-blur"
+          "border-primary-100/80 relative border-b backdrop-blur"
         )}
       >
         <div className="container flex items-center gap-1 overflow-x-auto py-2">
@@ -260,9 +265,10 @@ export function ToolsBanner() {
         </div>
       </nav>
 
-      {/* Mega menu panel — rendered as a sibling of the nav so it
-          sits above page content via the nav's z-40 stack. It's
-          only mounted while open. */}
+      {/* Mega menu panel — anchored to the bottom of the banner.
+          Since the banner is non-sticky (scrolls with the page),
+          the panel follows the banner in document flow rather than
+          being pinned to the viewport. Mounted only while open. */}
       {openCat ? (
         <MegaPanel
           id={MEGA_PANEL_ID}
@@ -310,13 +316,15 @@ function MegaPanel({
   const subgroups = getSubgroups(category.slug);
 
   return (
-    // Outer wrapper spans full viewport width and handles centering
-    // + pointer-events passthrough. The actual visible panel (with
+    // Outer wrapper spans the full container width and handles centering
+    // + pointer-events passthrough. Since the banner is non-sticky, the
+    // panel is `absolute top-full` so it sits right under the banner and
+    // follows it in document flow. The actual visible panel (with
     // background, border, shadow) is the inner div, which is sized
     // to its content via `w-fit max-w-[1440px]`. So when a category
     // has only 2-3 subgroups, the panel shrinks to fit those columns
     // instead of stretching across the whole viewport.
-    <div className="pointer-events-none fixed inset-x-0 top-[calc(var(--wly-header-height)+var(--wly-tools-height))] z-40 flex justify-center">
+    <div className="pointer-events-none absolute inset-x-0 top-full z-40 flex justify-center">
       <div
         onMouseEnter={onMouseEnter}
         onMouseLeave={onMouseLeave}
