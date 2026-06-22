@@ -11,22 +11,27 @@ binding = "ASSETS"
 [observability]
 enabled = true
 
+# ===========================================================================
+# Worker environments
 # ---------------------------------------------------------------------------
-# Cloudflare Workers configuration (OpenNext adapter)
-# ---------------------------------------------------------------------------
-# `pnpm build` produces .open-next/ via @opennextjs/cloudflare. `pnpm deploy`
-# invokes `opennextjs-cloudflare build && wrangler deploy` to ship the worker.
-# Production domains are attached in the Cloudflare dashboard so CI deploys
-# only update Worker code and assets, not route/custom-domain triggers.
-# ---------------------------------------------------------------------------
+# Each environment is fully isolated (its own Worker name, KV namespace,
+# and D1 database). Switching is via `--env <name>` on the wrangler CLI;
+# the CI workflows do this automatically:
 #
-# Two environments:
-#   - (default) production → widgetly.tech        (Worker name: widgetly)
-#   - stage              → stage.widgetly.tech    (Worker name: widgetly-stage)
+#   push to develop → deploy with --env stage     (stage.widgetly.tech)
+#   push to main    → deploy with --env production (widgetly.tech)
 #
-# Per-environment bindings (D1, KV) keep the two stacks fully isolated:
-# dropping or migrating the stage database doesn't affect production.
-# ---------------------------------------------------------------------------
+# Bindings are scoped to each `[env.X]` block. The top-level has NO
+# KV/D1 bindings — putting them at the top would collide with the
+# per-env blocks because wrangler merges top-level + env-scoped
+# bindings (and binding names must be unique).
+#
+# pnpm scripts:
+#   pnpm deploy         = build + wrangler deploy --env production
+#   pnpm deploy:stage   = build + wrangler deploy --env stage
+#   pnpm db:migrate:remote  = wrangler d1 migrations apply widgetly      --remote
+#   pnpm db:migrate:stage   = wrangler d1 migrations apply widgetly-stage --remote --env stage
+# ===========================================================================
 
 # ---------------------------------------------------------------------------
 # Production KV (OpenNext incremental cache).
@@ -36,19 +41,18 @@ enabled = true
 # "dummy"` config in open-next.config.ts caused the Worker to spin on every
 # request, which is what was triggering the random Error 1102s.
 #
-# KV is included in Workers Free (100K reads/day, 1K writes/day, 1 GB). Reads
-# happen on every cached request; writes happen at build time when OpenNext
-# prerenders each route. We use <0.1% of the daily quota.
+# KV is included in Workers Free (100K reads/day, 1K writes/day, 1 GB).
 # ---------------------------------------------------------------------------
-[[kv_namespaces]]
+[env.production]
+name = "widgetly"
+
+[[env.production.kv_namespaces]]
 binding = "NEXT_INC_CACHE_KV"
 id = "0e35b410aaf04be18d7cb17e54bc9cfb"
 preview_id = "d85f0da78ed64650a9502783e03f116f"
 
-# ---------------------------------------------------------------------------
 # Production D1: waitlist + tool suggestions + leaderboard + admin.
-# ---------------------------------------------------------------------------
-[[d1_databases]]
+[[env.production.d1_databases]]
 binding = "DB"
 database_name = "widgetly"
 database_id = "64cbb0d4-af76-46cf-a742-cf78902f1dc3"
@@ -73,21 +77,16 @@ name = "widgetly-stage"
 compatibility_date = "2025-04-01"
 compatibility_flags = ["nodejs_compat", "global_fetch_strictly_public"]
 
-# Stage KV namespace (placeholder IDs — replace after running the
-# `wrangler kv namespace create` commands in the setup notes above).
+# Stage KV namespace (replace the IDs with the real ones from
+# `wrangler kv namespace create NEXT_INC_CACHE_KV --env stage`).
 [[env.stage.kv_namespaces]]
 binding = "NEXT_INC_CACHE_KV"
 id = "REPLACE_WITH_STAGE_KV_ID"
 preview_id = "REPLACE_WITH_STAGE_KV_PREVIEW_ID"
 
-# Stage D1 database (placeholder ID — replace after `wrangler d1 create`).
+# Stage D1 database (replace the ID with the real one from
+# `wrangler d1 create widgetly-stage`).
 [[env.stage.d1_databases]]
 binding = "DB"
 database_name = "widgetly-stage"
 database_id = "REPLACE_WITH_STAGE_D1_ID"
-
-# Stage secrets go in:
-#   wrangler secret put ADMIN_SESSION_SECRET --env stage
-#   wrangler secret put SUGGEST_WEBHOOK_URL --env stage
-# (everything that's set on the production Worker; use the same values
-# for stage EXCEPT for any production-only credentials.)
