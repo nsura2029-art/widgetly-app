@@ -1,0 +1,31 @@
+name: Check stage worker logs
+
+on:
+  workflow_dispatch:
+
+jobs:
+  logs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.9
+      - run: pnpm install --frozen-lockfile
+      - name: Login and probe /me in one go
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          echo "=== Login ==="
+          curl -sv -c /tmp/cj.txt -X POST -H "Content-Type: application/json" \
+            --max-time 15 \
+            -d '{"username":"stage-admin","password":"StagePass2026!"}' \
+            "https://widgetly-stage.nsura2029.workers.dev/api/admin/auth/login" 2>&1 | tail -25
+          echo ""
+          echo "=== /me ==="
+          curl -sv -b /tmp/cj.txt --max-time 15 \
+            "https://widgetly-stage.nsura2029.workers.dev/api/admin/auth/me" 2>&1 | tail -25
