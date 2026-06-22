@@ -1,6 +1,6 @@
 # Stage environment setup
 
-This doc covers the one-time setup of `stage.widgetly.tech` and the
+This doc covers the one-time setup of `beta.widgetly.tech` and the
 ongoing workflow for keeping it in sync with `widgetly.tech`.
 
 ## Overview
@@ -8,7 +8,7 @@ ongoing workflow for keeping it in sync with `widgetly.tech`.
 | Environment | Domain                | Worker name      | Branch    | D1 database      | KV namespace                |
 | ----------- | --------------------- | ---------------- | --------- | ---------------- | --------------------------- |
 | Production  | `widgetly.tech`       | `widgetly`       | `main`    | `widgetly`       | `NEXT_INC_CACHE_KV` (prod)  |
-| Stage       | `stage.widgetly.tech` | `widgetly-stage` | `develop` | `widgetly-stage` | `NEXT_INC_CACHE_KV` (stage) |
+| Stage       | `beta.widgetly.tech` | `widgetly-stage` | `develop` | `widgetly-stage` | `NEXT_INC_CACHE_KV` (stage) |
 
 Deploys:
 
@@ -63,7 +63,7 @@ In the Cloudflare dashboard:
 
 1. Go to **Workers & Pages** → `widgetly-stage`.
 2. **Settings** → **Triggers** → **Custom Domains** → **Add Custom Domain**.
-3. Enter `stage.widgetly.tech`.
+3. Enter `beta.widgetly.tech`.
 4. Cloudflare will create the DNS record automatically.
 
 Wait ~30 s for the certificate to provision.
@@ -119,10 +119,10 @@ git checkout -b feat/something
 #   - sync secrets
 #   - pnpm exec wrangler deploy --env stage
 #   - pnpm exec wrangler d1 migrations apply widgetly-stage --remote --env stage
-#   - bash scripts/warm-cache.sh https://stage.widgetly.tech
+#   - bash scripts/warm-cache.sh https://beta.widgetly.tech
 
-# After the stage deploy, verify at https://stage.widgetly.tech
-# (and https://stage.widgetly.tech/admin for the dashboard).
+# After the stage deploy, verify at https://beta.widgetly.tech
+# (and https://beta.widgetly.tech/admin for the dashboard).
 
 # Once stage is green, open a release PR (develop → main). When that
 # merges, the production deploy workflow fires.

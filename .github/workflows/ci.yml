@@ -49,7 +49,7 @@ jobs:
   # ("Smoke test stage" must be green before merging develop → main).
   #
   # On PRs targeting main or develop, we hit the stage workers.dev URL
-  # (not stage.widgetly.tech, which may not be wired to the Worker yet
+  # (not beta.widgetly.tech, which may not be wired to the Worker yet
   # if the user hasn't done the one-time dashboard step). On a plain
   # push to a branch with no PR, we skip — there's nothing to gate.
   #
