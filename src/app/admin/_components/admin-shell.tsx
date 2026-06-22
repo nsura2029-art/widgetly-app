@@ -22,7 +22,17 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { BarChart3, Boxes, LogOut, Menu, RefreshCw, ShieldCheck, Wrench, X } from "lucide-react";
+import {
+  BarChart3,
+  Boxes,
+  KeyRound,
+  LogOut,
+  Menu,
+  RefreshCw,
+  ShieldCheck,
+  Wrench,
+  X,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const NAV = [
@@ -251,6 +261,14 @@ function AuthedShell({
                   {user.display_name || user.username}
                 </span>
               </span>
+              <Link
+                href="/admin/account/password"
+                className="border-border text-muted-foreground hover:text-foreground hover:bg-muted/5 inline-flex h-8 items-center gap-1.5 rounded-lg border px-2.5 text-xs font-medium transition-colors"
+                aria-label="Change password"
+              >
+                <KeyRound className="h-3.5 w-3.5" aria-hidden="true" />
+                <span className="hidden sm:inline">Change password</span>
+              </Link>
               <button
                 type="button"
                 onClick={signOut}
