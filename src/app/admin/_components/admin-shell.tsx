@@ -59,6 +59,14 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
       setAuth({ state: "anon" });
       return;
     }
+    // IMPORTANT: reset to "loading" *before* starting the probe.
+    // Otherwise the redirect effect below fires during the async
+    // window (auth.state is still "anon" from when isSignIn was
+    // true), bouncing the user back to /admin/sign-in before the
+    // /me response lands. Classic race; costs ~50ms of "loading"
+    // chrome on every protected-page navigation.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setAuth({ state: "loading" });
     let cancelled = false;
     (async () => {
       try {
