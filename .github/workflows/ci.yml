@@ -63,6 +63,9 @@ jobs:
     timeout-minutes: 5
     if: github.event_name == 'pull_request'
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Run smoke test against stage
         run: bash scripts/smoke-test.sh "${{ vars.STAGE_URL || 'https://widgetly-stage.nsura2029.workers.dev' }}"
         env:
