@@ -1,0 +1,93 @@
+name: Seed admin tools (stage)
+
+# One-shot workflow to seed the admin_tools D1 table on the stage
+# environment with the static catalog (status='live' by default).
+# This makes the public /tools/[category] menu DB-driven on stage
+# and populates the /admin/tools dashboard so admins can flip
+# statuses and see live updates in the public site.
+#
+# Uses workflow_dispatch so it never runs on push. The
+# CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID GitHub Actions
+# secrets are already wired for the deploy workflows, so no local
+# Cloudflare auth is needed.
+#
+# Trigger from the Actions tab:
+#   1. Go to https://github.com/nsura2029-art/widgetly-app/actions/workflows/seed-tools-stage.yml
+#   2. Click "Run workflow"
+#   3. Click "Run workflow" (no inputs required)
+#
+# After it succeeds:
+#   - /admin/tools shows all 105 catalog tools grouped by category,
+#     all in `status='live'`
+#   - /en/tools/pdf (and every /en/tools/<category>) renders the
+#     live D1 rows instead of the static fallback
+#   - The user can flip any tool to status='in_progress' in the
+#     admin UI; the public menu will hide it within one request
+#     (the page is `dynamic = "force-dynamic"` while the admin
+#     user is signed in, and revalidates for anon via the
+#     `revalidatePath` call in /api/admin/tools PATCH)
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: seed-tools-stage
+  cancel-in-progress: false
+
+jobs:
+  seed:
+    name: Insert admin_tools rows into stage D1
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: stage
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Setup pnpm 9
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.9
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # The seed script requires a password to seed the admin user
+      # AND it inserts tools in the same transaction. The CI secret
+      # STAGE_ADMIN_PASSWORD is the bcrypt source for the seeded
+      # admin_tools password (stage-admin / the same password). We
+      # don't actually need to create the admin user here if it
+      # already exists (the SQL is INSERT OR IGNORE), so passing the
+      # password is safe even on re-runs.
+      - name: Seed admin_tools (status='live') on widgetly-stage
+        env:
+          ADMIN_USERNAME: stage-admin
+          ADMIN_PASSWORD: ${{ secrets.STAGE_ADMIN_PASSWORD }}
+          ADMIN_DISPLAY_NAME: Stage Admin
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          node scripts/seed-admin.mjs --remote --env stage
+
+      - name: Verify the tool count
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          pnpm exec wrangler d1 execute widgetly-stage \
+            --env stage --remote \
+            --command "SELECT category, COUNT(*) AS n FROM admin_tools WHERE status='live' GROUP BY category ORDER BY category;"
+
+      - name: Done
+        run: |
+          echo "✓ Stage admin_tools seeded."
+          echo "→ https://beta.widgetly.tech/admin/tools  (dashboard)"
+          echo "→ https://beta.widgetly.tech/en/tools/pdf  (public menu, DB-driven)"
