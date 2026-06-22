@@ -6,6 +6,13 @@ name: Seed admin tools (stage)
 # and populates the /admin/tools dashboard so admins can flip
 # statuses and see live updates in the public site.
 #
+# The password input is required because the seed script re-inserts
+# the admin user (INSERT OR IGNORE — no-op if the user exists) and
+# that requires a bcrypt-able password. In practice the user
+# re-uses the same password they used for the one-shot
+# seed-admin-stage workflow, so the bcrypt hash stays the same and
+# the existing login keeps working.
+#
 # Uses workflow_dispatch so it never runs on push. The
 # CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID GitHub Actions
 # secrets are already wired for the deploy workflows, so no local
@@ -14,7 +21,8 @@ name: Seed admin tools (stage)
 # Trigger from the Actions tab:
 #   1. Go to https://github.com/nsura2029-art/widgetly-app/actions/workflows/seed-tools-stage.yml
 #   2. Click "Run workflow"
-#   3. Click "Run workflow" (no inputs required)
+#   3. Enter the same password the existing stage admin uses
+#   4. Click "Run workflow"
 #
 # After it succeeds:
 #   - /admin/tools shows all 105 catalog tools grouped by category,
@@ -29,6 +37,11 @@ name: Seed admin tools (stage)
 
 on:
   workflow_dispatch:
+    inputs:
+      password:
+        description: "Stage admin password (>= 10 chars, will be masked in logs). Use the same password as the existing stage-admin user so the INSERT OR IGNORE is a no-op for the user row."
+        required: true
+        type: string
 
 concurrency:
   group: seed-tools-stage
@@ -42,6 +55,10 @@ jobs:
     environment: stage
 
     steps:
+      - name: Mask the password in logs
+        run: |
+          echo "::add-mask::${{ inputs.password }}"
+
       - name: Checkout
         uses: actions/checkout@v4
 
@@ -58,17 +75,10 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # The seed script requires a password to seed the admin user
-      # AND it inserts tools in the same transaction. The CI secret
-      # STAGE_ADMIN_PASSWORD is the bcrypt source for the seeded
-      # admin_tools password (stage-admin / the same password). We
-      # don't actually need to create the admin user here if it
-      # already exists (the SQL is INSERT OR IGNORE), so passing the
-      # password is safe even on re-runs.
       - name: Seed admin_tools (status='live') on widgetly-stage
         env:
           ADMIN_USERNAME: stage-admin
-          ADMIN_PASSWORD: ${{ secrets.STAGE_ADMIN_PASSWORD }}
+          ADMIN_PASSWORD: ${{ inputs.password }}
           ADMIN_DISPLAY_NAME: Stage Admin
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
