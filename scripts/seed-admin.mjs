@@ -15,14 +15,22 @@
  *   ADMIN_DISPLAY_NAME   — optional
  *   ADMIN_EMAIL          — optional
  *
- * Target (local vs remote D1) is selected by:
- *   --local / --remote   CLI flag (preferred, cross-platform)
- *   D1_BINDING           env var ('local' | 'remote'); legacy fallback
+ * CLI flags:
+ *   --local / --remote   target D1 (default: local). Cross-platform
+ *                        (PowerShell-safe); preferred over the legacy
+ *                        D1_BINDING env var.
+ *   --env <name>         wrangler environment (default: none).
+ *                        Use 'stage' to seed the widgetly-stage D1,
+ *                        'production' to seed widgetly (the default).
+ *                        When set, the D1 name becomes
+ *                        `widgetly-<name>` and the wrangler command
+ *                        adds `--env <name>`.
  *
  * Usage:
  *   pnpm seed:admin:local
- *   pnpm seed:admin:remote            (passes --remote to the script)
- *   node scripts/seed-admin.mjs --remote   (direct invocation on Windows)
+ *   pnpm seed:admin:remote
+ *   node scripts/seed-admin.mjs --remote --env stage
+ *   ADMIN_PASSWORD=... node scripts/seed-admin.mjs --remote --env production
  *
  * Implementation note: we write a single .sql file and pass it to
  * `wrangler d1 execute --file=`. That avoids the per-row execSync
@@ -43,7 +51,13 @@ function parseTarget() {
   if (cliFlag) return cliFlag.slice(2);
   return process.env.D1_BINDING ?? "local";
 }
+function parseEnv() {
+  const i = process.argv.indexOf("--env");
+  if (i >= 0 && process.argv[i + 1]) return process.argv[i + 1];
+  return process.env.SEED_ENV ?? "";
+}
 const D1_BINDING = parseTarget();
+const SEED_ENV = parseEnv();
 const USERNAME = process.env.ADMIN_USERNAME ?? "admin";
 const PASSWORD = process.env.ADMIN_PASSWORD ?? "";
 const DISPLAY_NAME = process.env.ADMIN_DISPLAY_NAME ?? "Admin";
@@ -246,11 +260,21 @@ console.log(`Seeding admin user "${USERNAME}" (bcrypt cost 12)…`);
 console.log(`Seeding ${totalTools} tools into admin_tools (status='live')…`);
 
 const target = D1_BINDING === "remote" ? "--remote" : "--local";
-const cmd = `pnpm exec wrangler d1 execute widgetly ${target} --file=${sqlPath}`;
+// When --env <name> is passed, the D1 is widgetly-<name> and we need
+// to pass --env <name> to wrangler so the right [env.<name>] block
+// in wrangler.toml is selected. When --env is not passed we target
+// the default D1 (widgetly) without an --env flag (no top-level D1
+// binding exists in wrangler.toml — only [env.production] and
+// [env.stage] blocks do).
+const dbName = SEED_ENV ? `widgetly-${SEED_ENV}` : "widgetly";
+const envFlag = SEED_ENV ? `--env ${SEED_ENV}` : "";
+const cmd = `pnpm exec wrangler d1 execute ${dbName} ${target} ${envFlag} --file=${sqlPath}`.trim().replace(/\s+/g, " ");
 
+console.log(`→ ${cmd}`);
 try {
   execSync(cmd, { stdio: "inherit" });
-  console.log(`✓ Seed complete. Sign in at /admin/sign-in with username="${USERNAME}".`);
+  const targetUrl = SEED_ENV === "stage" ? "https://beta.widgetly.tech" : "https://widgetly.tech";
+  console.log(`✓ Seed complete. Sign in at ${targetUrl}/admin/sign-in with username="${USERNAME}".`);
 } catch (e) {
   console.error("✗ Wrangler d1 execute failed. See output above.");
   process.exitCode = 1;
