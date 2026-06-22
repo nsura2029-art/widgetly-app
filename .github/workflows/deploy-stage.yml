@@ -11,7 +11,7 @@ concurrency:
 
 jobs:
   deploy:
-    name: Build & Deploy to stage.widgetly.tech
+    name: Build & Deploy to beta.widgetly.tech
     runs-on: ubuntu-latest
     timeout-minutes: 25
     permissions:
@@ -88,14 +88,14 @@ jobs:
 
       - name: Warm stage KV cache
         if: success()
-        run: bash scripts/warm-cache.sh https://stage.widgetly.tech
+        run: bash scripts/warm-cache.sh https://beta.widgetly.tech
         env:
           WARM_LOCALES: "en"
 
       # ---------------------------------------------------------------------------
       # Post-deploy smoke test on stage. We hit the workers.dev URL
       # (https://widgetly-stage.<account-subdomain>.workers.dev) instead
-      # of stage.widgetly.tech for two reasons:
+      # of beta.widgetly.tech for two reasons:
       #   1. The custom domain may not be wired up yet — by default the
       #      domain is a Cloudflare "Workers Free" placeholder that
       #      returns 200 for everything, which would falsely pass the
@@ -103,7 +103,7 @@ jobs:
       #   2. The workers.dev URL is the one Cloudflare guarantees is
       #      bound to the deployed Worker, no DNS dance required.
       #
-      # Once the user wires stage.widgetly.tech to the widgetly-stage
+      # Once the user wires beta.widgetly.tech to the widgetly-stage
       # Worker in the Cloudflare dashboard, switch STAGE_URL to the
       # custom domain in the env block below.
       # ---------------------------------------------------------------------------
