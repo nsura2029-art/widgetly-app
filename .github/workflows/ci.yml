@@ -43,3 +43,30 @@ jobs:
         run: pnpm build
         env:
           NEXT_TELEMETRY_DISABLED: 1
+
+  # ---------------------------------------------------------------------------
+  # Stage smoke test on every PR. Required by main's branch protection rule
+  # ("Smoke test stage" must be green before merging develop → main).
+  #
+  # On PRs targeting main or develop, we hit the stage workers.dev URL
+  # (not stage.widgetly.tech, which may not be wired to the Worker yet
+  # if the user hasn't done the one-time dashboard step). On a plain
+  # push to a branch with no PR, we skip — there's nothing to gate.
+  #
+  # This is intentionally a "live test" against the deployed Worker, not
+  # a build artifact check. We want this to be the final word on
+  # "is the live site still working" before the change ships to prod.
+  # ---------------------------------------------------------------------------
+  smoke-test-stage:
+    name: Smoke test stage
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run smoke test against stage
+        run: bash scripts/smoke-test.sh "${{ vars.STAGE_URL || 'https://widgetly-stage.nsura2029.workers.dev' }}"
+        env:
+          STAGE_URL: ${{ vars.STAGE_URL || 'https://widgetly-stage.nsura2029.workers.dev' }}

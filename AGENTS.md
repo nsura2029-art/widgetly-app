@@ -311,10 +311,27 @@ shortcut. The pre-push hook, the CI workflow, the deploy workflow, and the
 3. **Build.** `pnpm exec opennextjs-cloudflare build` must produce a clean
    `.open-next/worker.js`. A build that emits warnings you can't explain is
    not a build you can ship.
-4. **Deploy.** Merge to `develop` (auto-deploys to `stage.widgetly.tech` via
-   `.github/workflows/deploy-stage.yml`), then to `main` (auto-deploys to
-   `widgetly.tech` via `.github/workflows/deploy.yml`). Wait for `success`.
-   Capture the run URL.
+4. **Deploy.** Two environments, fully isolated (separate Workers + D1 + KV):
+   - `develop` → `stage.widgetly.tech` via `.github/workflows/deploy-stage.yml`
+   - `main` → `widgetly.tech` via `.github/workflows/deploy.yml`
+
+   Flow:
+   1. PR against `develop` → CI runs (lint, type-check, test, format)
+   2. Merge to `develop` → stage deploy fires automatically: build → apply
+      D1 migrations → wrangler deploy → warm KV cache → **smoke test
+      (`scripts/smoke-test.sh`)** — 12 URLs across public + admin + API
+   3. Verify on stage manually (click around, check the change is there)
+   4. PR `develop → main` (the "release PR") → CI runs
+   5. Merge to `main` → prod deploy fires automatically: apply migrations →
+      build → deploy → warm cache → smoke test
+   6. Verify on prod
+
+   Smoke test is a separate job that fails the workflow if any of the 12
+   URLs return the wrong status. A red smoke test means **don't merge the
+   release PR** — fix forward or roll back.
+
+   Capture the run URL for both deploys.
+
 5. **Verify.** Hit the live URL. Confirm the change is observably present
    (curl, browser, sitemap fetch, JSON-LD validator, Lighthouse — whichever
    matches the surface touched). For SEO changes, also submit affected URLs
