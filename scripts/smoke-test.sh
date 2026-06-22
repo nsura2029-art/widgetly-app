@@ -9,7 +9,7 @@
 #
 # Usage:
 #   bash scripts/smoke-test.sh https://widgetly.tech
-#   bash scripts/smoke-test.sh https://stage.widgetly.tech
+#   bash scripts/smoke-test.sh https://beta.widgetly.tech
 #
 # Exit codes:
 #   0 — all checks passed
