@@ -1,0 +1,119 @@
+name: Seed admin user (stage)
+
+# One-shot workflow to create the first admin user in the stage D1.
+# Uses workflow_dispatch so it never runs on push. The CLOUDFLARE_API_TOKEN
+# GitHub Actions secret is already present from the deploy workflows,
+# so no local Cloudflare auth is needed.
+#
+# Trigger from the Actions tab:
+#   1. Go to https://github.com/nsura2029-art/widgetly-app/actions/workflows/seed-admin-stage.yml
+#   2. Click "Run workflow"
+#   3. Fill in username + password
+#   4. Click "Run workflow"
+#
+# After it succeeds, sign in at https://beta.widgetly.tech/admin/sign-in
+# with the credentials you provided.
+
+on:
+  workflow_dispatch:
+    inputs:
+      username:
+        description: "Admin username (3-32 chars, lowercase a-z, 0-9, _, -)"
+        required: true
+        default: "stage-admin"
+      password:
+        description: "Admin password (>= 10 chars, will be masked in logs)"
+        required: true
+        type: string
+      display_name:
+        description: "Human-readable display name"
+        required: false
+        default: "Stage Admin"
+
+jobs:
+  seed:
+    name: Insert admin user into stage D1
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment: stage
+
+    steps:
+      - name: Mask the password in logs
+        run: |
+          echo "::add-mask::${{ inputs.password }}"
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Setup pnpm 9
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.9
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate bcrypt hash + write SQL to a temp file
+        env:
+          USERNAME: ${{ inputs.username }}
+          PASSWORD: ${{ inputs.password }}
+          DISPLAY_NAME: ${{ inputs.display_name }}
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/seed-admin
+          node --input-type=module -e "
+            import bcrypt from 'bcryptjs';
+            import { writeFileSync } from 'node:fs';
+            const hash = bcrypt.hashSync(process.env.PASSWORD, 12);
+            const esc = (s) => s.replace(/'/g, \"''\");
+            const sql = \`INSERT OR IGNORE INTO admin_users
+              (username, password_hash, display_name, email, is_active, must_change_password, created_at, updated_at)
+              VALUES
+                ('\${esc(process.env.USERNAME)}', '\${esc(hash)}', '\${esc(process.env.DISPLAY_NAME)}',
+                 NULL, 1, 1,
+                 strftime('%Y-%m-%dT%H:%M:%fZ', 'now'),
+                 strftime('%Y-%m-%dT%H:%M:%fZ', 'now'));\`;
+            writeFileSync('/tmp/seed-admin/insert.sql', sql);
+            console.log('SQL written. Hash length:', hash.length);
+            console.log('Username:', process.env.USERNAME);
+            console.log('Display name:', process.env.DISPLAY_NAME);
+          "
+
+      - name: Show the SQL (password hash is masked)
+        run: |
+          echo "--- SQL being executed ---"
+          cat /tmp/seed-admin/insert.sql
+          echo "--- end SQL ---"
+
+      - name: Apply to stage D1
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          pnpm exec wrangler d1 execute widgetly-stage \
+            --env stage \
+            --remote \
+            --file=/tmp/seed-admin/insert.sql
+
+      - name: Verify the user exists
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          pnpm exec wrangler d1 execute widgetly-stage \
+            --env stage \
+            --remote \
+            --command "SELECT id, username, display_name, is_active, must_change_password FROM admin_users WHERE username = '${{ inputs.username }}';"
+
+      - name: Done
+        env:
+          USERNAME: ${{ inputs.username }}
+        run: |
+          echo "✓ Stage admin user '$USERNAME' created."
+          echo "→ Sign in at https://beta.widgetly.tech/admin/sign-in"
