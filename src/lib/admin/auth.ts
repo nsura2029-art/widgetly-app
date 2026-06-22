@@ -25,7 +25,7 @@
  * The HMAC key is `ADMIN_SESSION_SECRET` — set in wrangler as a
  * secret (NOT in .env). See scripts/setup-cloudflare-secrets.mjs.
  */
-import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
+import { createHmac, randomBytes, timingSafeEqual, createHash } from "node:crypto";
 import bcrypt from "bcryptjs";
 import { cookies } from "next/headers";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
@@ -429,4 +429,175 @@ export async function requireAdminFromRequest(): Promise<AuthContext | null> {
   const user = await findUserById(payload.uid);
   if (!user || user.is_active !== 1) return null;
   return { user, sessionId: payload.sid };
+}
+
+// ---------------------------------------------------------------------------
+// Password change + reset (admin account self-service)
+// ---------------------------------------------------------------------------
+
+/** Token TTL for password reset links (1 hour). */
+export const PASSWORD_RESET_TTL_MS = 60 * 60 * 1000;
+
+/** Minimum password length for new passwords. */
+export const MIN_PASSWORD_LENGTH = 10;
+
+/**
+ * Change the password for the currently-authenticated admin. Requires
+ * the current password to confirm identity (defense against stolen
+ * session cookies on shared/lost devices). Clears the
+ * `must_change_password` flag on success.
+ */
+export async function changePassword(
+  userId: number,
+  currentPlain: string,
+  newPlain: string
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  if (newPlain.length < MIN_PASSWORD_LENGTH) {
+    return { ok: false, error: `Password must be at least ${MIN_PASSWORD_LENGTH} characters` };
+  }
+  if (newPlain === currentPlain) {
+    return { ok: false, error: "New password must be different from the current one" };
+  }
+  const db = getDb();
+  const row = await safeQuery(
+    () =>
+      db
+        .prepare(`SELECT password_hash FROM admin_users WHERE id = ?1 LIMIT 1`)
+        .bind(userId)
+        .first<{ password_hash: string }>(),
+    null
+  );
+  if (!row) return { ok: false, error: "Account not found" };
+  const ok = await passwordVerify(currentPlain, row.password_hash);
+  if (!ok) return { ok: false, error: "Current password is incorrect" };
+  const newHash = await passwordHash(newPlain);
+  await safeQuery(
+    () =>
+      db
+        .prepare(
+          `UPDATE admin_users
+             SET password_hash = ?1,
+                 must_change_password = 0,
+                 updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+           WHERE id = ?2`
+        )
+        .bind(newHash, userId)
+        .run(),
+    null
+  );
+  return { ok: true };
+}
+
+export type PasswordResetOutcome =
+  | { ok: true; token: string; expiresAt: string }
+  | { ok: false; reason: "no_user" | "disabled" | "rate_limited" };
+
+/**
+ * Issue a one-time password-reset token for the given username.
+ *
+ * Stores only the SHA-256 hash of the token in D1 (the plaintext is
+ * returned in the response — currently used by the no-email fallback
+ * where the requester copies the link). Invalidates any pre-existing
+ * unused tokens for this user by setting used_at on them.
+ */
+export async function issuePasswordResetToken(
+  username: string,
+  ip: string | null,
+  userAgent: string | null
+): Promise<PasswordResetOutcome> {
+  const user = await findUserByUsername(username);
+  if (!user) return { ok: false, reason: "no_user" };
+  if (user.is_active !== 1) return { ok: false, reason: "disabled" };
+
+  if (ip) {
+    const since = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+    const db = getDb();
+    const n = await safeQuery(
+      () =>
+        db
+          .prepare(
+            `SELECT COUNT(*) AS n FROM admin_password_resets WHERE ip = ?1 AND created_at > ?2`
+          )
+          .bind(ip, since)
+          .first<{ n: number }>(),
+      null
+    );
+    if ((n?.n ?? 0) >= 3) return { ok: false, reason: "rate_limited" };
+  }
+
+  const token = randomBytes(32).toString("hex");
+  const tokenHash = createHash("sha256").update(token).digest("hex");
+  const expiresAt = new Date(Date.now() + PASSWORD_RESET_TTL_MS).toISOString();
+
+  const db = getDb();
+  await safeQuery(async () => {
+    await db
+      .prepare(
+        `UPDATE admin_password_resets SET used_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+             WHERE user_id = ?1 AND used_at IS NULL`
+      )
+      .bind(user.id)
+      .run();
+    await db
+      .prepare(
+        `INSERT INTO admin_password_resets
+             (user_id, token_hash, expires_at, ip, user_agent)
+           VALUES (?1, ?2, ?3, ?4, ?5)`
+      )
+      .bind(user.id, tokenHash, expiresAt, ip, userAgent)
+      .run();
+  }, null);
+  return { ok: true, token, expiresAt };
+}
+
+/**
+ * Validate a reset token + write a new password to the user account.
+ */
+export async function consumePasswordResetToken(
+  token: string,
+  newPlain: string
+): Promise<{ ok: true; userId: number } | { ok: false; error: string }> {
+  if (newPlain.length < MIN_PASSWORD_LENGTH) {
+    return { ok: false, error: `Password must be at least ${MIN_PASSWORD_LENGTH} characters` };
+  }
+  const tokenHash = createHash("sha256").update(token).digest("hex");
+  const db = getDb();
+  const row = await safeQuery(
+    () =>
+      db
+        .prepare(
+          `SELECT id, user_id, expires_at, used_at
+             FROM admin_password_resets WHERE token_hash = ?1 LIMIT 1`
+        )
+        .bind(tokenHash)
+        .first<{ id: number; user_id: number; expires_at: string; used_at: string | null }>(),
+    null
+  );
+  if (!row) return { ok: false, error: "Invalid or expired reset link" };
+  if (row.used_at) return { ok: false, error: "This reset link has already been used" };
+  if (new Date(row.expires_at).getTime() < Date.now()) {
+    return { ok: false, error: "This reset link has expired" };
+  }
+  const newHash = await passwordHash(newPlain);
+  await safeQuery(async () => {
+    await db
+      .prepare(
+        `UPDATE admin_users
+             SET password_hash = ?1,
+                 must_change_password = 0,
+                 updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+           WHERE id = ?2`
+      )
+      .bind(newHash, row.user_id)
+      .run();
+    await db
+      .prepare(
+        `UPDATE admin_password_resets
+             SET used_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+           WHERE id = ?1`
+      )
+      .bind(row.id)
+      .run();
+  }, null);
+  return { ok: true, userId: row.user_id };
 }
