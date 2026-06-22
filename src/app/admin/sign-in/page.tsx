@@ -21,7 +21,9 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Loader2, ShieldCheck, AlertCircle } from "lucide-react";
 
-export default function AdminSignInPage() {
+export const dynamic = "force-dynamic";
+
+function AdminSignInForm() {
   const router = useRouter();
   const sp = useSearchParams();
   const next = sp.get("next") || "/admin";
@@ -163,5 +165,22 @@ export default function AdminSignInPage() {
         </form>
       </div>
     </div>
+  );
+}
+
+export default function AdminSignInPage() {
+  // useSearchParams suspends during static prerender, so wrap the
+  // form in a Suspense boundary to satisfy Next.js 16's static
+  // generation rules.
+  return (
+    <React.Suspense
+      fallback={
+        <div className="text-muted-foreground flex min-h-[calc(100dvh-3.5rem)] items-center justify-center text-sm">
+          Loading…
+        </div>
+      }
+    >
+      <AdminSignInForm />
+    </React.Suspense>
   );
 }
