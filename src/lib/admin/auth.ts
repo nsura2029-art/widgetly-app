@@ -28,6 +28,7 @@
 import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import bcrypt from "bcryptjs";
 import { cookies } from "next/headers";
+import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { getDb, safeQuery } from "@/lib/d1/admin";
 
 // ---------------------------------------------------------------------------
@@ -88,16 +89,26 @@ type SessionPayload = {
 
 let devSecret: string | null = null;
 function getSecret(): string {
-  // Read from the Cloudflare binding via getCloudflareContext, falling
-  // back to a per-process random secret in dev (which invalidates
+  // Read from the Cloudflare binding via getCloudflareContext (the
+  // canonical way to access env vars in OpenNext on Cloudflare).
+  // Fall back to a per-process random secret in dev (which invalidates
   // sessions across restarts — fine for local).
+  //
+  // IMPORTANT: do NOT read from `globalThis.__cloudflare__` — that
+  // object doesn't exist in OpenNext's runtime, so the lookup always
+  // misses and we fall through to the dev secret. With Workers Free /
+  // multi-region, different Worker instances use different random
+  // secrets, so a token signed on instance A fails verification on
+  // instance B. This caused the bug where /api/admin/auth/login
+  // succeeded but every subsequent request (including /api/admin/auth/me
+  // and the admin pages' server-side auth check) returned 401 —
+  // because each request landed on a different Worker instance.
   try {
-    const { env } = (globalThis as { __cloudflare__?: { env?: Record<string, string> } })
-      ?.__cloudflare__ ?? { env: {} as Record<string, string> };
-    const fromEnv = env?.ADMIN_SESSION_SECRET;
+    const { env } = getCloudflareContext();
+    const fromEnv = (env as { ADMIN_SESSION_SECRET?: string })?.ADMIN_SESSION_SECRET;
     if (fromEnv) return fromEnv;
   } catch {
-    /* ignore */
+    /* ignore — local dev without OpenNext shim */
   }
   if (!devSecret) devSecret = randomBytes(32).toString("hex");
   return devSecret;
