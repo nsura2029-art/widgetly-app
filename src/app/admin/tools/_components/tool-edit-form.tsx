@@ -10,6 +10,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Loader2, Save } from "lucide-react";
 import { StatusChangeModal } from "./status-change-modal";
+import { csrfFetch } from "@/lib/admin/csrf-client";
 import { TOOL_STATUSES, type AdminTool, type ToolStatus } from "@/lib/admin/tools";
 
 const TIERS = ["free", "freemium", "paid"] as const;
@@ -46,7 +47,7 @@ export function ToolEditForm({ tool }: { tool: AdminTool }) {
     setError(null);
     setSuccess(null);
     try {
-      const r = await fetch(`/api/admin/tools/${tool.id}`, {
+      const r = await csrfFetch(`/api/admin/tools/${tool.id}`, {
         method: "PATCH",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
@@ -81,7 +82,7 @@ export function ToolEditForm({ tool }: { tool: AdminTool }) {
     setBusy(true);
     setError(null);
     try {
-      const r = await fetch(`/api/admin/tools/${tool.id}`, {
+      const r = await csrfFetch(`/api/admin/tools/${tool.id}`, {
         method: "PATCH",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ status, notes }),

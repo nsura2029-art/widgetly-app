@@ -35,7 +35,8 @@ import { getDb, safeQuery } from "@/lib/d1/admin";
 // ---------------------------------------------------------------------------
 
 export const COOKIE_NAME = "wly_admin";
-export const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+export const CSRF_COOKIE_NAME = "wly_admin_csrf";
+export const SESSION_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours of inactivity
 export const BCRYPT_COST = 12;
 export const RATE_LIMIT_WINDOW_MS = 60_000; // 1 minute
 export const RATE_LIMIT_MAX = 5; // 5 attempts per window per IP
@@ -175,6 +176,64 @@ export async function writeSessionCookie(token: string): Promise<void> {
 export async function clearSessionCookie(): Promise<void> {
   const store = await cookies();
   store.set({ name: COOKIE_NAME, value: "", path: "/", maxAge: 0 });
+  store.set({ name: CSRF_COOKIE_NAME, value: "", path: "/", maxAge: 0 });
+}
+
+// ---------------------------------------------------------------------------
+// CSRF token
+// ---------------------------------------------------------------------------
+// Belt-and-suspenders CSRF: even though the session cookie is
+// SameSite=Strict (so cross-site requests never include it), we
+// require a separate non-HttpOnly cookie carrying a token that the
+// client must echo back as `x-csrf-token` on every state-changing
+// request. A cross-site attacker can't read this cookie (it lives
+// in the user's browser), so they can't forge the header.
+//
+// The token is generated on sign-in and rotated on every login.
+// On logout we clear both cookies.
+//
+// Token format: 32 random bytes, base64url. Stored client-side in
+// `wly_admin_csrf` (NOT HttpOnly so the JS can read it). The header
+// value on state-changing requests is the exact same string.
+
+export function mintCsrfToken(): string {
+  return randomBytes(32).toString("base64url");
+}
+
+export async function readCsrfCookie(): Promise<string | null> {
+  try {
+    const store = await cookies();
+    return store.get(CSRF_COOKIE_NAME)?.value ?? null;
+  } catch {
+    return null;
+  }
+}
+
+export async function writeCsrfCookie(token: string): Promise<void> {
+  const store = await cookies();
+  // NOT HttpOnly — the client must read this to send the header.
+  // SameSite=Strict so cross-site reads never happen.
+  store.set(CSRF_COOKIE_NAME, token, {
+    httpOnly: false,
+    secure: true,
+    sameSite: "strict",
+    path: "/",
+    maxAge: SESSION_TTL_MS / 1000,
+  });
+}
+
+export async function requireCsrfHeader(req: Request): Promise<boolean> {
+  const cookie = await readCsrfCookie();
+  if (!cookie) return false;
+  const header = req.headers.get("x-csrf-token");
+  if (!header) return false;
+  // Constant-time compare to avoid timing oracles.
+  if (cookie.length !== header.length) return false;
+  try {
+    return timingSafeEqual(Buffer.from(cookie), Buffer.from(header));
+  } catch {
+    return false;
+  }
 }
 
 // ---------------------------------------------------------------------------

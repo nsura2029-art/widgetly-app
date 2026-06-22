@@ -1,0 +1,91 @@
+name: Deploy to Stage (Cloudflare Workers)
+
+on:
+  push:
+    branches: [develop]
+  workflow_dispatch:
+
+concurrency:
+  group: stage-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Build & Deploy to stage.widgetly.tech
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    permissions:
+      contents: read
+      deployments: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # -------------------------------------------------------------------
+      # Sync the same set of secrets we push to production, but to the
+      # `stage` wrangler environment. This keeps the two stacks in lockstep
+      # so staging is a faithful preview of what'll hit production.
+      #
+      # Note: ADMIN_SESSION_SECRET should be different on stage so a token
+      # minted in one environment doesn't accidentally work in the other.
+      # -------------------------------------------------------------------
+      - name: Sync secrets to stage Worker
+        if: ${{ env.SUPABASE_URL != '' || env.SUPABASE_SERVICE_ROLE_KEY != '' || env.WAITLIST_WEBHOOK_URL != '' || env.SUGGEST_WEBHOOK_URL != '' || env.NEXT_PUBLIC_ANALYTICS_TOKEN != '' || env.ADMIN_SESSION_SECRET != '' }}
+        run: |
+          set -e
+          echo "secrets present in this run:"
+          for n in SUPABASE_URL SUPABASE_SERVICE_ROLE_KEY WAITLIST_WEBHOOK_URL SUGGEST_WEBHOOK_URL NEXT_PUBLIC_ANALYTICS_TOKEN ADMIN_SESSION_SECRET; do
+            v=$(eval echo "\$$n")
+            if [ -n "$v" ]; then echo "  $n: set (length ${#v})"; else echo "  $n: (not set, skipping)"; fi
+          done
+          [ -n "$SUPABASE_URL" ]              && printf '%s' "$SUPABASE_URL"              | pnpm exec wrangler secret put SUPABASE_URL              --env stage || true
+          [ -n "$SUPABASE_SERVICE_ROLE_KEY" ] && printf '%s' "$SUPABASE_SERVICE_ROLE_KEY" | pnpm exec wrangler secret put SUPABASE_SERVICE_ROLE_KEY --env stage || true
+          [ -n "$WAITLIST_WEBHOOK_URL" ]      && printf '%s' "$WAITLIST_WEBHOOK_URL"      | pnpm exec wrangler secret put WAITLIST_WEBHOOK_URL      --env stage || true
+          [ -n "$SUGGEST_WEBHOOK_URL" ]       && printf '%s' "$SUGGEST_WEBHOOK_URL"       | pnpm exec wrangler secret put SUGGEST_WEBHOOK_URL       --env stage || true
+          [ -n "$NEXT_PUBLIC_ANALYTICS_TOKEN" ] && printf '%s' "$NEXT_PUBLIC_ANALYTICS_TOKEN" | pnpm exec wrangler secret put NEXT_PUBLIC_ANALYTICS_TOKEN --env stage || true
+          [ -n "$ADMIN_SESSION_SECRET" ]      && printf '%s' "$ADMIN_SESSION_SECRET"      | pnpm exec wrangler secret put ADMIN_SESSION_SECRET      --env stage || true
+          echo "stage secrets sync complete"
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          WAITLIST_WEBHOOK_URL: ${{ secrets.WAITLIST_WEBHOOK_URL }}
+          SUGGEST_WEBHOOK_URL: ${{ secrets.SUGGEST_WEBHOOK_URL }}
+          NEXT_PUBLIC_ANALYTICS_TOKEN: ${{ secrets.NEXT_PUBLIC_ANALYTICS_TOKEN }}
+          ADMIN_SESSION_SECRET: ${{ secrets.ADMIN_SESSION_SECRET }}
+
+      - name: Deploy to stage
+        run: pnpm exec wrangler deploy --env stage
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          OPEN_NEXT_DEPLOY: "true"
+          NEXT_TELEMETRY_DISABLED: 1
+
+      # Apply any pending D1 migrations to the stage database. Same
+      # `wrangler d1 migrations apply` is idempotent — only new ones run.
+      - name: Apply D1 migrations (stage)
+        if: success()
+        run: pnpm exec wrangler d1 migrations apply widgetly-stage --remote --env stage
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      - name: Warm stage KV cache
+        if: success()
+        run: bash scripts/warm-cache.sh https://stage.widgetly.tech
+        env:
+          WARM_LOCALES: "en"

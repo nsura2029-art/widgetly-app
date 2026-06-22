@@ -14,11 +14,15 @@
  * during SSR — those are HttpOnly and not in the document). The first
  * render shows the minimal shell; after /api/admin/auth/me returns
  * we either stay minimal (401) or swap in the full chrome (200).
+ *
+ * Tablet + mobile: the sidebar becomes a slide-in panel triggered by
+ * a hamburger button. Backdrop click closes it. The route change
+ * effect also closes it so navigation doesn't leave the menu open.
  */
 import * as React from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { BarChart3, Boxes, LogOut, RefreshCw, ShieldCheck, Wrench } from "lucide-react";
+import { BarChart3, Boxes, LogOut, Menu, RefreshCw, ShieldCheck, Wrench, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const NAV = [
@@ -131,14 +135,68 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
     );
   }
 
-  // Authed: full sidebar + top bar.
+  // Authed: full sidebar + top bar (responsive).
+  return (
+    <AuthedShell pathname={pathname} auth={auth} signOut={signOut}>
+      {children}
+    </AuthedShell>
+  );
+}
+
+function AuthedShell({
+  pathname,
+  auth,
+  signOut,
+  children,
+}: {
+  pathname: string;
+  auth: { state: "authed"; user: { id: number; username: string; display_name: string } };
+  signOut: () => Promise<void>;
+  children: React.ReactNode;
+}) {
+  const [sidebarOpen, setSidebarOpen] = React.useState(false);
+
+  // Close the mobile sidebar on route change.
+  React.useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setSidebarOpen(false);
+  }, [pathname]);
+
+  const user = auth.user;
+
   return (
     <div className="bg-background text-foreground min-h-dvh">
       <div className="flex min-h-dvh">
-        <aside className="border-border/60 hidden w-60 shrink-0 border-r lg:flex lg:flex-col">
-          <div className="flex h-14 items-center gap-2 border-b px-5">
-            <ShieldCheck className="text-primary h-5 w-5" aria-hidden="true" />
-            <span className="text-sm font-semibold tracking-tight">Widgetly Admin</span>
+        {/* Mobile backdrop */}
+        {sidebarOpen && (
+          <button
+            type="button"
+            aria-label="Close menu"
+            onClick={() => setSidebarOpen(false)}
+            className="fixed inset-0 z-20 bg-stone-900/40 backdrop-blur-sm lg:hidden"
+          />
+        )}
+
+        <aside
+          className={cn(
+            "border-border/60 w-60 shrink-0 border-r bg-white lg:flex lg:flex-col",
+            // Off-canvas by default below lg; slide in when open
+            sidebarOpen ? "fixed inset-y-0 left-0 z-30 flex flex-col" : "hidden lg:flex"
+          )}
+        >
+          <div className="flex h-14 items-center justify-between gap-2 border-b px-5">
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="text-primary h-5 w-5" aria-hidden="true" />
+              <span className="text-sm font-semibold tracking-tight">Widgetly Admin</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setSidebarOpen(false)}
+              className="text-muted-foreground hover:text-foreground -mr-2 inline-flex h-8 w-8 items-center justify-center rounded-md transition-colors lg:hidden"
+              aria-label="Close menu"
+            >
+              <X className="h-4 w-4" aria-hidden="true" />
+            </button>
           </div>
           <nav className="flex-1 space-y-1 p-3">
             {NAV.map((item) => {
@@ -171,15 +229,26 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         </aside>
 
         <div className="flex flex-1 flex-col">
-          <header className="border-border/60 sticky top-0 z-10 flex h-14 items-center justify-between border-b bg-white/80 px-6 backdrop-blur">
-            <div className="text-muted-foreground text-sm">
-              {pathname === "/admin" ? "Dashboard" : pathname.replace(/^\/admin\/?/, "")}
-            </div>
+          <header className="border-border/60 sticky top-0 z-10 flex h-14 items-center justify-between border-b bg-white/80 px-4 backdrop-blur sm:px-6">
             <div className="flex items-center gap-3">
-              <span className="text-muted-foreground text-xs">
+              <button
+                type="button"
+                onClick={() => setSidebarOpen((v) => !v)}
+                className="border-border text-muted-foreground hover:text-foreground hover:bg-muted/5 inline-flex h-9 w-9 items-center justify-center rounded-lg border bg-white/60 transition-colors lg:hidden"
+                aria-label="Open menu"
+                aria-expanded={sidebarOpen}
+              >
+                <Menu className="h-4 w-4" aria-hidden="true" />
+              </button>
+              <div className="text-muted-foreground text-sm">
+                {pathname === "/admin" ? "Dashboard" : pathname.replace(/^\/admin\/?/, "")}
+              </div>
+            </div>
+            <div className="flex items-center gap-2 sm:gap-3">
+              <span className="text-muted-foreground hidden text-xs sm:inline">
                 Signed in as{" "}
                 <span className="text-foreground font-medium">
-                  {auth.user.display_name || auth.user.username}
+                  {user.display_name || user.username}
                 </span>
               </span>
               <button
@@ -189,11 +258,11 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
                 aria-label="Sign out"
               >
                 <LogOut className="h-3.5 w-3.5" aria-hidden="true" />
-                Sign out
+                <span className="hidden sm:inline">Sign out</span>
               </button>
             </div>
           </header>
-          <main className="flex-1 p-6">{children}</main>
+          <main className="flex-1 p-4 sm:p-6">{children}</main>
         </div>
       </div>
     </div>

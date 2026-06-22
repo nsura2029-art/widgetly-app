@@ -19,47 +19,26 @@ enabled = true
 # Production domains are attached in the Cloudflare dashboard so CI deploys
 # only update Worker code and assets, not route/custom-domain triggers.
 # ---------------------------------------------------------------------------
-
-# Optional KV (e.g. waitlist persistence)
-# [[kv_namespaces]]
-# binding = "WAITLIST"
-# id = "REPLACE_WITH_KV_NAMESPACE_ID"
-# preview_id = "REPLACE_WITH_PREVIEW_KV_NAMESPACE_ID"
-
-# ---------------------------------------------------------------------------
-# KV: user locale preference (set by POST /api/locale, read by the middleware
-# via the wly_locale cookie). Anonymous identity is the key.
 #
-# Created via:
-#   pnpm wrangler kv namespace create LOCALE_KV
-#   pnpm wrangler kv namespace create LOCALE_KV --preview
-# Paste the printed IDs into `id` / `preview_id` below.
+# Two environments:
+#   - (default) production → widgetly.tech        (Worker name: widgetly)
+#   - stage              → stage.widgetly.tech    (Worker name: widgetly-stage)
+#
+# Per-environment bindings (D1, KV) keep the two stacks fully isolated:
+# dropping or migrating the stage database doesn't affect production.
 # ---------------------------------------------------------------------------
-# [[kv_namespaces]]
-# binding = "LOCALE_KV"
-# id = "REPLACE_WITH_KV_NAMESPACE_ID"
-# preview_id = "REPLACE_WITH_PREVIEW_KV_NAMESPACE_ID"
 
 # ---------------------------------------------------------------------------
-# KV: OpenNext incremental cache.
+# Production KV (OpenNext incremental cache).
 #
 # Backing store for prerendered HTML pages (`force-static` routes). Without
 # this, OpenNext re-renders every request — the previous `incrementalCache:
 # "dummy"` config in open-next.config.ts caused the Worker to spin on every
 # request, which is what was triggering the random Error 1102s.
 #
-# Created via:
-#   pnpm wrangler kv namespace create NEXT_INC_CACHE_KV
-#   pnpm wrangler kv namespace create NEXT_INC_CACHE_KV --preview
-# Paste the printed IDs into `id` / `preview_id` below.
-#
 # KV is included in Workers Free (100K reads/day, 1K writes/day, 1 GB). Reads
 # happen on every cached request; writes happen at build time when OpenNext
 # prerenders each route. We use <0.1% of the daily quota.
-#
-# Bound binding name is `NEXT_INC_CACHE_KV` — this is the default name that
-# `cloudflare-kv-incremental-cache` looks up; if you change it here, you must
-# also override `kvBinding` in open-next.config.ts.
 # ---------------------------------------------------------------------------
 [[kv_namespaces]]
 binding = "NEXT_INC_CACHE_KV"
@@ -67,32 +46,48 @@ id = "0e35b410aaf04be18d7cb17e54bc9cfb"
 preview_id = "d85f0da78ed64650a9502783e03f116f"
 
 # ---------------------------------------------------------------------------
-# Environment variables (set in Cloudflare dashboard, not here)
-# ---------------------------------------------------------------------------
-# WAITLIST_KV      — KV binding (if KV enabled)
-# LOCALE_KV        — KV binding (locale preference persistence)
-# ANALYTICS_TOKEN  — Cloudflare Web Analytics token (set in dashboard)
-# ---------------------------------------------------------------------------
-
-# ---------------------------------------------------------------------------
-# D1: waitlist + tool suggestions persistence.
-#
-# Replaces the previous Supabase integration. D1 lives inside Cloudflare's
-# edge network, so writes are 5-20ms vs the 100-300ms round-trip to
-# Supabase we had before.
-#
-# Setup (one-time, on your local machine):
-#   1. pnpm exec wrangler d1 create widgetly
-#      → prints a database_id; paste it below.
-#   2. pnpm db:migrate:remote
-#      → applies migrations/0001_init.sql to the deployed D1.
-#
-# Migrations are SQL files in /migrations. Add a new NNNN_*.sql file and
-# run `pnpm db:migrate:remote` to apply. Never edit applied migrations.
-#
-# The binding `DB` is what the code reads via (globalThis as { DB?: D1Database }).DB.
+# Production D1: waitlist + tool suggestions + leaderboard + admin.
 # ---------------------------------------------------------------------------
 [[d1_databases]]
 binding = "DB"
 database_name = "widgetly"
 database_id = "64cbb0d4-af76-46cf-a742-cf78902f1dc3"
+
+# ===========================================================================
+# STAGE ENVIRONMENT
+# ---------------------------------------------------------------------------
+# A completely separate Worker + D1 + KV. Reachable at stage.widgetly.tech.
+# CI deploys push-to-develop here; production deploys push-to-main.
+#
+# Setup (one-time, on your local machine):
+#   1. wrangler kv namespace create NEXT_INC_CACHE_KV --env stage
+#   2. wrangler d1 create widgetly-stage
+#   3. Paste the printed IDs into the [env.stage] block below.
+#   4. wrangler d1 migrations apply widgetly-stage --remote --env stage
+#   5. wrangler deploy --env stage
+#   6. In the Cloudflare dashboard, attach stage.widgetly.tech to the
+#      `widgetly-stage` Worker.
+# ===========================================================================
+[env.stage]
+name = "widgetly-stage"
+compatibility_date = "2025-04-01"
+compatibility_flags = ["nodejs_compat", "global_fetch_strictly_public"]
+
+# Stage KV namespace (placeholder IDs — replace after running the
+# `wrangler kv namespace create` commands in the setup notes above).
+[[env.stage.kv_namespaces]]
+binding = "NEXT_INC_CACHE_KV"
+id = "REPLACE_WITH_STAGE_KV_ID"
+preview_id = "REPLACE_WITH_STAGE_KV_PREVIEW_ID"
+
+# Stage D1 database (placeholder ID — replace after `wrangler d1 create`).
+[[env.stage.d1_databases]]
+binding = "DB"
+database_name = "widgetly-stage"
+database_id = "REPLACE_WITH_STAGE_D1_ID"
+
+# Stage secrets go in:
+#   wrangler secret put ADMIN_SESSION_SECRET --env stage
+#   wrangler secret put SUGGEST_WEBHOOK_URL --env stage
+# (everything that's set on the production Worker; use the same values
+# for stage EXCEPT for any production-only credentials.)
