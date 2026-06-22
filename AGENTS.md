@@ -72,8 +72,8 @@ This AGENTS.md is the binding work contract for the whole repository. Every chil
 
 ### Branching
 
-- `main` — production. Triggers Cloudflare deploy on push (via `.github/workflows/deploy.yml`).
-- `develop` — staging. No auto-deploy; trigger manually via `workflow_dispatch`.
+- `main` — production. Push triggers Cloudflare deploy to `widgetly.tech` via `.github/workflows/deploy.yml`.
+- `develop` — staging. Push triggers Cloudflare deploy to `stage.widgetly.tech` via `.github/workflows/deploy-stage.yml`. See `docs/operations/stage-deploy.md` for the one-time setup.
 - Feature branches: `chore/<description>`, `feat/<description>`, `fix/<description>`.
 
 ### Commits
@@ -311,9 +311,10 @@ shortcut. The pre-push hook, the CI workflow, the deploy workflow, and the
 3. **Build.** `pnpm exec opennextjs-cloudflare build` must produce a clean
    `.open-next/worker.js`. A build that emits warnings you can't explain is
    not a build you can ship.
-4. **Deploy.** Merge to `develop` (preview), then to `main` (production).
-   Each merge triggers the deploy workflow (`.github/workflows/deploy.yml`).
-   Wait for `success`. Capture the run URL.
+4. **Deploy.** Merge to `develop` (auto-deploys to `stage.widgetly.tech` via
+   `.github/workflows/deploy-stage.yml`), then to `main` (auto-deploys to
+   `widgetly.tech` via `.github/workflows/deploy.yml`). Wait for `success`.
+   Capture the run URL.
 5. **Verify.** Hit the live URL. Confirm the change is observably present
    (curl, browser, sitemap fetch, JSON-LD validator, Lighthouse — whichever
    matches the surface touched). For SEO changes, also submit affected URLs

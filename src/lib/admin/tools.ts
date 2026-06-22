@@ -73,8 +73,18 @@ export type ListToolsOptions = {
   status?: ToolStatus | "all";
   category?: string | "all";
   q?: string;
+  sort?: "live_first" | "updated_desc" | "updated_asc" | "name_asc" | "name_desc" | "sort_asc";
   limit?: number;
   offset?: number;
+};
+
+const SORT_CLAUSES: Record<NonNullable<ListToolsOptions["sort"]>, string> = {
+  live_first: "status = 'live' DESC, sort_order ASC, updated_at DESC",
+  updated_desc: "updated_at DESC",
+  updated_asc: "updated_at ASC",
+  name_asc: "name COLLATE NOCASE ASC",
+  name_desc: "name COLLATE NOCASE DESC",
+  sort_asc: "sort_order ASC, name COLLATE NOCASE ASC",
 };
 
 export async function listTools(opts: ListToolsOptions = {}): Promise<{
@@ -84,6 +94,7 @@ export async function listTools(opts: ListToolsOptions = {}): Promise<{
   const db = getDb();
   const limit = Math.min(opts.limit ?? 50, 200);
   const offset = Math.max(opts.offset ?? 0, 0);
+  const sortClause = SORT_CLAUSES[opts.sort ?? "live_first"] ?? SORT_CLAUSES.live_first;
   const where: string[] = [];
   const binds: unknown[] = [];
 
@@ -111,7 +122,7 @@ export async function listTools(opts: ListToolsOptions = {}): Promise<{
       const rows = await db
         .prepare(
           `SELECT * FROM admin_tools ${whereSql}
-         ORDER BY status = 'live' DESC, sort_order ASC, updated_at DESC
+         ORDER BY ${sortClause}
          LIMIT ? OFFSET ?`
         )
         .bind(...binds, limit, offset)

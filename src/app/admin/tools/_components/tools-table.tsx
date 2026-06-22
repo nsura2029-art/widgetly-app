@@ -15,6 +15,7 @@ import Link from "next/link";
 import { ChevronLeft, ChevronRight, ExternalLink, Filter, Search, Trash2 } from "lucide-react";
 import { StatusChangeModal } from "./status-change-modal";
 import { cn } from "@/lib/utils";
+import { csrfFetch } from "@/lib/admin/csrf-client";
 import type { AdminTool, ToolStatus } from "@/lib/admin/tools";
 
 const STATUS_META: Record<ToolStatus, { label: string; tone: string }> = {
@@ -43,7 +44,17 @@ type Filters = {
   status: ToolStatus | "all";
   category: string;
   q: string;
+  sort: "live_first" | "updated_desc" | "updated_asc" | "name_asc" | "name_desc" | "sort_asc";
 };
+
+const SORT_OPTIONS: Array<{ value: Filters["sort"]; label: string }> = [
+  { value: "live_first", label: "Live first" },
+  { value: "updated_desc", label: "Updated (newest)" },
+  { value: "updated_asc", label: "Updated (oldest)" },
+  { value: "name_asc", label: "Name (A–Z)" },
+  { value: "name_desc", label: "Name (Z–A)" },
+  { value: "sort_asc", label: "Sort order" },
+];
 
 export function ToolsTable({
   initialRows,
@@ -83,9 +94,14 @@ export function ToolsTable({
     (override: Partial<Filters> & { page?: number }) => {
       const next = new URLSearchParams(sp.toString());
       const merged = { ...filters, ...override };
-      for (const k of ["status", "category", "q"] as const) {
+      for (const k of ["status", "category", "q", "sort"] as const) {
         const v = merged[k];
-        if (!v || v === "all" || v === "") next.delete(k);
+        const isDefault =
+          (k === "status" && v === "all") ||
+          (k === "sort" && v === "live_first") ||
+          (k === "q" && v === "") ||
+          (k === "category" && v === "all");
+        if (!v || isDefault) next.delete(k);
         else next.set(k, v);
       }
       if (override.page) next.set("page", String(override.page));
@@ -98,6 +114,35 @@ export function ToolsTable({
 
   const applyFilter = (override: Partial<Filters>) => {
     router.replace(buildHref(override));
+  };
+
+  /**
+   * Cycle the sort key on a column header click. The mapping is:
+   *   - "Name" header: cycles name_asc → name_desc → live_first
+   *   - "Updated" header: cycles updated_desc → updated_asc → live_first
+   */
+  const cycleSort = (column: "name" | "updated") => {
+    const map: Record<"name" | "updated", Array<Filters["sort"]>> = {
+      name: ["name_asc", "name_desc", "live_first"],
+      updated: ["updated_desc", "updated_asc", "live_first"],
+    };
+    const order = map[column];
+    const idx = order.indexOf(filters.sort);
+    const next = order[(idx + 1) % order.length]!;
+    applyFilter({ sort: next });
+  };
+
+  const sortIndicator = (column: "name" | "updated"): string => {
+    if (column === "name" && (filters.sort === "name_asc" || filters.sort === "name_desc")) {
+      return filters.sort === "name_asc" ? "↑" : "↓";
+    }
+    if (
+      column === "updated" &&
+      (filters.sort === "updated_asc" || filters.sort === "updated_desc")
+    ) {
+      return filters.sort === "updated_desc" ? "↓" : "↑";
+    }
+    return "";
   };
 
   const onSearchSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -126,7 +171,7 @@ export function ToolsTable({
     setError(null);
     try {
       for (const id of ids) {
-        const r = await fetch(`/api/admin/tools/${id}`, {
+        const r = await csrfFetch(`/api/admin/tools/${id}`, {
           method: "PATCH",
           headers: { "content-type": "application/json" },
           body: JSON.stringify({ status: newStatus, notes }),
@@ -153,7 +198,7 @@ export function ToolsTable({
     setBusy(true);
     setError(null);
     try {
-      const r = await fetch(`/api/admin/tools/${id}`, { method: "DELETE" });
+      const r = await csrfFetch(`/api/admin/tools/${id}`, { method: "DELETE" });
       if (!r.ok) {
         const data = (await r.json().catch(() => ({}))) as { error?: string };
         throw new Error(data.error || "Delete failed");
@@ -221,6 +266,19 @@ export function ToolsTable({
             ))}
           </datalist>
         </div>
+
+        <select
+          value={filters.sort}
+          onChange={(e) => applyFilter({ sort: e.target.value as Filters["sort"] })}
+          className="border-border h-10 rounded-lg border bg-white px-3 text-sm"
+          aria-label="Sort order"
+        >
+          {SORT_OPTIONS.map((o) => (
+            <option key={o.value} value={o.value}>
+              Sort: {o.label}
+            </option>
+          ))}
+        </select>
       </div>
 
       {/* Bulk action bar */}
@@ -274,10 +332,30 @@ export function ToolsTable({
                     className="h-4 w-4 rounded border-stone-300"
                   />
                 </th>
-                <th className="px-3 py-3 text-left font-semibold">Name</th>
+                <th className="px-3 py-3 text-left font-semibold">
+                  <button
+                    type="button"
+                    onClick={() => cycleSort("name")}
+                    className="hover:text-foreground inline-flex items-center gap-1 transition-colors"
+                    aria-label="Sort by name"
+                  >
+                    Name
+                    <span className="text-primary w-3 text-xs">{sortIndicator("name")}</span>
+                  </button>
+                </th>
                 <th className="px-3 py-3 text-left font-semibold">Category</th>
                 <th className="px-3 py-3 text-left font-semibold">Status</th>
-                <th className="px-3 py-3 text-left font-semibold">Updated</th>
+                <th className="px-3 py-3 text-left font-semibold">
+                  <button
+                    type="button"
+                    onClick={() => cycleSort("updated")}
+                    className="hover:text-foreground inline-flex items-center gap-1 transition-colors"
+                    aria-label="Sort by updated time"
+                  >
+                    Updated
+                    <span className="text-primary w-3 text-xs">{sortIndicator("updated")}</span>
+                  </button>
+                </th>
                 <th className="w-44 px-4 py-3 text-right font-semibold">Actions</th>
               </tr>
             </thead>

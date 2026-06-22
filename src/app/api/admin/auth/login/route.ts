@@ -21,18 +21,19 @@ import {
   checkRateLimit,
   clientIpFromHeaders,
   COOKIE_NAME,
+  CSRF_COOKIE_NAME,
   findUserByUsername,
   issueSessionToken,
+  mintCsrfToken,
   passwordVerify,
   recordLoginAttempt,
   recordSession,
   SESSION_TTL_MS,
   touchLastLogin,
 } from "@/lib/admin/auth";
+import { LoginBody } from "@/lib/admin/schemas";
 
 export const runtime = "nodejs";
-
-type Body = { username?: string; password?: string };
 
 export async function POST(req: NextRequest) {
   const ip = clientIpFromHeaders(req.headers);
@@ -45,18 +46,21 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  let body: Body;
+  let body: LoginBody;
   try {
-    body = (await req.json()) as Body;
-  } catch {
-    return NextResponse.json({ error: "Malformed request body" }, { status: 400 });
+    body = LoginBody.parse(await req.json());
+  } catch (err) {
+    await recordLoginAttempt(ip, "(unparseable)", false, "missing_fields");
+    return NextResponse.json(
+      {
+        error: "Invalid request body",
+        issues: (err as { issues?: unknown }).issues,
+      },
+      { status: 400 }
+    );
   }
-  const username = (body.username ?? "").trim();
-  const password = body.password ?? "";
-  if (!username || !password) {
-    await recordLoginAttempt(ip, username, false, "missing_fields");
-    return NextResponse.json({ error: "Username and password are required" }, { status: 400 });
-  }
+  const username = body.username;
+  const password = body.password;
 
   const user = await findUserByUsername(username);
   if (!user) {
@@ -92,6 +96,7 @@ export async function POST(req: NextRequest) {
     uid: user.id,
     exp: Date.now() + SESSION_TTL_MS,
   });
+  const csrf = mintCsrfToken();
   await recordSession(sid, user.id, ip, req.headers.get("user-agent"));
   await touchLastLogin(user.id, ip);
   await recordLoginAttempt(ip, username, true, null);
@@ -102,10 +107,21 @@ export async function POST(req: NextRequest) {
       username: user.username,
       display_name: user.display_name,
       must_change_password: user.must_change_password,
+      // Return CSRF token in the response body too so a client that
+      // has just been freshly loaded (cookies still propagating) can
+      // prime itself before the first state-changing call.
+      csrf_token: csrf,
     },
   });
   res.cookies.set(COOKIE_NAME, token, {
     httpOnly: true,
+    secure: true,
+    sameSite: "strict",
+    path: "/",
+    maxAge: SESSION_TTL_MS / 1000,
+  });
+  res.cookies.set(CSRF_COOKIE_NAME, csrf, {
+    httpOnly: false,
     secure: true,
     sameSite: "strict",
     path: "/",

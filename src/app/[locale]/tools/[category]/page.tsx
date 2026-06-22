@@ -75,6 +75,26 @@ export default async function ToolsCategoryPage({ params }: { params: Promise<Pa
   if (!cat) notFound();
 
   const Icon = ICONS[cat.icon] ?? FileText;
+
+  // Live tools for this category, pulled from D1 admin_tools where
+  // status = 'live'. Falls back to [] on D1-not-bound (so the static
+  // catalog remains the source of truth for SEO). The list is
+  // deduped against the static examples to avoid showing the same
+  // tool twice.
+  let liveTools: { slug: string; name: string }[] = [];
+  try {
+    const { getLiveToolsForCategoryPublic } = await import("@/lib/d1/public-tools");
+    const rows = await getLiveToolsForCategoryPublic(cat.slug);
+    const staticSlugs = new Set(
+      cat.examples.map((n) => n.toLowerCase().replace(/[^a-z0-9]+/g, "-"))
+    );
+    liveTools = rows
+      .filter((r) => !staticSlugs.has(r.slug))
+      .map((r) => ({ slug: r.slug, name: r.name }))
+      .slice(0, 8);
+  } catch {
+    // D1 not bound → static catalog only, no error.
+  }
   // Sibling categories for the "explore more" rail.
   const others = TOOLS_CATEGORIES.filter((c) => c.slug !== cat.slug).slice(0, 4);
 
@@ -200,6 +220,31 @@ export default async function ToolsCategoryPage({ params }: { params: Promise<Pa
                 </li>
               );
             })}
+            {liveTools.map((t) => (
+              <li key={`live-${t.slug}`} id={t.slug}>
+                <Link
+                  href={`/tools/${cat.slug}/${t.slug}`}
+                  prefetch={false}
+                  className="border-primary/30 bg-primary/5 hover:border-primary/50 group flex items-center gap-2.5 rounded-lg border px-3 py-2.5 text-sm transition-colors"
+                >
+                  <span
+                    className={cn(
+                      "flex h-7 w-7 shrink-0 items-center justify-center rounded-md",
+                      ACCENT_CLASSES[cat.accent]
+                    )}
+                  >
+                    <Icon className="h-3.5 w-3.5" aria-hidden="true" />
+                  </span>
+                  <span className="text-foreground flex-1 font-medium">{t.name}</span>
+                  <span
+                    className="inline-flex items-center rounded-full border border-emerald-500/20 bg-emerald-500/10 px-1.5 py-0.5 text-[9px] font-semibold tracking-wider text-emerald-700 uppercase"
+                    aria-label="Newly live in the admin pipeline"
+                  >
+                    New
+                  </span>
+                </Link>
+              </li>
+            ))}
           </ul>
         </div>
       </div>

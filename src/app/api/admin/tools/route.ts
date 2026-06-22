@@ -5,31 +5,40 @@
  * Both require an active admin session.
  */
 import { NextResponse, type NextRequest } from "next/server";
-import { requireAdminFromRequest } from "@/lib/admin/auth";
-import { createTool, isToolStatus, listTools, type ToolCreate } from "@/lib/admin/tools";
+import { requireAdminFromRequest, requireCsrfHeader } from "@/lib/admin/auth";
+import { createTool, listTools } from "@/lib/admin/tools";
+import { CreateToolBody, ListToolsQuery } from "@/lib/admin/schemas";
 
 export const runtime = "nodejs";
-
-const VALID_TIERS = new Set(["free", "freemium", "paid"]);
-const VALID_ACCENTS = new Set(["primary", "secondary", "accent"]);
 
 export async function GET(req: NextRequest) {
   const ctx = await requireAdminFromRequest();
   if (!ctx) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const url = new URL(req.url);
-  const status = url.searchParams.get("status") ?? "all";
-  const category = url.searchParams.get("category") ?? "all";
-  const q = url.searchParams.get("q") ?? "";
-  const limit = Number(url.searchParams.get("limit") ?? "50");
-  const offset = Number(url.searchParams.get("offset") ?? "0");
-
+  const parsed = ListToolsQuery.safeParse({
+    status: url.searchParams.get("status") ?? undefined,
+    category: url.searchParams.get("category") ?? undefined,
+    q: url.searchParams.get("q") ?? undefined,
+    sort: url.searchParams.get("sort") ?? undefined,
+    limit: url.searchParams.get("limit") ?? undefined,
+    offset: url.searchParams.get("offset") ?? undefined,
+    page: url.searchParams.get("page") ?? undefined,
+  });
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: "Invalid query", issues: parsed.error.issues },
+      { status: 400 }
+    );
+  }
+  const q = parsed.data;
   const result = await listTools({
-    status: isToolStatus(status) ? status : "all",
-    category,
-    q,
-    limit,
-    offset,
+    status: q.status,
+    category: q.category,
+    q: q.q,
+    sort: q.sort,
+    limit: q.limit,
+    offset: q.offset,
   });
   return NextResponse.json(result);
 }
@@ -37,26 +46,18 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const ctx = await requireAdminFromRequest();
   if (!ctx) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!(await requireCsrfHeader(req))) {
+    return NextResponse.json({ error: "CSRF token missing or invalid" }, { status: 403 });
+  }
 
-  let body: Partial<ToolCreate> & { notes?: string };
+  let body;
   try {
-    body = (await req.json()) as typeof body;
-  } catch {
-    return NextResponse.json({ error: "Malformed request body" }, { status: 400 });
-  }
-
-  // Validate
-  if (!body.slug || !body.category || !body.name) {
-    return NextResponse.json({ error: "slug, category, and name are required" }, { status: 400 });
-  }
-  if (body.status && !isToolStatus(body.status)) {
-    return NextResponse.json({ error: "Invalid status" }, { status: 400 });
-  }
-  if (body.pricing_tier && !VALID_TIERS.has(body.pricing_tier)) {
-    return NextResponse.json({ error: "Invalid pricing_tier" }, { status: 400 });
-  }
-  if (body.accent_color && !VALID_ACCENTS.has(body.accent_color)) {
-    return NextResponse.json({ error: "Invalid accent_color" }, { status: 400 });
+    body = CreateToolBody.parse(await req.json());
+  } catch (err) {
+    return NextResponse.json(
+      { error: "Invalid request body", issues: (err as { issues?: unknown }).issues },
+      { status: 400 }
+    );
   }
 
   const row = await createTool(
