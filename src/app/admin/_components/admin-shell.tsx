@@ -51,22 +51,27 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
     | { state: "authed"; user: { id: number; username: string; display_name: string } }
   >({ state: "loading" });
 
+  // Track whether the /me probe has completed for the current
+  // pathname. The redirect effect only fires when this is true,
+  // because both effects run in the same render cycle after
+  // navigation — the probe's setAuth("loading") is scheduled but
+  // not yet committed when the redirect effect runs, so the redirect
+  // would otherwise see the stale "anon" state and bounce the user
+  // back to /admin/sign-in.
+  const probeDoneRef = React.useRef(false);
+
   // Probe /me on mount and whenever the route changes (so a fresh
   // sign-in on /admin/sign-in immediately upgrades the shell).
   React.useEffect(() => {
     if (isSignIn) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setAuth({ state: "anon" });
+      probeDoneRef.current = false;
       return;
     }
-    // IMPORTANT: reset to "loading" *before* starting the probe.
-    // Otherwise the redirect effect below fires during the async
-    // window (auth.state is still "anon" from when isSignIn was
-    // true), bouncing the user back to /admin/sign-in before the
-    // /me response lands. Classic race; costs ~50ms of "loading"
-    // chrome on every protected-page navigation.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setAuth({ state: "loading" });
+    probeDoneRef.current = false;
     let cancelled = false;
     (async () => {
       try {
@@ -87,6 +92,8 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           // eslint-disable-next-line react-hooks/set-state-in-effect
           setAuth({ state: "anon" });
         }
+      } finally {
+        if (!cancelled) probeDoneRef.current = true;
       }
     })();
     return () => {
@@ -95,8 +102,10 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   }, [pathname, isSignIn]);
 
   // If we're on a protected page and the probe says anon, redirect.
+  // Guard with probeDoneRef so the redirect never fires during the
+  // async window between the probe starting and finishing.
   React.useEffect(() => {
-    if (auth.state === "anon" && !isSignIn) {
+    if (auth.state === "anon" && !isSignIn && probeDoneRef.current) {
       router.replace(`/admin/sign-in?next=${encodeURIComponent(pathname)}`);
     }
   }, [auth.state, isSignIn, pathname, router]);
