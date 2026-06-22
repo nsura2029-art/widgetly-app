@@ -67,6 +67,14 @@ jobs:
           NEXT_PUBLIC_ANALYTICS_TOKEN: ${{ secrets.NEXT_PUBLIC_ANALYTICS_TOKEN }}
           ADMIN_SESSION_SECRET: ${{ secrets.ADMIN_SESSION_SECRET }}
 
+      # Apply any pending D1 migrations BEFORE deploying so the new
+      # Worker code finds the new tables on its first request.
+      - name: Apply D1 migrations (stage)
+        run: pnpm exec wrangler d1 migrations apply widgetly-stage --remote --env stage
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
       - name: Deploy to stage
         # opennextjs-cloudflare build produces .open-next/worker.js; then
         # wrangler deploy --env stage picks up the [env.stage] bindings
@@ -78,17 +86,18 @@ jobs:
           OPEN_NEXT_DEPLOY: "true"
           NEXT_TELEMETRY_DISABLED: 1
 
-      # Apply any pending D1 migrations to the stage database. Same
-      # `wrangler d1 migrations apply` is idempotent — only new ones run.
-      - name: Apply D1 migrations (stage)
-        if: success()
-        run: pnpm exec wrangler d1 migrations apply widgetly-stage --remote --env stage
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-
       - name: Warm stage KV cache
         if: success()
         run: bash scripts/warm-cache.sh https://stage.widgetly.tech
         env:
           WARM_LOCALES: "en"
+
+      # ---------------------------------------------------------------------------
+      # Post-deploy smoke test on stage. Same checks as production but pointed
+      # at stage.widgetly.tech. A failure here blocks merging the
+      # develop→main release PR (via the "stage deploy" required check
+      # in branch protection on main).
+      # ---------------------------------------------------------------------------
+      - name: Smoke test stage
+        if: success()
+        run: bash scripts/smoke-test.sh https://stage.widgetly.tech

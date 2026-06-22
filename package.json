@@ -8,7 +8,7 @@
     "build": "next build",
     "start": "next start",
     "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
-    "deploy": "opennextjs-cloudflare build && wrangler deploy",
+    "deploy": "opennextjs-cloudflare build && wrangler deploy --env production",
     "render:remotion": "remotion render src/remotion/index.tsx Audience out/remotion.mp4 --codec h264 --frames-per-second 30 --quality 80",
     "lint": "eslint .",
     "test": "vitest run",
