@@ -1,0 +1,242 @@
+#!/usr/bin/env node
+/**
+ * scripts/seed-admin.mjs
+ *
+ * One-shot seed for the admin dashboard:
+ *   1. Create the initial admin user from env vars.
+ *   2. Migrate the static tool catalog into admin_tools with
+ *      status='live' so the public-side D1 reader has data.
+ *
+ * Both are idempotent (INSERT OR IGNORE) so re-running is safe.
+ *
+ * Env vars:
+ *   ADMIN_USERNAME       — required
+ *   ADMIN_PASSWORD       — required (≥ 10 chars)
+ *   ADMIN_DISPLAY_NAME   — optional
+ *   ADMIN_EMAIL          — optional
+ *   D1_BINDING           — 'local' (default) or 'remote'
+ *
+ * Usage:
+ *   pnpm seed:admin:local
+ *   D1_BINDING=remote pnpm seed:admin:remote
+ *
+ * Implementation note: we write a single .sql file and pass it to
+ * `wrangler d1 execute --file=`. That avoids the per-row execSync
+ * cost of the leaderboard seed (100+ tool rows × subprocess is
+ * painful) while keeping wrangler as the single D1 client.
+ */
+import bcrypt from "bcryptjs";
+import { readFile, writeFile, unlink, mkdtemp } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join, resolve } from "node:path";
+import { execSync } from "node:child_process";
+
+const D1_BINDING = process.env.D1_BINDING ?? "local";
+const USERNAME = process.env.ADMIN_USERNAME ?? "admin";
+const PASSWORD = process.env.ADMIN_PASSWORD ?? "";
+const DISPLAY_NAME = process.env.ADMIN_DISPLAY_NAME ?? "Admin";
+const EMAIL = process.env.ADMIN_EMAIL ?? null;
+
+if (!PASSWORD || PASSWORD.length < 10) {
+  console.error("✗ Set ADMIN_PASSWORD (≥ 10 chars) before running this script.");
+  console.error("  Example: ADMIN_PASSWORD='your-strong-password' pnpm seed:admin:local");
+  process.exit(1);
+}
+
+// ---------------------------------------------------------------------------
+// Catalog (mirrors TOOLS_CATEGORIES + TOOLS_SUBGROUPS structure)
+// ---------------------------------------------------------------------------
+
+const CATEGORIES = [
+  { slug: "pdf", name: "PDF Tools", accent: "primary" },
+  { slug: "image", name: "Image Tools", accent: "secondary" },
+  { slug: "video", name: "Video Tools", accent: "accent" },
+  { slug: "ai", name: "AI Tools", accent: "primary" },
+  { slug: "calculators", name: "Calculators", accent: "secondary" },
+  { slug: "converters", name: "Converters", accent: "accent" },
+  { slug: "seo", name: "SEO Tools", accent: "primary" },
+  { slug: "developer", name: "Developer", accent: "secondary" },
+  { slug: "business", name: "Business", accent: "accent" },
+  { slug: "education", name: "Education", accent: "primary" },
+  { slug: "writing", name: "Writing", accent: "secondary" },
+];
+
+const TOOLS = {
+  pdf: [
+    "merge-pdf",
+    "split-pdf",
+    "compress-pdf",
+    "pdf-to-word",
+    "pdf-to-excel",
+    "word-to-pdf",
+    "excel-to-pdf",
+    "pdf-to-jpg",
+    "jpg-to-pdf",
+    "rotate-pdf",
+    "protect-pdf",
+    "unlock-pdf",
+    "sign-pdf",
+    "edit-pdf",
+    "ocr-pdf",
+  ],
+  image: [
+    "image-compressor",
+    "image-resizer",
+    "image-converter",
+    "image-cropper",
+    "image-rotator",
+    "image-watermark",
+    "image-color-picker",
+    "meme-generator",
+    "qr-code-generator",
+    "barcode-generator",
+  ],
+  video: ["video-compressor", "video-converter", "video-trimmer", "video-merger", "gif-maker"],
+  ai: [
+    "ai-resume-builder",
+    "ai-email-writer",
+    "ai-text-summarizer",
+    "ai-paraphraser",
+    "ai-grammar-checker",
+    "ai-image-generator",
+    "ai-voice-generator",
+  ],
+  calculators: [
+    "percentage-calculator",
+    "bmi-calculator",
+    "mortgage-calculator",
+    "loan-calculator",
+    "tip-calculator",
+    "age-calculator",
+    "calorie-calculator",
+    "compound-interest-calculator",
+    "gpa-calculator",
+    "scientific-calculator",
+  ],
+  converters: [
+    "unit-converter",
+    "currency-converter",
+    "length-converter",
+    "weight-converter",
+    "temperature-converter",
+    "time-zone-converter",
+    "color-converter",
+  ],
+  seo: [
+    "meta-tag-generator",
+    "og-preview",
+    "robots-txt-generator",
+    "sitemap-generator",
+    "keyword-density-checker",
+    "word-counter",
+    "case-converter",
+  ],
+  developer: [
+    "json-formatter",
+    "json-validator",
+    "base64-encoder",
+    "url-encoder",
+    "regex-tester",
+    "diff-checker",
+    "uuid-generator",
+    "password-generator",
+    "hash-generator",
+    "jwt-decoder",
+  ],
+  business: [
+    "invoice-generator",
+    "receipt-generator",
+    "salary-calculator",
+    "tax-calculator",
+    "vat-calculator",
+    "break-even-calculator",
+  ],
+  education: [
+    "flashcard-generator",
+    "lesson-plan-generator",
+    "rubric-generator",
+    "study-timer",
+    "citation-generator",
+    "word-unscrambler",
+  ],
+  writing: [
+    "essay-typer",
+    "paraphraser",
+    "plagiarism-checker",
+    "readability-checker",
+    "tone-checker",
+    "headline-generator",
+  ],
+};
+
+const totalTools = Object.values(TOOLS).reduce((n, arr) => n + arr.length, 0);
+
+// ---------------------------------------------------------------------------
+// Build SQL
+// ---------------------------------------------------------------------------
+
+function humanize(slug) {
+  return slug
+    .split("-")
+    .map((s) => s[0]?.toUpperCase() + s.slice(1))
+    .join(" ");
+}
+
+function esc(s) {
+  return String(s ?? "").replace(/'/g, "''");
+}
+
+const passwordHash = await bcrypt.hash(PASSWORD, 12);
+const now = new Date().toISOString();
+
+const catIndex = new Map(CATEGORIES.map((c) => [c.slug, c]));
+
+const lines = [];
+lines.push("-- Generated by scripts/seed-admin.mjs");
+lines.push("-- Idempotent (INSERT OR IGNORE). Safe to re-run.");
+
+lines.push(
+  `INSERT OR IGNORE INTO admin_users
+     (username, password_hash, display_name, email, is_active, must_change_password, created_at, updated_at)
+   VALUES ('${esc(USERNAME)}', '${esc(passwordHash)}', '${esc(DISPLAY_NAME)}', ${
+     EMAIL ? `'${esc(EMAIL)}'` : "NULL"
+   }, 1, 1, '${now}', '${now}');`
+);
+
+for (const [category, slugs] of Object.entries(TOOLS)) {
+  const cat = catIndex.get(category);
+  for (const slug of slugs) {
+    const name = humanize(slug);
+    const desc = `Free online ${cat?.name ?? category} tool.`;
+    const longDesc = `Run ${name.toLowerCase()} in your browser — no sign-up, no install, no watermark. ${desc}`;
+    lines.push(
+      `INSERT OR IGNORE INTO admin_tools
+         (slug, category, name, description, long_description, api_endpoint,
+          pricing_tier, icon_url, accent_color, sort_order, status, notes, live_at,
+          created_at, updated_at)
+       VALUES ('${esc(slug)}','${esc(category)}','${esc(name)}','${esc(desc)}',
+         '${esc(longDesc)}','/api/tools/${esc(category)}/${esc(slug)}','free',
+         NULL, '${esc(cat?.accent ?? "primary")}', 100, 'live',
+         'Seeded from static catalog', '${now}', '${now}', '${now}');`
+    );
+  }
+}
+
+const sqlPath = join(tmpdir(), `seed-admin-${Date.now()}.sql`);
+await writeFile(sqlPath, lines.join("\n") + "\n", "utf8");
+
+console.log(`Seeding admin user "${USERNAME}" (bcrypt cost 12)…`);
+console.log(`Seeding ${totalTools} tools into admin_tools (status='live')…`);
+
+const target = D1_BINDING === "remote" ? "--remote" : "--local";
+const cmd = `pnpm exec wrangler d1 execute widgetly ${target} --file=${sqlPath}`;
+
+try {
+  execSync(cmd, { stdio: "inherit" });
+  console.log(`✓ Seed complete. Sign in at /admin/sign-in with username="${USERNAME}".`);
+} catch (e) {
+  console.error("✗ Wrangler d1 execute failed. See output above.");
+  process.exitCode = 1;
+} finally {
+  await unlink(sqlPath).catch(() => {});
+}
