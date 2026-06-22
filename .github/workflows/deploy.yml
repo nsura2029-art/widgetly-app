@@ -119,4 +119,16 @@ jobs:
         if: success() && github.ref == 'refs/heads/main'
         run: bash scripts/warm-cache.sh https://widgetly.tech
         env:
-          WARM_LOCALES: 'en'
+          WARM_LOCALES: "en"
+
+      # ---------------------------------------------------------------------------
+      # Post-deploy smoke test. Catches the case where the build + deploy
+      # succeeded but the live Worker is broken (e.g. a missing env var, a
+      # D1 query hitting "no such table", an HTML route returning 500).
+      # The smoke test hits 12 key URLs across public + admin + API; a single
+      # failure fails the job, which blocks the develop→main release PR
+      # (via required-checks branch protection).
+      # ---------------------------------------------------------------------------
+      - name: Smoke test the live site
+        if: success() && github.ref == 'refs/heads/main'
+        run: bash scripts/smoke-test.sh https://widgetly.tech

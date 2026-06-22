@@ -91,3 +91,13 @@ jobs:
         run: bash scripts/warm-cache.sh https://stage.widgetly.tech
         env:
           WARM_LOCALES: "en"
+
+      # ---------------------------------------------------------------------------
+      # Post-deploy smoke test on stage. Same checks as production but pointed
+      # at stage.widgetly.tech. A failure here blocks merging the
+      # develop→main release PR (via the "stage deploy" required check
+      # in branch protection on main).
+      # ---------------------------------------------------------------------------
+      - name: Smoke test stage
+        if: success()
+        run: bash scripts/smoke-test.sh https://stage.widgetly.tech
