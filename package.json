@@ -37,7 +37,7 @@
     "setup:secrets": "node scripts/setup-cloudflare-secrets.mjs",
     "setup:secrets:dry": "node scripts/setup-cloudflare-secrets.mjs --dry-run",
     "db:migrate:local": "wrangler d1 migrations apply widgetly --local",
-    "db:migrate:remote": "wrangler d1 migrations apply widgetly --remote",
+    "db:migrate:remote": "wrangler d1 migrations apply widgetly --remote --env production",
     "db:create": "wrangler d1 create widgetly",
     "db:info": "wrangler d1 info widgetly",
     "db:console:local": "wrangler d1 execute widgetly --local --command",
