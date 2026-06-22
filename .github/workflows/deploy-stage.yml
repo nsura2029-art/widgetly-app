@@ -68,7 +68,10 @@ jobs:
           ADMIN_SESSION_SECRET: ${{ secrets.ADMIN_SESSION_SECRET }}
 
       - name: Deploy to stage
-        run: pnpm exec wrangler deploy --env stage
+        # opennextjs-cloudflare build produces .open-next/worker.js; then
+        # wrangler deploy --env stage picks up the [env.stage] bindings
+        # from wrangler.toml. Mirrors pnpm deploy but for stage.
+        run: pnpm exec opennextjs-cloudflare build && pnpm exec wrangler deploy --env stage
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
