@@ -43,7 +43,11 @@
     "db:console:local": "wrangler d1 execute widgetly --local --command",
     "db:console:remote": "wrangler d1 execute widgetly --remote --command",
     "db:seed:local": "node scripts/seed-leaderboard.mjs",
-    "db:seed:remote": "node scripts/seed-leaderboard.mjs --remote"
+    "db:seed:remote": "node scripts/seed-leaderboard.mjs --remote",
+    "seed:admin:local": "node scripts/seed-admin.mjs",
+    "seed:admin:remote": "D1_BINDING=remote node scripts/seed-admin.mjs",
+    "deploy:stage": "opennextjs-cloudflare build && wrangler deploy --env stage",
+    "db:migrate:stage": "wrangler d1 migrations apply widgetly-stage --remote --env stage"
   },
   "remotion": {
     "webpackOverride": "./remotion/webpack.override.js"
@@ -52,6 +56,7 @@
     "@opennextjs/cloudflare": "1.19.11",
     "@radix-ui/react-slot": "^1.1.0",
     "@supabase/supabase-js": "^2.108.1",
+    "bcryptjs": "^2.4.3",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "framer-motion": "^11.11.17",
@@ -62,7 +67,7 @@
     "react-dom": "19.2.0",
     "swagger-ui-dist": "^5.32.6",
     "tailwind-merge": "^2.5.4",
-    "zod": "^3.25.76"
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.0.0",
