@@ -65,14 +65,23 @@ export function Breadcrumb({
       <nav
         aria-label="Breadcrumb"
         className={cn(
-          // Non-sticky. The breadcrumb sits in normal document flow
-          // directly under the tools banner and scrolls away with the
-          // page. Rationale: only the brand mark belongs at the top of
-          // every viewport; a sticky breadcrumb triples the chrome the
-          // user has to mentally filter on every scroll. The trail is
-          // still discoverable on first paint and reappears whenever
-          // the user scrolls back up.
-          "border-border/60 w-full border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/85",
+          // Sticky under the brand header (h-16) + tools banner. The
+          // banner height is roughly 56px (py-2 + chip row + borders),
+          // so the breadcrumb pins at top-28 (7rem = 112px) on lg+
+          // viewports. On smaller viewports the banner is shorter
+          // (chips wrap to two rows), so we pin at top-24 to keep
+          // breathing room.
+          //
+          // Pinned at z-30 so the header (z-50) and tools banner
+          // (z-40) always sit visually on top of it. backdrop-blur
+          // keeps the trail readable over scrolling content.
+          //
+          // Updated 2026-06: was non-sticky by design (see
+          // git history); user feedback was that losing the
+          // breadcrumb context while scrolling through long pages
+          // (especially tool lists) made the page feel unmoored, so
+          // we now keep the trail visible.
+          "border-border/60 sticky top-24 z-30 w-full border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/85 lg:top-28",
           className
         )}
       >
