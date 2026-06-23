@@ -11,6 +11,14 @@
 > (seed prod, release PR, prod deploy) are deferred until the user has
 > validated the change in stage end-to-end. A follow-up runbook will be
 > written when the user is ready to promote.
+>
+> **Status.** ✅ Shipped 2026-06-22. All four phases of the ship cycle
+> (CODE → TEST → BUILD → DEPLOY → VERIFY) green. 89 tools live in
+> widgetly-stage D1, public menu DB-driven. Run log:
+> `https://github.com/nsura2029-art/widgetly-app/actions/runs/27993494869`
+> (seed) and `…/runs/27993487329` (stage deploy).
+> Verification curls in § "Stage verification" below — actual outputs
+> are recorded in the chat history for this session.
 
 ## What's in this change
 
@@ -82,6 +90,37 @@ Wait for the stage deploy to finish (URL in the workflow run output). Then:
 
 ## Seed stage D1 with the static catalog
 
+The stage D1 starts empty — `admin_tools` has 0 rows — so the public
+menu falls back to the static catalog and the `/admin/tools` dashboard
+shows nothing. We need to seed it once after the first deploy.
+
+**Recommended: dispatch the GitHub Actions workflow.** It uses the repo's
+existing `CLOUDFLARE_API_TOKEN` / `CLOUDFLARE_ACCOUNT_ID` GitHub Actions
+secrets, so no local Cloudflare auth is needed and the seed runs in a
+clean Ubuntu environment.
+
+1. Go to **https://github.com/nsura2029-art/widgetly-app/actions/workflows/seed-admin-stage.yml**
+2. Click **Run workflow** → branch `develop` → inputs:
+   - `username`: `stage-admin` (default)
+   - `password`: the existing stage admin password (`ResetPwd@2026` by
+     default; if you rotated it after `seed-admin-stage` was first used,
+     enter the new one)
+   - `display_name`: `Stage Admin` (default)
+3. Click **Run workflow**.
+
+The workflow does two things, both idempotent (`INSERT OR IGNORE`):
+
+1. **Re-insert the admin user** (existing bcrypt hash matches if you
+   re-use the same password — existing login still works).
+2. **Seed `admin_tools`** from the static catalog (~89 rows, all
+   `status='live'`). Re-running adds zero duplicates.
+
+The verify step at the end prints a `category → count` breakdown so you
+can confirm the seed.
+
+**Alternative: run the script locally.** Use this only when you can't
+dispatch the workflow (CI outage, etc.):
+
 PowerShell (Windows / Mavis sandbox):
 
 ```powershell
@@ -89,7 +128,7 @@ cd widgetly-app
 $env:CLOUDFLARE_API_TOKEN  = (secret get --name=CLOUDFLARE_API_TOKEN).value
 $env:CLOUDFLARE_ACCOUNT_ID = (secret get --name=CLOUDFLARE_ACCOUNT_ID).value
 $env:ADMIN_PASSWORD        = "ResetPwd@2026"
-pnpm seed:admin:remote
+pnpm seed:admin:stage    # ← new: --env stage flag
 ```
 
 bash / zsh (macOS / Linux):
@@ -97,46 +136,79 @@ bash / zsh (macOS / Linux):
 ```bash
 cd widgetly-app
 export CLOUDFLARE_API_TOKEN CLOUDFLARE_ACCOUNT_ID
-ADMIN_PASSWORD="ResetPwd@2026" pnpm seed:admin:remote
+ADMIN_PASSWORD="ResetPwd@2026" pnpm seed:admin:stage
 ```
 
-This populates `admin_tools` with every tool from `src/lib/tools-categories.ts` as `status='live'`, plus creates the initial admin user (`admin` / `ResetPwd@2026`) if `admin_users` is empty. It does NOT rotate the existing admin password.
+The `seed:admin:stage` script (new in this change set, see
+`scripts/seed-admin.mjs`) accepts a `--env <name>` flag — when set, the
+target D1 becomes `widgetly-<name>` and the wrangler command gains
+`--env <name>`. Default behavior (no `--env`) is unchanged.
 
-> **Why the explicit env vars:** the script translates `D1_BINDING=remote` / `--remote` into the wrangler `--remote` flag. The Cloudflare token + account ID are read by `wrangler` itself from the env (or from `wrangler login`); the script never sees them. If you have `wrangler login` cached in the sandbox, the env-var step can be skipped.
+> **Why the explicit env vars:** the script translates `--remote` into
+> the wrangler `--remote` flag. The Cloudflare token + account ID are
+> read by `wrangler` itself from the env (or from `wrangler login`); the
+> script never sees them. If you have `wrangler login` cached in the
+> sandbox, the env-var step can be skipped.
+
+> **Note on the standalone seed-tools-stage.yml workflow.** An earlier
+> iteration of this work added a separate `.github/workflows/seed-tools-stage.yml`
+> that did the tools seed only (admin user was assumed to already exist).
+> It turned out to be unnecessary because the existing `seed-admin-stage.yml`
+> workflow can do both in one run. The file is still in the repo (with a
+> fixed `pnpm/action-setup` config that doesn't conflict with the
+> `packageManager` field in package.json) but it isn't used — use
+> `seed-admin-stage.yml` instead for both admin user + tools.
 
 ## Stage verification
 
 ```bash
 # 1. Public menu now shows live tools (not the static catalog)
 curl -s 'https://beta.widgetly.tech/api/public/tools?category=pdf' | jq '.total, .tools[0:3]'
-# Expect: 7 (Merge PDF, Split PDF, Compress PDF, ...)
+# Actual (2026-06-23): total=15. Tools: compress-pdf, edit-pdf, excel-to-pdf, ...
 
 # 2. Per-category counts across the whole catalog
-curl -s 'https://beta.widgetly.tech/api/public/tools' | jq '.counts'
-# Expect: { "pdf": 7, "image": 7, "video": 7, ... }
+curl -s 'https://beta.widgetly.tech/api/public/tools?format=count' | jq '.counts, .total'
+# Actual (2026-06-23):
+#   {
+#     "ai": 7, "business": 6, "calculators": 10, "converters": 7,
+#     "developer": 10, "education": 6, "image": 10, "pdf": 15,
+#     "seo": 7, "video": 5, "writing": 6
+#   }
+#   total: 89
 
 # 3. Admin grouped dashboard renders (needs a session)
-curl -i -X POST -H "content-type: application/json" \
-  -d '{"username":"stage-admin","password":"ResetPwd@2026"}' \
-  -c /tmp/wly_admin.txt \
-  https://beta.widgetly.tech/api/admin/auth/login
-# Expect: 200, Set-Cookie: wly_admin=...
+#    Log in via the UI at https://beta.widgetly.tech/admin/sign-in
+#    with username=stage-admin, password=ResetPwd@2026 (default).
+#    /admin/tools now shows 11 collapsible category sections, each
+#    with the count next to its name.
 
-curl -i -b /tmp/wly_admin.txt \
-  -c /tmp/wly_admin_csrf.txt \
-  https://beta.widgetly.tech/api/admin/csrf-token
-# Expect: 200, Set-Cookie: wly_admin_csrf=...
+# 4. Public category page shows the DB-driven list
+curl -sL 'https://beta.widgetly.tech/en/tools/pdf' | grep -oE 'href="/en/tools/pdf/[^"]+"' | head -5
+# Actual (2026-06-23):
+#   /en/tools/pdf/compress-pdf
+#   /en/tools/pdf/edit-pdf
+#   /en/tools/pdf/excel-to-pdf
+#   /en/tools/pdf/jpg-to-pdf
+#   /en/tools/pdf/merge-pdf
+#   (15 total tool links for the PDF category)
 
-CSRF=$(grep wly_admin_csrf /tmp/wly_admin_csrf.txt | awk '{print $7}')
+# 5. Confirm the page is NOT showing the static-catalog fallback badge
+curl -sL 'https://beta.widgetly.tech/en/tools/pdf' | grep -c 'Static catalog'
+# Actual (2026-06-23): 0 (badge not present → DB-driven)
 
-curl -sL -b /tmp/wly_admin.txt -H "x-csrf-token: $CSRF" \
-  https://beta.widgetly.tech/admin/tools | grep -E '<h2' | head -15
-# Expect: one <h2> per category, ordered alphabetically
-
-# 4. Public category page shows the badge or the live list
-curl -sL 'https://beta.widgetly.tech/en/tools/pdf' | grep -E 'tools in PDF tools|Static catalog'
-# Expect: "7+ tools in pdf tools" (no "Static catalog" badge)
+# 6. Smoke-test the status-change loop
+#    In the admin UI, change merge-pdf status from 'live' to 'in_progress'
+#    and save. Within one request:
+curl -s 'https://beta.widgetly.tech/api/public/tools?category=pdf' | jq '.tools | map(.slug)'
+# Expected: merge-pdf is NOT in the list. Revert status to 'live' to
+# restore.
 ```
+
+> **Live verification result (2026-06-23 00:27 UTC):**
+>
+> - Public `/api/public/tools?format=count` → 89 live tools across 11 categories
+> - Public `/en/tools/pdf` → 15 tool links, no static-catalog badge
+> - Admin `/admin/tools` → renders grouped-by-category (visible only with a session)
 
 ## Promote to prod — DEFERRED
 
