@@ -51,11 +51,19 @@ export const suggestionFormSchema = z
     // placeholder value) is rejected. The "Other" option in the
     // select is a real, valid bucket for tools that don't fit the
     // other 11 defined categories.
+    //
+    // We use `.string().refine(...)` rather than `.enum().refine(...)`
+    // so the empty-string check fires first and returns our localized
+    // `categoryRequired` code. With `.enum().refine()`, Zod's enum
+    // validation runs first and emits its own generic "Invalid enum
+    // value" message for an empty string, bypassing the refine.
     category: z
-      .enum([...SUGGESTION_CATEGORIES] as [SuggestionCategory, ...SuggestionCategory[]])
-      .refine((value) => value.length > 0, {
-        message: SUGGESTION_ERROR_CODES.categoryRequired,
-      }),
+      .string()
+      .refine(
+        (value): value is SuggestionCategory =>
+          (SUGGESTION_CATEGORIES as readonly string[]).includes(value),
+        { message: SUGGESTION_ERROR_CODES.categoryRequired }
+      ),
     urgency: z.enum([...SUGGESTION_URGENCIES] as [SuggestionUrgency, ...SuggestionUrgency[]]),
     email: z
       .string()
