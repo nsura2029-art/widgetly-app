@@ -85,6 +85,13 @@ Owns the SEO surface of Widgetly: how the site is crawled, indexed, ranked, and 
 - Don't apply `force-dynamic` to the tools index (`/tools`) or any other marketing page — they're static and benefit from KV caching. The 5-minute `s-maxage=300` on `/[locale]/:path*` is fine for content that changes on deploy.
 - See `docs/operations/deploy-admin-tools-grouping.md` § "Bug fix" for the full root-cause analysis.
 
+### /suggest and /leaderboard are DB-driven
+
+- `/suggest` (`src/app/[locale]/suggest/page.tsx`) and `/leaderboard` (`src/app/[locale]/leaderboard/page.tsx`) read D1 at request time. They use `revalidate = 60` (suggest) or `revalidate = 300` (leaderboard) so the OpenNext KV cache holds the rendered HTML for at most those windows, then re-renders. This is the right trade-off for suggestion boards: most visitors see a cached page, but a new upvote or status change propagates within a minute.
+- `/suggest?status=live` runs **two** D1 queries in parallel and merges the results: `listSuggestions({ status: 'live' })` for community suggestions, plus `listLiveToolsFromAdminCatalog()` for the curated admin catalog. The merge de-dupes by slug so a tool that exists in both only shows once. This is the canonical implementation — copy the same pattern if you add a new merge-style filter.
+- The leaderboard page renders three sections: featured creator (single most recently joined contributor), top suggestions (top 6 by upvotes, status != 'rejected'), and the ranked contributor list (ranked by `contributions` table entries in the chosen time window). They share a page but read from independent tables; one section's staleness doesn't affect the others.
+- **Don't** add per-route `Cache-Control` overrides for `/suggest*` or `/leaderboard*` — the `revalidate` constant already gives you cacheability; adding `s-maxage` on top would only break the freshness contract documented above.
+
 ### Per-tool page requirements
 
 - Title: `<Tool Name> — Free Online <Tool Name> Tool` (max 60 chars).

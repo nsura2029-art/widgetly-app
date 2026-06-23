@@ -6,13 +6,11 @@ import { PageShell } from "@/components/layout/page-shell";
 import { SITE_CONFIG } from "@/lib/constants";
 import { isD1Configured } from "@/lib/d1/server";
 import {
-  SUGGESTION_CATEGORIES,
-  SUGGESTION_STATUSES,
+  listLiveToolsFromAdminCatalog,
   listSuggestions,
   normalizeCategory,
   normalizeSort,
   normalizeStatus,
-  suggestionStatusLabel,
   type SuggestionSort,
 } from "@/lib/d1/suggestions";
 import { buildMetadata } from "@/lib/seo";
@@ -93,10 +91,36 @@ export default async function SuggestPage({
   let total = 0;
 
   if (isD1Configured()) {
-    const live = await listSuggestions({ category, status, sort, page, pageSize: 20 });
-    suggestions = live.suggestions.map(({ email: _email, ...suggestion }) => suggestion);
-    totalPages = live.totalPages;
-    total = live.total;
+    // When the requested status is `live`, merge in the curated
+    // `admin_tools` catalog (where status='live') on top of the
+    // user-submitted `suggestions` table. This way `/suggest?status=live`
+    // shows the union of community-suggested tools that have shipped AND
+    // the tools we already have live in the catalog — the user can
+    // upvote and discover the full set, not just the suggestions.
+    const wantLiveCatalog = status === "live";
+    const [userSuggestions, liveCatalog] = await Promise.all([
+      listSuggestions({ category, status, sort, page, pageSize: 20 }),
+      wantLiveCatalog
+        ? listLiveToolsFromAdminCatalog({ category, limit: 60 })
+        : Promise.resolve([]),
+    ]);
+    const userRows = userSuggestions.suggestions.map(
+      ({ email: _email, ...suggestion }) => suggestion
+    );
+    // Dedupe: if a suggestion slug is already present from the user
+    // submissions, don't also show the admin-catalog copy.
+    const seen = new Set(userRows.map((row) => row.slug));
+    const merged = wantLiveCatalog
+      ? [
+          ...userRows,
+          ...liveCatalog
+            .filter((row) => !seen.has(row.slug))
+            .map(({ email: _email, ...rest }) => rest),
+        ]
+      : userRows;
+    suggestions = merged;
+    total = userSuggestions.total + (wantLiveCatalog ? liveCatalog.length : 0);
+    totalPages = Math.max(1, Math.ceil(total / 20));
   } else {
     const filtered = seedSuggestions()
       .filter((suggestion) => (category ? suggestion.category === category : true))

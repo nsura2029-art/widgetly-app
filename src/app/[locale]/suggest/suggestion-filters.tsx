@@ -24,7 +24,6 @@ import { Filter } from "lucide-react";
 import {
   SUGGESTION_CATEGORIES,
   SUGGESTION_STATUSES,
-  type SuggestionCategory,
   type SuggestionStatus,
 } from "@/lib/d1/suggestions";
 import { useTranslations } from "next-intl";
@@ -37,8 +36,14 @@ const SORT_OPTIONS: ReadonlyArray<{ value: SortOption; labelKey: string }> = [
   { value: "recently_built", labelKey: "sortRecentlyBuilt" },
 ];
 
+// Public-facing status labels. The DB stores `in_review` for freshly
+// submitted suggestions, but the public copy now reads "Suggested"
+// (the user's mental model: they hit "Submit", the tool is "suggested",
+// and only later does the team "review" it). The internal `in_review`
+// value is unchanged so the rest of the pipeline (status updates,
+// emails, admin views) keeps working without any data migration.
 const SUGGESTION_STATUS_LABEL_KEYS: Record<SuggestionStatus, string> = {
-  in_review: "statusInReview",
+  in_review: "statusSuggested",
   building: "statusBuilding",
   live: "statusLive",
   rejected: "statusRejected",

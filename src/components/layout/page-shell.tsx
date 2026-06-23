@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
  * Canonical page-content wrapper.
  *
  * Every non-landing page should render its body inside `<PageShell>` so the
- * horizontal alignment (Tailwind's `.container`, 1440px max) matches the
+ * horizontal alignment (Tailwind's `.container`, 1600px max) matches the
  * sticky header, featured tools band, and breadcrumb band, all of which
  * also span the full container width. The container is the single source of truth for
  * "what horizontal edge content sits at" on the site.

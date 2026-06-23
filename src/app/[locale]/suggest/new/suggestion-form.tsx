@@ -26,7 +26,13 @@ const initialForm: SuggestionFormInput = {
   toolName: "",
   description: "",
   useCase: "",
-  category: "AI",
+  // Empty string forces the user to make a real choice in the
+  // category dropdown. The Zod schema rejects empty values with
+  // "Please choose a category." The placeholder option below
+  // makes the empty value visible to the user instead of silently
+  // picking a default (which used to be "AI", a category that
+  // doesn't fit most suggestions).
+  category: "" as SuggestionCategory,
   urgency: "medium",
   email: "",
 };
@@ -218,7 +224,11 @@ export function SuggestionForm() {
             value={form.category}
             onChange={(event) => update("category", event.target.value as SuggestionCategory)}
             className="border-border h-12 w-full rounded-xl border bg-white px-4 text-sm"
+            required
           >
+            <option value="" disabled>
+              Select a category…
+            </option>
             {SUGGESTION_CATEGORIES.map((category) => (
               <option key={category} value={category}>
                 {category}

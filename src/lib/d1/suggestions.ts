@@ -23,6 +23,7 @@ export const SUGGESTION_CATEGORIES = [
   "Writing",
   "Business",
   "Education",
+  "Other",
 ] as const;
 
 export const SUGGESTION_STATUSES = ["in_review", "building", "live", "rejected"] as const;
@@ -105,11 +106,16 @@ export function normalizeCategory(value: unknown): SuggestionCategory {
   const raw = String(value ?? "")
     .trim()
     .toLowerCase();
-  return (
-    SUGGESTION_CATEGORIES.find((category) => category.toLowerCase() === raw) ??
-    SUGGESTION_CATEGORIES.find((category) => category.toLowerCase().startsWith(raw)) ??
-    "AI"
-  );
+  if (!raw) return "Other";
+  const exact = SUGGESTION_CATEGORIES.find((category) => category.toLowerCase() === raw);
+  if (exact) return exact;
+  const prefix = SUGGESTION_CATEGORIES.find((category) => category.toLowerCase().startsWith(raw));
+  if (prefix) return prefix;
+  // Unknown / unmappable value — fall back to the "Other" bucket so
+  // user-submitted tools that don't match any defined category still
+  // land somewhere searchable. Previously this fell back to "AI",
+  // which silently mis-categorized suggestions.
+  return "Other";
 }
 
 export function normalizeStatus(value: unknown): SuggestionStatus {
@@ -145,7 +151,11 @@ export function normalizeSort(value: unknown): SuggestionSort {
 export function suggestionStatusLabel(status: SuggestionStatus): string {
   switch (status) {
     case "in_review":
-      return "In Review";
+      // Public-facing label is "Suggested" to match the user's mental
+      // model: a freshly submitted tool hasn't been "reviewed" yet, it's
+      // just been suggested. The internal DB value is still `in_review`
+      // so the rest of the pipeline is unchanged.
+      return "Suggested";
     case "building":
       return "Building";
     case "live":
@@ -291,6 +301,83 @@ export async function listSuggestions(input: SuggestionListInput = {}): Promise<
   };
 }
 
+/**
+ * Live tools sourced from the admin catalog (`admin_tools` table where
+ * `status = 'live'`). Returned in the same `SuggestionRecord` shape so
+ * the public suggest board can render admin-catalog entries alongside
+ * user-submitted suggestions when the requested status is `live`.
+ *
+ * Why a separate read path: the public board needs a unified list per
+ * status, and the suggest/leaderboard/admin surfaces each have their
+ * own read patterns. Keeping this isolated makes it easy to swap in
+ * caching or a view later without touching the rest of the page logic.
+ */
+type AdminToolRow = {
+  id: number;
+  slug: string;
+  name: string;
+  description: string;
+  long_description: string | null;
+  category: string;
+  live_at: string | null;
+  sort_order: number;
+};
+
+function mapAdminToolAsLiveSuggestion(row: AdminToolRow): SuggestionRecord {
+  const now = row.live_at ?? new Date().toISOString();
+  return {
+    id: -row.id, // negative to keep admin rows distinct from suggestion rows in any downstream join
+    slug: row.slug,
+    toolName: row.name,
+    description: row.description,
+    useCase: row.long_description ?? row.description,
+    category: normalizeCategory(row.category),
+    urgency: "medium",
+    email: "",
+    status: "live",
+    upvotes: 0,
+    createdAt: now,
+    updatedAt: now,
+    builtAt: now,
+  };
+}
+
+export async function listLiveToolsFromAdminCatalog(
+  input: { category?: string | null; limit?: number } = {}
+): Promise<SuggestionRecord[]> {
+  try {
+    const db = getD1();
+    const { clause, bindings } = (() => {
+      if (input.category) {
+        return {
+          clause: "WHERE status = 'live' AND category = ?",
+          bindings: [normalizeCategory(input.category)],
+        };
+      }
+      return { clause: "WHERE status = 'live'", bindings: [] as unknown[] };
+    })();
+    const rows = await db
+      .prepare(
+        `SELECT id, slug, name, description, long_description, category, live_at, sort_order
+         FROM admin_tools
+         ${clause}
+         ORDER BY live_at DESC, sort_order ASC
+         LIMIT ?`
+      )
+      .bind(...bindings, input.limit ?? 60)
+      .all<AdminToolRow>();
+    return (rows.results ?? []).map(mapAdminToolAsLiveSuggestion);
+  } catch (err) {
+    // If the admin_tools table doesn't exist yet (e.g. fresh D1),
+    // return an empty list rather than 500-ing the suggest board.
+    const msg = err instanceof Error ? err.message : String(err);
+    if (msg.includes("no such table") || msg.includes("D1 binding missing")) {
+      return [];
+    }
+    throw err;
+  }
+}
+
 export async function getSuggestionByIdOrSlug(idOrSlug: string): Promise<SuggestionRecord | null> {
   const isNumeric = /^\d+$/.test(idOrSlug);
   const row = await getD1()
@@ -394,9 +481,6 @@ async function recomputeUpvotes(
   return { upvotes: total, voted };
 }
 
-/**
- * Backward-compatible helper for the older `/api/suggest` route.
- */
 export async function recordSuggestion(input: {
   id?: string;
   slug?: string;
@@ -450,4 +534,58 @@ export async function readTopSuggestions(
     pitch: suggestion.description,
     status: suggestion.status,
   }));
+}
+
+/**
+ * Top user-submitted suggestions by vote count, for the leaderboard page.
+ * Excludes `rejected` rows so the leaderboard always surfaces a useful
+ * set (rejected items are still discoverable on /suggest?status=rejected).
+ *
+ * Returns a small, lean shape (slug, name, votes, category, status) so
+ * the leaderboard section can render a focused "Top Community
+ * Suggestions" card without pulling the full SuggestionRecord.
+ */
+export type TopSuggestion = {
+  slug: string;
+  name: string;
+  votes: number;
+  category: string;
+  status: SuggestionStatus;
+  createdAt: string;
+};
+
+export async function listTopSuggestions(limit = 6): Promise<TopSuggestion[]> {
+  try {
+    const rows = await getD1()
+      .prepare(
+        `SELECT slug, tool_name, category, status, upvotes, created_at
+         FROM suggestions
+         WHERE status != 'rejected'
+         ORDER BY upvotes DESC, created_at DESC
+         LIMIT ?`
+      )
+      .bind(limit)
+      .all<{
+        slug: string;
+        tool_name: string;
+        category: string;
+        status: string;
+        upvotes: number;
+        created_at: string;
+      }>();
+    return (rows.results ?? []).map((row) => ({
+      slug: row.slug,
+      name: row.tool_name,
+      votes: Number(row.upvotes ?? 0),
+      category: row.category,
+      status: normalizeStatus(row.status),
+      createdAt: String(row.created_at),
+    }));
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    if (msg.includes("no such table") || msg.includes("D1 binding missing")) {
+      return [];
+    }
+    throw err;
+  }
 }
