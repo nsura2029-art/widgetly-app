@@ -2,7 +2,8 @@
 
 import { useMemo, useState } from "react";
 import { Check, Clipboard, Linkedin, LogIn, Send, Share2 } from "lucide-react";
-import { SignInButton, SignUpButton, useUser } from "@clerk/nextjs";
+import { SignInButton, SignUpButton } from "@clerk/nextjs";
+import { useSafeUser } from "@/lib/auth/use-safe-user";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
@@ -80,7 +81,7 @@ function translateError(code: string, tErrors: (key: string) => string) {
  * Signed-in visitors see the actual <SuggestionFormInner />.
  */
 export function SuggestionForm() {
-  const { isLoaded, isSignedIn } = useUser();
+  const { isLoaded, isSignedIn } = useSafeUser();
   if (!isLoaded) {
     // Skeleton while Clerk resolves — prevents a flash where the
     // form briefly shows before the user is known.
@@ -124,7 +125,7 @@ function SignInRequiredPanel() {
 function SuggestionFormInner() {
   const t = useTranslations("suggest.formNew");
   const tErrors = useTranslations("suggest.formNew.errors");
-  const { user } = useUser();
+  const { user } = useSafeUser();
   const [form, setForm] = useState<SuggestionFormInput>(initialForm);
   const [errors, setErrors] = useState<FieldErrors>({});
   const [submitting, setSubmitting] = useState(false);
