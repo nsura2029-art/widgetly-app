@@ -93,6 +93,27 @@ The `/tools/[category]` page does this on every request:
 
 This means the public site is never broken during the seeding window, and the moment the admin marks a tool as `live` it appears in the public menu.
 
+### Status-change propagation latency
+
+The `/[locale]/tools/[category]` route is `force-dynamic` (see
+`src/app/[locale]/tools/[category]/page.tsx`) with a per-route
+`Cache-Control: public, s-maxage=10, stale-while-revalidate=86400`
+in `next.config.ts`. So when an admin flips a tool's status:
+
+- The D1 write happens immediately.
+- The public API (`/api/public/tools`) reflects the new status on the
+  next request — API routes are never cached.
+- The public page (`/en/tools/pdf`) reflects the new status within
+  **≤10 seconds** of the write — the edge cache holds the old HTML
+  for at most 10 s, then re-renders from D1.
+
+Before the force-dynamic fix (commit `8dd8557` and earlier), the
+category page was prerendered at build time and stored in the
+OpenNext KV cache. Admin status changes only reached the public
+site on the next deploy. See
+`docs/operations/deploy-admin-tools-grouping.md` § "Bug fix" for
+the root-cause analysis and the verification recipe.
+
 ---
 
 ## Work Guidance
