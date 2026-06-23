@@ -113,7 +113,7 @@ type LiveToolsByCategory = Record<string, Record<string, LiveTool[]>>;
  * since every live DB tool has one. Kept exported for future
  * anchor-scroll behaviors.
  */
- 
+
 function _toAnchor(slug: string): string {
   return slug
     .toLowerCase()
