@@ -26,12 +26,9 @@
  *   - We want Clerk to see the resolved locale before auth() runs so
  *     locale-aware routes can resolve the right Clerk session.
  */
-// Clerk is enabled when both keys are present. The middleware wraps
-// the intl handler with clerkMiddleware() so the Clerk auth context
-// is populated for every request. Routes that don't need Clerk (the
-// admin dashboard, which has its own session-based auth) are excluded
-// by the matcher below.
-import { clerkMiddleware } from "@clerk/nextjs/server";
+// Note: clerkMiddleware was intentionally removed. See the export comment
+// at the bottom of this file. The clerkMiddleware import triggered a
+// workerd module-load failure when CLERK_* env vars were missing.
 import { NextRequest } from "next/server";
 import createIntlMiddleware from "next-intl/middleware";
 import { routing } from "../next-intl.config";
@@ -189,10 +186,17 @@ const intlHandler = async (authOrReq: unknown, maybeReq?: NextRequest) => {
   return response;
 };
 
-// clerkMiddleware needs a publishable key at runtime. When the env
-// var is missing, fall back to the plain intl handler so the worker
-// still serves public pages.
-const clerkEnabled = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
-const handler = clerkEnabled ? clerkMiddleware(intlHandler) : intlHandler;
-
-export default handler;
+// NOTE: clerkMiddleware is intentionally NOT used here even with the
+// conditional. The Clerk SDK's module-init code calls node:crypto.webcrypto
+// and reads CLERK_* env vars at load time, which fails in workerd when
+// the keys aren't present at request time (build time has no keys, and
+// runtime keys depend on whether the user added them to GitHub yet).
+//
+// The workaround: lazy-load Clerk only inside route handlers / client
+// components (see src/lib/auth/use-safe-user.ts). The middleware stays
+// pure intl-handler so it never touches Clerk.
+//
+// When Clerk secrets are available and stable, re-enable by wrapping:
+//   const handler = clerkMiddleware(intlHandler);
+// (intlHandler already accepts (auth, req) signature.)
+export default intlHandler;
