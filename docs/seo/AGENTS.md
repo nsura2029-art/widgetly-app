@@ -76,6 +76,15 @@ Owns the SEO surface of Widgetly: how the site is crawled, indexed, ranked, and 
 - Explicitly allow AI crawlers (GPTBot, ClaudeBot, PerplexityBot, Google-Extended).
 - Block SEO scrapers (AhrefsBot, SemrushBot, MJ12bot).
 
+### Cache-Control — DB-driven category pages
+
+- **Per-tool category pages (`/[locale]/tools/[category]/page.tsx`) read `admin_tools` from D1 at request time.** They MUST NOT be prerendered — a prerendered route bakes the D1 result into the OpenNext KV cache, and admin status changes (e.g. `live` → `deprecated`) would never reach the public menu until the next deploy.
+- Use `export const dynamic = "force-dynamic"` on this page. This opts the route out of the OpenNext KV cache entirely; every request re-renders against the current D1 state.
+- Pair with a per-route `Cache-Control` override in `next.config.ts` for `/[locale]/tools/:category` — `public, s-maxage=10, stale-while-revalidate=86400` is the current setting. The 10 s edge TTL gives 1102 protection under load while still propagating admin status changes within ~10 s.
+- Per-tool detail pages (`/tools/[category]/[tool]`) are `force-static` and read from `tools-pages.ts` (static catalog). No D1 dependency, no freshness constraint — keep them static.
+- Don't apply `force-dynamic` to the tools index (`/tools`) or any other marketing page — they're static and benefit from KV caching. The 5-minute `s-maxage=300` on `/[locale]/:path*` is fine for content that changes on deploy.
+- See `docs/operations/deploy-admin-tools-grouping.md` § "Bug fix" for the full root-cause analysis.
+
 ### Per-tool page requirements
 
 - Title: `<Tool Name> — Free Online <Tool Name> Tool` (max 60 chars).

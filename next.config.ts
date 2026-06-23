@@ -58,6 +58,16 @@ const nextConfig: NextConfig = {
   // -------------------------------------------------------------------------
   async headers() {
     const CACHE_HTML = "public, s-maxage=300, stale-while-revalidate=86400";
+    // Tools category pages (e.g. /en/tools/pdf) are force-dynamic in
+    // the route definition because the right-rail menu reads from D1
+    // at request time. We override the default edge cache for these
+    // routes with a 10-second TTL so admin status changes propagate to
+    // the public site within ~10s, not after the next deploy. The
+    // stale-while-revalidate window keeps the edge serving under load
+    // even immediately after expiry. See
+    // docs/operations/deploy-admin-tools-grouping.md § "Bug fix: live
+    // menu reflects admin status changes".
+    const CACHE_TOOLS_CATEGORY = "public, s-maxage=10, stale-while-revalidate=86400";
     const CACHE_SITEMAP = "public, s-maxage=3600";
     const CACHE_IMMUTABLE = "public, max-age=31536000, immutable";
     const NO_STORE = "no-store, no-cache, must-revalidate";
@@ -78,6 +88,22 @@ const nextConfig: NextConfig = {
       {
         source: "/fr/:path*",
         headers: [{ key: "Cache-Control", value: CACHE_HTML }],
+      },
+
+      // Per-tool-category pages: short edge cache so DB-backed menu
+      // updates are visible quickly. Specific routes come BEFORE the
+      // catch-all /:path* rules so they win the lookup.
+      {
+        source: "/en/tools/:category",
+        headers: [{ key: "Cache-Control", value: CACHE_TOOLS_CATEGORY }],
+      },
+      {
+        source: "/es/tools/:category",
+        headers: [{ key: "Cache-Control", value: CACHE_TOOLS_CATEGORY }],
+      },
+      {
+        source: "/fr/tools/:category",
+        headers: [{ key: "Cache-Control", value: CACHE_TOOLS_CATEGORY }],
       },
 
       // sitemap + robots — short edge cache

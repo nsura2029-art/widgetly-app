@@ -22,13 +22,13 @@
 
 ## What's in this change
 
-| Surface                      | Change                                                                                                                                                                                                                                                            |
-| ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `/admin/tools`               | Now renders the catalog grouped by category (collapsible sections, per-category status counts, search + filter, bulk status changes, delete). Was a flat paginated table.                                                                                         |
-| `/tools/[category]` (public) | The right-rail menu is now driven by `admin_tools WHERE status='live'` for the category — DB is the source of truth. Falls back to the static catalog with a visible "Static catalog" badge when D1 is empty, so the page is never broken during the seed window. |
-| `/api/public/tools`          | `limit` default raised from 100 → 200, hard cap raised from 200 → 500. Added `format=count` for `{ category, count: number }`.                                                                                                                                    |
-| `src/lib/admin/tools.ts`     | New helper `listToolsGroupedByCategory()` — server-side bucketed read used by the new admin page. Excludes the long text columns (`long_description`, `notes`) to keep the catalog payload under 50 KB.                                                           |
-| DOX                          | `docs/api/AGENTS.md` (admin + public tools endpoints), `docs/database/AGENTS.md` (helpers), `docs/secrets/AGENTS.md` (ADMIN_SESSION_SECRET), new `docs/admin/AGENTS.md` (owning the admin surface). Root `AGENTS.md` Child DOX Index + role registry updated.     |
+| Surface                      | Change                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `/admin/tools`               | Now renders the catalog grouped by category (collapsible sections, per-category status counts, search + filter, bulk status changes, delete). Was a flat paginated table.                                                                                                                                                                                                                                                            |
+| `/tools/[category]` (public) | The right-rail menu is now driven by `admin_tools WHERE status='live'` for the category — DB is the source of truth. Falls back to the static catalog with a visible "Static catalog" badge when D1 is empty, so the page is never broken during the seed window. **Follow-up (see "Bug fix" below): page is now `force-dynamic` with a 10 s edge cache so admin status changes propagate within ~10 s, not until the next deploy.** |
+| `/api/public/tools`          | `limit` default raised from 100 → 200, hard cap raised from 200 → 500. Added `format=count` for `{ category, count: number }`.                                                                                                                                                                                                                                                                                                       |
+| `src/lib/admin/tools.ts`     | New helper `listToolsGroupedByCategory()` — server-side bucketed read used by the new admin page. Excludes the long text columns (`long_description`, `notes`) to keep the catalog payload under 50 KB.                                                                                                                                                                                                                              |
+| DOX                          | `docs/api/AGENTS.md` (admin + public tools endpoints), `docs/database/AGENTS.md` (helpers), `docs/secrets/AGENTS.md` (ADMIN_SESSION_SECRET), new `docs/admin/AGENTS.md` (owning the admin surface). Root `AGENTS.md` Child DOX Index + role registry updated.                                                                                                                                                                        |
 
 ## Ship gate (local — must be green before push)
 
@@ -209,6 +209,17 @@ curl -s 'https://beta.widgetly.tech/api/public/tools?category=pdf' | jq '.tools 
 > - Public `/api/public/tools?format=count` → 89 live tools across 11 categories
 > - Public `/en/tools/pdf` → 15 tool links, no static-catalog badge
 > - Admin `/admin/tools` → renders grouped-by-category (visible only with a session)
+>
+> **Post-fix re-verification (target after the bug fix lands on stage):**
+>
+> 1. `curl -sI https://beta.widgetly.tech/en/tools/pdf | grep -i x-nextjs`
+>    → no `x-nextjs-prerender: 1` (route is dynamic). First request
+>    after deploy is `x-nextjs-cache: MISS`, second within 10 s is
+>    `HIT`.
+> 2. Flip `compress-pdf` to `deprecated` in admin.
+> 3. Within ≤10 s: `curl -sL https://beta.widgetly.tech/en/tools/pdf | grep -oE 'href="/en/tools/pdf/[^"]+"' | wc -l`
+>    → **14** (compress-pdf gone).
+> 4. Flip back to `live`. Within ≤10 s: count back to **15**.
 
 ## Promote to prod — DEFERRED
 
@@ -237,3 +248,113 @@ The public category page is forward-compatible: if a row is `status='live'`, it'
 ## Note about secrets
 
 This change does NOT add any new secrets. `ADMIN_SESSION_SECRET` is unchanged and is already required on both envs. The deploy workflow already syncs it to the production Worker; the stage Worker has it set manually from PR #73.
+
+## Bug fix (follow-up commit): live menu reflects admin status changes
+
+**Reported 2026-06-23.** After the grouped-admin deploy shipped, the user
+verified end-to-end on stage:
+
+1. `/admin/tools` shows the catalog grouped by category, all 89 rows
+   `status='live'`.
+2. `/api/public/tools?category=pdf` correctly returns **14 tools**
+   after `compress-pdf` was flipped to `deprecated` — the API reads
+   D1 live on every call.
+3. **But `/en/tools/pdf` still rendered all 15 tools**, including
+   `compress-pdf`. The deprecated tool did not disappear from the
+   public menu even after several minutes.
+
+**Root cause.** `/[locale]/tools/[category]/page.tsx` exported a
+`generateStaticParams()` returning the full set of category slugs.
+Combined with no `dynamic` export, Next.js marked the route as fully
+static, prerendered every page at build time, and stored the
+rendered HTML in the OpenNext KV cache (`x-nextjs-cache: HIT`,
+`x-nextjs-prerender: 1`). The D1 read happened **once during the
+build** — at that moment all 15 PDF tools were `live` — and the
+result was baked into the HTML. Admin status changes in D1 never
+reached the cached HTML, regardless of `stale-while-revalidate`
+values, because the prerender manifest only gets refreshed on a
+redeploy.
+
+The API endpoint was unaffected because API routes are always
+dynamic (`runtime = "nodejs"`). The smoke-test in the original
+verification (`§ "Stage verification"` step 6) only checked the API,
+which masked the bug.
+
+**Fix.** Two small changes to make the public menu reflect D1 in
+near-real-time:
+
+1. **`src/app/[locale]/tools/[category]/page.tsx`** — replace
+   `generateStaticParams()` with `export const dynamic = "force-dynamic"`.
+   This opts the route out of the OpenNext KV cache entirely; every
+   request re-renders against the current D1 state.
+2. **`next.config.ts`** — add a per-route `Cache-Control: public,
+s-maxage=10, stale-while-revalidate=86400` for
+   `/[en|es|fr]/tools/:category` (more specific than the catch-all
+   `/[locale]/:path*` rule, so it wins). The 10 s TTL gives us a
+   short edge cache for 1102 protection under load, while still
+   propagating admin status changes within ~10 s.
+
+### Why this works
+
+- **`force-dynamic`**: tells Next.js the route must be rendered per
+  request. The OpenNext adapter honors this and skips the KV
+  incremental cache entirely (verified via the OpenNext caching
+  docs — `force-dynamic` opts the route out of the Full Route
+  Cache). The HTML is no longer stored in KV; admin writes go
+  straight from D1 to the response.
+- **10 s edge cache**: the Cloudflare edge (separate from OpenNext
+  KV) still caches the rendered HTML for 10 s, with a 1-day SWR
+  window. Under normal traffic, >99 % of requests are served from
+  the edge without invoking the Worker. Admin changes appear in
+  ≤10 s.
+- **Why not `s-maxage=0`**: it would force every request through
+  the Worker, multiplying D1 reads and CPU cost by ~10×. With
+  `s-maxage=10`, D1 sees one read per category per 10 s, not one
+  per request.
+
+### Why not on-demand revalidation via `revalidateTag`
+
+OpenNext's `revalidateTag` / `revalidatePath` requires a configured
+tag cache + queue. The current `open-next.config.ts` uses
+`tagCache: "dummy"` (see the comment in that file). Switching to a
+real tag cache means adding a Durable Object + KV binding +
+queue — significant architecture change for a bug that's
+fully fixable by the dynamic + 10 s TTL combo above. Defer the
+tag-cache refactor to a future workstream if finer-grained
+invalidation becomes a real need (e.g. multi-tenant content with
+frequent edits).
+
+### Verification
+
+```bash
+# Pre-fix state (reproduced on stage 2026-06-23):
+curl -sI 'https://beta.widgetly.tech/en/tools/pdf' | grep -i 'x-nextjs'
+#   x-nextjs-cache: HIT
+#   x-nextjs-prerender: 1
+
+curl -s 'https://beta.widgetly.tech/api/public/tools?category=pdf' \
+  | jq '.tools | map(.slug) | length'
+#   14 (compress-pdf correctly excluded)
+
+curl -sL 'https://beta.widgetly.tech/en/tools/pdf' \
+  | grep -oE 'href="/en/tools/pdf/[^"]+"' | wc -l
+#   15 (BUG: page still shows compress-pdf)
+
+# Post-fix (deploy branch fix/category-page-live-d1 to stage):
+#   x-nextjs-cache: MISS (first request), then HIT for ~10 s
+#   x-nextjs-prerender: not set (route is dynamic)
+#   Same admin flip — compress-pdf disappears from the page within 10 s
+```
+
+The full smoke test for this fix lives in § "Stage verification"
+above — re-run steps 4-6 after the fix branch is on stage.
+
+### Files changed in this fix
+
+| File                                             | Change                                                                                                                                                                                                                 |
+| ------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/app/[locale]/tools/[category]/page.tsx`     | Drop `generateStaticParams()`. Add `export const dynamic = "force-dynamic"`. Remove the now-unused `getAllToolsCategorySlugs` import.                                                                                  |
+| `next.config.ts`                                 | Add per-route `Cache-Control: public, s-maxage=10, stale-while-revalidate=86400` for `/[en\|es\|fr]/tools/:category`. Specific routes are listed BEFORE the catch-all `/[locale]/:path*` rules so they win the lookup. |
+| `docs/operations/deploy-admin-tools-grouping.md` | This section.                                                                                                                                                                                                          |
+| `docs/seo/AGENTS.md`                             | New note under "Local Contracts / Cache-Control" explaining the dynamic + 10 s TTL pattern for DB-driven category pages.                                                                                               |
+| `docs/admin/AGENTS.md`                           | New note in the "Pages" section reminding operators that admin status changes reach the public menu in ≤10 s, not instantly.                                                                                           |

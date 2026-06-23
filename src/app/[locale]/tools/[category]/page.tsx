@@ -21,7 +21,6 @@ import { PageShell } from "@/components/layout/page-shell";
 import { buildMetadata } from "@/lib/seo";
 import {
   TOOLS_CATEGORIES,
-  getAllToolsCategorySlugs,
   getToolsCategory,
   getToolsCategoryKeywords,
 } from "@/lib/tools-categories";
@@ -51,9 +50,18 @@ const ACCENT_CLASSES: Record<"primary" | "secondary" | "accent", string> = {
 
 type Params = { category: string };
 
-export function generateStaticParams(): Params[] {
-  return getAllToolsCategorySlugs().map((category) => ({ category }));
-}
+// This page reads `admin_tools` from D1 at request time, so it MUST be
+// rendered dynamically — if it were prerendered, admin status changes
+// (e.g. flipping a tool from `live` to `deprecated`) would never reach
+// the public menu: the prerendered HTML would be served from the
+// OpenNext KV cache until the next deploy.
+//
+// `force-dynamic` opts this route out of the OpenNext KV cache entirely;
+// the per-route `Cache-Control` override in `next.config.ts` (s-maxage=10)
+// still gives us a short edge cache so 1102 protection is preserved.
+// Admin status changes therefore propagate to the public site within
+// ~10 seconds, not until the next deploy.
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: Promise<Params> }): Promise<Metadata> {
   const { category } = await params;
