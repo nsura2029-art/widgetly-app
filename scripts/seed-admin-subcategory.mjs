@@ -70,8 +70,14 @@ function slugifyName(name) {
 // dependency-light.
 // ---------------------------------------------------------------------------
 
+const projectRoot = process.cwd();
+const subgroupsPath = join(projectRoot, "src/lib/tools-subgroups.ts");
+
+// Two-step: write a tiny tsx loader that imports the source and
+// prints JSON to stdout. Pass the absolute path to avoid cwd
+// confusion in CI runners.
 const extractScript = `
-import { TOOLS_SUBGROUPS } from "${process.cwd()}/src/lib/tools-subgroups.ts";
+import { TOOLS_SUBGROUPS } from ${JSON.stringify(subgroupsPath)};
 const out = [];
 for (const [category, subgroups] of Object.entries(TOOLS_SUBGROUPS)) {
   for (const group of subgroups) {
@@ -88,15 +94,31 @@ for (const [category, subgroups] of Object.entries(TOOLS_SUBGROUPS)) {
 process.stdout.write(JSON.stringify(out));
 `;
 
-const extractTmp = join(process.cwd(), `.tmp-extract-subgroups-${Date.now()}.mjs`);
+const extractTmp = join(projectRoot, `.tmp-extract-subgroups-${Date.now()}.mjs`);
 await writeFile(extractTmp, extractScript, "utf8");
 
 let rows;
 try {
-  const out = execSync(`pnpm exec tsx ${extractTmp}`, { encoding: "utf8" });
+  const out = execSync(`pnpm exec tsx ${extractTmp}`, {
+    encoding: "utf8",
+    cwd: projectRoot,
+  });
   rows = JSON.parse(out);
 } catch (e) {
-  console.error("✗ Failed to extract (category, subcategory, slug) triples:", e.message);
+  // Re-run without suppressing stderr so the actual tsx error
+  // (missing module, syntax error, etc.) is visible in CI logs.
+  console.error("✗ Failed to extract (category, subcategory, slug) triples.");
+  console.error("  Debug info: cwd=" + projectRoot + " tmp=" + extractTmp);
+  console.error("  Re-running with full stderr:");
+  try {
+    execSync(`pnpm exec tsx ${extractTmp}`, {
+      encoding: "utf8",
+      cwd: projectRoot,
+      stdio: "inherit",
+    });
+  } catch {
+    // already printed the error
+  }
   process.exit(1);
 } finally {
   await unlink(extractTmp).catch(() => {});
