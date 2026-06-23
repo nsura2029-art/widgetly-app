@@ -71,7 +71,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
       probeDoneRef.current = false;
       return;
     }
-     
+
     setAuth({ state: "loading" });
     probeDoneRef.current = false;
     let cancelled = false;
@@ -83,15 +83,13 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           const { user } = (await r.json()) as {
             user: { id: number; username: string; display_name: string };
           };
-           
+
           setAuth({ state: "authed", user });
         } else {
-           
           setAuth({ state: "anon" });
         }
       } catch {
         if (!cancelled) {
-           
           setAuth({ state: "anon" });
         }
       } finally {
