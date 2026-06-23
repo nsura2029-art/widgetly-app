@@ -53,22 +53,9 @@ import { cn } from "@/lib/utils";
 // ---------------------------------------------------------------------------
 
 const ACCENT_TILE_CLASSES: Record<string, string> = {
-  // Mirrors the previous static palette so the menu looks identical
-  // when seeded from tools-subgroups.ts. The DB's `accent_color`
-  // is one of the three accent vars ("primary" | "secondary" |
-  // "accent"); the legacy subgroup accent names ("orange",
-  // "indigo", etc.) come from a different palette map and are
-  // handled by the API: per-tool `accent_color` from D1 is what the
-  // menu uses, but subgroup color is no longer authoritative.
   primary: "bg-primary hover:bg-primary/90 text-primary-foreground",
   secondary: "bg-secondary hover:bg-secondary/90 text-secondary-foreground",
   accent: "bg-accent hover:bg-accent/90 text-accent-foreground",
-  // Direct accent names from the legacy tools-subgroups.ts palette,
-  // preserved here so admin-added tools that reference these
-  // colors still get a sensible tile. The DB stores
-  // `accent_color = 'primary'|'secondary'|'accent'` only — these
-  // are defensive fallbacks for any seeded row that pre-dates the
-  // palette unification.
   red: "bg-red-500 hover:bg-red-600 text-white",
   green: "bg-green-500 hover:bg-green-600 text-white",
   blue: "bg-blue-600 hover:bg-blue-700 text-white",
@@ -113,7 +100,7 @@ type LiveToolsByCategory = Record<string, Record<string, LiveTool[]>>;
  * since every live DB tool has one. Kept exported for future
  * anchor-scroll behaviors.
  */
-
+ 
 function _toAnchor(slug: string): string {
   return slug
     .toLowerCase()
@@ -493,15 +480,15 @@ function ToolLink({
 }
 
 /**
- * Pre-resolved icon map for the dynamic tool links. The DB doesn't
- * send an icon name (keeps the grouped payload small), so we derive
- * one from the tool's display name. The lint rule
- * `react-hooks/static-components` forbids creating components during
- * render, so we resolve every named icon ONCE at module load and
- * look it up at render time by name.
+ * Per-tool icon. We don't get an icon name from the grouped API
+ * (keeps the payload small), so derive one from the display name
+ * using a stable hash → icon map. The lint rule
+ * `react-hooks/static-components` forbids creating components
+ * during render, so we resolve every named icon ONCE at module
+ * load and look it up at render time by name.
  *
- * Falls back to "Sparkles" for any name we don't recognize — better
- * than no icon at all.
+ * Falls back to "Sparkles" for any name we don't recognize —
+ * better than no icon at all.
  */
 const NAME_TO_ICON: Array<[RegExp, string]> = [
   [/merge|combine|join/i, "Combine"],
@@ -544,7 +531,6 @@ const NAME_TO_ICON: Array<[RegExp, string]> = [
   [/sitemap|robots/i, "Sitemap"],
   [/keyword|word.?count/i, "Type"],
   [/case/i, "CaseSensitive"],
-  [/json.?formatter|validator/i, "Braces"],
   [/regex|test/i, "Regex"],
   [/diff|compare/i, "GitCompare"],
   [/uuid/i, "Fingerprint"],
