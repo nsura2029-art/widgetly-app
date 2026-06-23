@@ -174,6 +174,36 @@ Reference secrets in commands as `${SECRET_NAME}` — the shell expands at execu
 
 ---
 
+## Clerk (user authentication)
+
+Two secrets, both required:
+
+| Name                                | Format                                   | Where to set                                                           |
+| ----------------------------------- | ---------------------------------------- | ---------------------------------------------------------------------- |
+| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | `pk_test_...` (or `pk_live_...` in prod) | GitHub Actions secret, `wrangler secret put --env stage`, `.env.local` |
+| `CLERK_SECRET_KEY`                  | `sk_test_...` (or `sk_live_...` in prod) | Same as above                                                          |
+
+**Get them at** [dashboard.clerk.com](https://dashboard.clerk.com) → **API Keys**. Use the _test_ keys for stage/dev, _live_ keys for prod.
+
+### Enabling Clerk on stage
+
+One-time, when you first have the keys:
+
+1. **Add the secrets to GitHub** (one-time, manual):
+   - Go to https://github.com/nsura2029-art/widgetly-app/settings/secrets/actions
+   - Click **New repository secret** and add each of:
+     - `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` (value: `pk_test_...`)
+     - `CLERK_SECRET_KEY` (value: `sk_test_...`)
+2. **Sync to the stage Worker** — go to https://github.com/nsura2029-art/widgetly-app/actions/workflows/set-stage-clerk-secrets.yml → **Run workflow** → **Run workflow**. This pushes both secrets to the Cloudflare stage Worker via `wrangler secret put`.
+3. **Wait for the next deploy** (or trigger one). The `deploy-stage.yml` workflow also re-syncs both secrets on every push to `develop`, so once (1) and (2) are done, future deploys will keep them up to date.
+4. **Verify** by curling the stage URL — the header "Sign in" button should now open Clerk's hosted sign-in flow (instead of linking to `/admin/sign-in`).
+
+### When Clerk is configured, also re-enable `clerkMiddleware` in the middleware
+
+The current `src/middleware.ts` keeps Clerk out of the worker bundle on purpose (the SDK's module-init code does `require('node:crypto').webcrypto` and reads `CLERK_*` env vars, which doesn't work in workerd without proper configuration). Once the keys are set on the worker, the import side effects work — re-enable `clerkMiddleware` to enable per-request auth context (used by `auth()` in server components and API routes).
+
+See the `Why NO clerkMiddleware here` comment in `src/middleware.ts` for the full rationale and the planned re-enable.
+
 ## Child DOX Index
 
 _No children. This AGENTS.md owns secrets entirely._

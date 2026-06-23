@@ -56,6 +56,12 @@ const SECRETS_TO_PUSH = [
   "WAITLIST_WEBHOOK_URL",
   "SUGGEST_WEBHOOK_URL",
   "NEXT_PUBLIC_ANALYTICS_TOKEN",
+  "ADMIN_SESSION_SECRET",
+  // Clerk — both keys are needed for clerkMiddleware to work without
+  // breaking the worker. See src/middleware.ts for the rationale.
+  // Skip silently when unset (the deploy workflow handles prod).
+  "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY",
+  "CLERK_SECRET_KEY",
 ];
 
 const DRY_RUN = process.argv.includes("--dry-run");

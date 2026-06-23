@@ -42,11 +42,11 @@ jobs:
       # minted in one environment doesn't accidentally work in the other.
       # -------------------------------------------------------------------
       - name: Sync secrets to stage Worker
-        if: ${{ env.SUPABASE_URL != '' || env.SUPABASE_SERVICE_ROLE_KEY != '' || env.WAITLIST_WEBHOOK_URL != '' || env.SUGGEST_WEBHOOK_URL != '' || env.NEXT_PUBLIC_ANALYTICS_TOKEN != '' || env.ADMIN_SESSION_SECRET != '' }}
+        if: ${{ env.SUPABASE_URL != '' || env.SUPABASE_SERVICE_ROLE_KEY != '' || env.WAITLIST_WEBHOOK_URL != '' || env.SUGGEST_WEBHOOK_URL != '' || env.NEXT_PUBLIC_ANALYTICS_TOKEN != '' || env.ADMIN_SESSION_SECRET != '' || env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY != '' || env.CLERK_SECRET_KEY != '' }}
         run: |
           set -e
           echo "secrets present in this run:"
-          for n in SUPABASE_URL SUPABASE_SERVICE_ROLE_KEY WAITLIST_WEBHOOK_URL SUGGEST_WEBHOOK_URL NEXT_PUBLIC_ANALYTICS_TOKEN ADMIN_SESSION_SECRET; do
+          for n in SUPABASE_URL SUPABASE_SERVICE_ROLE_KEY WAITLIST_WEBHOOK_URL SUGGEST_WEBHOOK_URL NEXT_PUBLIC_ANALYTICS_TOKEN ADMIN_SESSION_SECRET NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY CLERK_SECRET_KEY; do
             v=$(eval echo "\$$n")
             if [ -n "$v" ]; then echo "  $n: set (length ${#v})"; else echo "  $n: (not set, skipping)"; fi
           done
@@ -56,6 +56,8 @@ jobs:
           [ -n "$SUGGEST_WEBHOOK_URL" ]       && printf '%s' "$SUGGEST_WEBHOOK_URL"       | pnpm exec wrangler secret put SUGGEST_WEBHOOK_URL       --env stage || true
           [ -n "$NEXT_PUBLIC_ANALYTICS_TOKEN" ] && printf '%s' "$NEXT_PUBLIC_ANALYTICS_TOKEN" | pnpm exec wrangler secret put NEXT_PUBLIC_ANALYTICS_TOKEN --env stage || true
           [ -n "$ADMIN_SESSION_SECRET" ]      && printf '%s' "$ADMIN_SESSION_SECRET"      | pnpm exec wrangler secret put ADMIN_SESSION_SECRET      --env stage || true
+          [ -n "$NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY" ] && printf '%s' "$NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY" | pnpm exec wrangler secret put NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY --env stage || true
+          [ -n "$CLERK_SECRET_KEY" ]              && printf '%s' "$CLERK_SECRET_KEY"              | pnpm exec wrangler secret put CLERK_SECRET_KEY              --env stage || true
           echo "stage secrets sync complete"
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
