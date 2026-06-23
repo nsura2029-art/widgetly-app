@@ -226,7 +226,8 @@ Public read-only access to the live tool catalog (no auth, no rate limit). Mirro
     - `json` — `{ tools: PublicTool[], total: number, category?: string }`
     - `jsonl` — newline-delimited JSON, one tool per line
     - `count` — `{ category: string, count: number }` (only meaningful with `category`)
-- When `category` is omitted, returns aggregated counts: `{ counts: Record<category, number>, total: number }`.
+    - `grouped` (only meaningful when `category` is omitted) — `{ categories: Record<category, { slug, name }[]>, total: number }`. Lightweight summary used by the header mega-menu; only slug + name per tool to keep the payload small. Cached at the edge with `s-maxage=10, stale-while-revalidate=86400` so admin status changes propagate within ~10s.
+- When `category` is omitted and `format` is not `grouped`, returns aggregated counts: `{ counts: Record<category, number>, total: number }`.
 - `PublicTool` shape: `{ id, slug, category, name, description, pricing_tier, icon_url, accent_color, sort_order, status, live_at }`.
 - Returns 500 with `{ tools: [], total: 0, error: "internal" }` if D1 throws.
 - The endpoint always returns `status='live'` rows only; the DB is the source of truth for the public menu.

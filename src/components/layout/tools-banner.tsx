@@ -61,6 +61,23 @@ const FEATURED_SLUGS = [
   "writing",
 ] as const;
 
+/** Live tool summary shape returned by /api/public/tools?format=grouped. */
+type LiveTool = { slug: string; name: string };
+type LiveToolsByCategory = Record<string, LiveTool[]>;
+
+/**
+ * Anchor id used to scroll to a sub-tool on the /tools/[category]
+ * page. Lowercase, hyphen-separated, ASCII only. Matches the slug
+ * the admin DB stores for live tools, so the "Live now" entries
+ * can link to the same anchor ids the static groups use.
+ */
+function toAnchor(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
 /**
  * Pre-resolve Lucide icon components at module load. The
  * `react-hooks/static-components` lint rule forbids creating
@@ -85,16 +102,6 @@ const FEATURED = FEATURED_SLUGS.map((slug) => {
   }
   return { ...cat, Icon: getIcon(cat.icon), subIcons };
 });
-
-/** Convert a sub-tool display name to an anchor id. Matches the
- *  pattern the `/tools/[category]` page uses for sub-tool anchors
- *  (lowercase, hyphen-separated, ASCII only). */
-function toAnchor(name: string): string {
-  return name
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-}
 
 const MEGA_PANEL_ID = "tools-mega-panel";
 
@@ -167,6 +174,19 @@ const MEGA_PANEL_ID = "tools-mega-panel";
  *  - 120ms close delay on mouseleave so the cursor can traverse
  *    the gap between chip and panel without it snapping shut.
  *
+ * ## Live catalog merge (2026-06-22)
+ *
+ * The mega panel used to render only the static sub-groupings
+ * defined in src/lib/tools-subgroups.ts. That meant any tool an
+ * admin marked `live` in the admin panel was invisible in the
+ * menu — it would only show on /tools/[category] and on the
+ * /suggest?status=live board. Now we fetch
+ * /api/public/tools?format=grouped once on mount and append a
+ * "Live now" column to each panel listing any DB tools that
+ * aren't already covered by the static groups. The fetch is
+ * edge-cached at s-maxage=10 so admin status changes propagate
+ * within ~10s, matching the cache policy on the category pages.
+ *
  * Accessibility:
  *  - Chip is a button with aria-expanded + aria-controls.
  *  - Panel has role="menu" with menuitem children.
@@ -176,6 +196,10 @@ const MEGA_PANEL_ID = "tools-mega-panel";
 export function ToolsBanner() {
   const t = useTranslations("toolsBanner");
   const [openSlug, setOpenSlug] = React.useState<string | null>(null);
+  const [liveTools, setLiveTools] = React.useState<LiveToolsByCategory>({});
+  const [liveStatus, setLiveStatus] = React.useState<"idle" | "loading" | "ready" | "error">(
+    "idle"
+  );
   const closeTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const navRef = React.useRef<HTMLElement>(null);
 
@@ -213,6 +237,29 @@ export function ToolsBanner() {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [openSlug, close]);
+
+  // Fetch the grouped live-tools feed once on mount. Cached at the
+  // edge (s-maxage=10) so the Worker's 10ms/request budget is
+  // protected — see /api/public/tools?format=grouped. We do not
+  // refetch on every panel open; the cache TTL is short enough
+  // that status changes show up within ~10s.
+  React.useEffect(() => {
+    let cancelled = false;
+    fetch("/api/public/tools?format=grouped", { headers: { accept: "application/json" } })
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))))
+      .then((body: { categories?: LiveToolsByCategory }) => {
+        if (cancelled) return;
+        setLiveTools(body.categories ?? {});
+        setLiveStatus("ready");
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setLiveStatus("error");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const openCat = openSlug ? FEATURED.find((c) => c.slug === openSlug) : undefined;
 
@@ -284,6 +331,10 @@ export function ToolsBanner() {
           subIcons={openCat.subIcons}
           browseLabel={t("browseAll", { count: openCat.count })}
           countLabel={t("toolsCount", { count: openCat.count })}
+          liveTools={liveTools[openCat.slug] ?? []}
+          liveStatus={liveStatus}
+          liveSectionTitle={t("liveSectionTitle")}
+          liveSectionHint={t("liveSectionHint")}
           onLinkClick={close}
           onMouseEnter={cancelClose}
           onMouseLeave={scheduleClose}
@@ -291,6 +342,26 @@ export function ToolsBanner() {
       ) : null}
     </>
   );
+}
+
+/**
+ * Compute the set of "already covered" anchors for a category, so
+ * the "Live now" column only shows tools that aren't already
+ * represented in the static sub-groups. We match on the slugified
+ * display name (lowercase + hyphens) since that's how the static
+ * items and the DB slugs both key their anchors.
+ */
+function buildStaticAnchors(category: (typeof FEATURED)[number]): Set<string> {
+  const out = new Set<string>();
+  const subgroups = getSubgroups(category.slug);
+  if (subgroups) {
+    for (const g of subgroups) {
+      for (const item of g.items) out.add(toAnchor(item.name));
+    }
+  } else {
+    for (const name of category.examples) out.add(toAnchor(name));
+  }
+  return out;
 }
 
 /**
@@ -306,6 +377,10 @@ function MegaPanel({
   subIcons,
   browseLabel,
   countLabel,
+  liveTools,
+  liveStatus,
+  liveSectionTitle,
+  liveSectionHint,
   onLinkClick,
   onMouseEnter,
   onMouseLeave,
@@ -316,11 +391,18 @@ function MegaPanel({
   subIcons: Record<string, ReturnType<typeof getIcon>>;
   browseLabel: string;
   countLabel: string;
+  liveTools: LiveTool[];
+  liveStatus: "idle" | "loading" | "ready" | "error";
+  liveSectionTitle: string;
+  liveSectionHint: string;
   onLinkClick: () => void;
   onMouseEnter: () => void;
   onMouseLeave: () => void;
 }) {
   const subgroups = getSubgroups(category.slug);
+  const staticAnchors = buildStaticAnchors(category);
+  // Anything in D1 that the static groups don't already cover.
+  const extras = liveTools.filter((t) => !staticAnchors.has(t.slug));
 
   return (
     // Outer wrapper spans the full container width and handles centering
@@ -377,9 +459,9 @@ function MegaPanel({
                 7 subgroups wrap to 2 rows of 5+2.
                 gap-x-6 is constant regardless of how many columns.
           */}
-          {subgroups ? (
-            <div className="flex flex-wrap items-start gap-x-6 gap-y-8">
-              {subgroups.map((group) => (
+          <div className="flex flex-wrap items-start gap-x-6 gap-y-8">
+            {subgroups ? (
+              subgroups.map((group) => (
                 <div key={group.title} className="w-[200px] shrink-0">
                   <SubgroupColumn
                     group={group}
@@ -388,19 +470,41 @@ function MegaPanel({
                     onLinkClick={onLinkClick}
                   />
                 </div>
-              ))}
-            </div>
-          ) : (
-            // Fallback for any featured category that doesn't have
-            // explicit sub-groupings defined yet — render the flat
-            // `examples` list in a single column with category icon
-            // as a placeholder for each item.
-            <FallbackList
-              examples={category.examples}
-              categorySlug={category.slug}
-              onLinkClick={onLinkClick}
-            />
-          )}
+              ))
+            ) : (
+              // Fallback for any featured category that doesn't have
+              // explicit sub-groupings defined yet — render the flat
+              // `examples` list in a single column with category icon
+              // as a placeholder for each item.
+              <div className="w-[200px] shrink-0">
+                <FallbackColumn
+                  examples={category.examples}
+                  categorySlug={category.slug}
+                  onLinkClick={onLinkClick}
+                />
+              </div>
+            )}
+            {/* Live catalog — DB tools not already covered by the
+                static groups. Hidden when there's nothing to add so
+                the panel doesn't grow an empty column. The
+                loading/error states are non-blocking: the user
+                still sees the static groups underneath. */}
+            {extras.length > 0 ? (
+              <div className="w-[200px] shrink-0">
+                <LiveColumn
+                  tools={extras}
+                  title={liveSectionTitle}
+                  categorySlug={category.slug}
+                  onLinkClick={onLinkClick}
+                />
+              </div>
+            ) : null}
+            {liveStatus === "error" ? (
+              <p className="text-muted-foreground sr-only" aria-live="polite">
+                {liveSectionHint}
+              </p>
+            ) : null}
+          </div>
         </div>
       </div>
     </div>
@@ -431,6 +535,40 @@ function SubgroupColumn({
               Icon={subIcons[item.name] ?? getIcon("Sparkles")}
               accent={group.accent}
               href={`/tools/${categorySlug}/${toAnchor(item.name)}`}
+              onClick={onLinkClick}
+            />
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function LiveColumn({
+  tools,
+  title,
+  categorySlug,
+  onLinkClick,
+}: {
+  tools: LiveTool[];
+  title: string;
+  categorySlug: string;
+  onLinkClick: () => void;
+}) {
+  return (
+    <div>
+      <h3 className="text-muted-foreground mb-2 flex items-center gap-1.5 text-[11px] font-semibold tracking-wider uppercase">
+        <span aria-hidden="true" className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500" />
+        {title}
+      </h3>
+      <ul className="space-y-0.5">
+        {tools.map((t) => (
+          <li key={t.slug}>
+            <SubToolLink
+              item={{ name: t.name, icon: "Sparkles" }}
+              Icon={getIcon("Sparkles")}
+              accent="green"
+              href={`/tools/${categorySlug}/${t.slug}`}
               onClick={onLinkClick}
             />
           </li>
@@ -485,7 +623,7 @@ function SubToolLink({
   );
 }
 
-function FallbackList({
+function FallbackColumn({
   examples,
   categorySlug,
   onLinkClick,
@@ -495,18 +633,23 @@ function FallbackList({
   onLinkClick: () => void;
 }) {
   return (
-    <ul className="grid grid-cols-2 gap-x-6 gap-y-0.5 md:grid-cols-3">
-      {examples.map((name) => (
-        <li key={name}>
-          <SubToolLink
-            item={{ name, icon: "Sparkles" }}
-            Icon={getIcon("Sparkles")}
-            accent="blue"
-            href={`/tools/${categorySlug}/${toAnchor(name)}`}
-            onClick={onLinkClick}
-          />
-        </li>
-      ))}
-    </ul>
+    <div>
+      <h3 className="text-muted-foreground mb-2 text-[11px] font-semibold tracking-wider uppercase">
+        Examples
+      </h3>
+      <ul className="space-y-0.5">
+        {examples.map((name) => (
+          <li key={name}>
+            <SubToolLink
+              item={{ name, icon: "Sparkles" }}
+              Icon={getIcon("Sparkles")}
+              accent="blue"
+              href={`/tools/${categorySlug}/${toAnchor(name)}`}
+              onClick={onLinkClick}
+            />
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }

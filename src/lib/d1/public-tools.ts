@@ -107,3 +107,53 @@ export async function getLiveToolCountsByCategory(): Promise<Record<string, numb
     {}
   ).catch(() => ({}));
 }
+
+/**
+ * Lightweight summary used by the header mega-menu's "Live now" section.
+ * Returns the slug + display name for every live tool grouped by
+ * category. We deliberately project only the two columns we need —
+ * keeps the response small (one tiny JSON for all 12 categories
+ * combined) and lets the menu merge this with the static catalog
+ * without paying for the full tool payload.
+ *
+ * Slug is included so the client can dedupe against the static
+ * sub-groups (which are keyed by display name) and decide which
+ * "Live now" entries to surface.
+ */
+export type LiveToolSummary = { slug: string; name: string };
+
+export async function listLiveToolsGroupedByCategory(): Promise<Record<string, LiveToolSummary[]>> {
+  let db: D1Database;
+  try {
+    const { env } = getCloudflareContext();
+    const candidate = (env as { DB?: D1Database })?.DB;
+    if (!candidate) return {};
+    db = candidate;
+  } catch {
+    return {};
+  }
+  return safeQuery(
+    () =>
+      db
+        .prepare(
+          `SELECT category, slug, name FROM admin_tools
+           WHERE status = 'live'
+           ORDER BY category ASC, sort_order ASC, name ASC`
+        )
+        .all<{ category: string; slug: string; name: string }>()
+        .then((r) => {
+          const out: Record<string, LiveToolSummary[]> = {};
+          for (const row of r.results ?? []) {
+            if (!out[row.category]) out[row.category] = [];
+            out[row.category]!.push({ slug: row.slug, name: row.name });
+          }
+          return out;
+        }),
+    {}
+  ).catch((err) => {
+    log.warn("public.tools.listGrouped.failed", "public-read-failed", {
+      error: (err as Error).message,
+    });
+    return {};
+  });
+}

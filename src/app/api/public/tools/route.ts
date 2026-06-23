@@ -22,6 +22,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import {
   getLiveToolCountsByCategory,
   getLiveToolsForCategoryPublic,
+  listLiveToolsGroupedByCategory,
   type PublicTool,
 } from "@/lib/d1/public-tools";
 import { log } from "@/lib/log";
@@ -46,6 +47,21 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ tools, total: tools.length, category });
     }
 
+    // No category filter.
+    if (format === "grouped") {
+      // Lightweight grouped list for the header mega-menu. Only slug
+      // + name per tool — keeps the payload small and the merge
+      // step on the client fast.
+      //
+      // 10s s-maxage matches the per-route cache policy on
+      // /tools/[category] so admin status changes propagate on the
+      // same ~10s window everywhere.
+      const groups = await listLiveToolsGroupedByCategory();
+      return NextResponse.json(
+        { categories: groups, total: Object.values(groups).reduce((n, xs) => n + xs.length, 0) },
+        { headers: { "cache-control": "public, s-maxage=10, stale-while-revalidate=86400" } }
+      );
+    }
     // All-categories: aggregate per-category counts (cheaper than the
     // full list when callers just want badges/numbers).
     const counts = await getLiveToolCountsByCategory();
