@@ -31,9 +31,18 @@ describe("suggestion helpers", () => {
   });
 
   it("returns public status labels", () => {
-    expect(suggestionStatusLabel("in_review")).toBe("In Review");
+    // `in_review` maps to "Suggested" on the public UI to match the
+    // user's mental model: a freshly submitted tool hasn't been
+    // "reviewed" yet, it's just been suggested. The DB value is
+    // unchanged.
+    expect(suggestionStatusLabel("in_review")).toBe("Suggested");
     expect(suggestionStatusLabel("building")).toBe("Building");
     expect(suggestionStatusLabel("live")).toBe("Live");
     expect(suggestionStatusLabel("rejected")).toBe("Rejected");
+  });
+
+  it("normalizes unknown categories to the Other bucket", () => {
+    expect(normalizeCategory("underwater-basket-weaving")).toBe("Other");
+    expect(normalizeCategory("")).toBe("Other");
   });
 });

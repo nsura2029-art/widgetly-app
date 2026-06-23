@@ -391,6 +391,7 @@
       "sortNewest": "Newest",
       "sortRecentlyBuilt": "Recently built",
       "statusInReview": "In review",
+      "statusSuggested": "Suggested",
       "statusBuilding": "Building",
       "statusLive": "Live",
       "statusRejected": "Rejected",

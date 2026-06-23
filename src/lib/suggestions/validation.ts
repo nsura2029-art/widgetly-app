@@ -23,7 +23,15 @@ export const suggestionFormSchema = z
       .trim()
       .min(20, "Use case must be at least 20 characters.")
       .max(300, "Use case must be 300 characters or fewer."),
-    category: z.enum([...SUGGESTION_CATEGORIES] as [SuggestionCategory, ...SuggestionCategory[]]),
+    // Category is required: an empty string (the "Select a category"
+    // placeholder value) is rejected. The "Other" option in the
+    // select is a real, valid bucket for tools that don't fit the
+    // other 11 defined categories.
+    category: z
+      .enum([...SUGGESTION_CATEGORIES] as [SuggestionCategory, ...SuggestionCategory[]])
+      .refine((value) => value.length > 0, {
+        message: "Please choose a category.",
+      }),
     urgency: z.enum([...SUGGESTION_URGENCIES] as [SuggestionUrgency, ...SuggestionUrgency[]]),
     email: z
       .string()
