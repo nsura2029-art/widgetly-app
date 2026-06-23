@@ -2,6 +2,20 @@
 
 Owns every route under `src/app/api/`: endpoints, request/response shapes, error codes, runtime notes.
 
+---
+
+## Recent additions (June 2026)
+
+- **Auth-gated suggest routes**:
+  - `POST /api/suggest` — requires Clerk sign-in. Server overrides the client-supplied `email` with the Clerk primary email address (the form no longer needs an email field). Returns 401 if signed out, 400 with `email_required` if the user has no verified email.
+  - `POST /api/suggestions` — same auth contract as `/api/suggest`.
+- **Conversion quota routes** (under `/api/conversions/`):
+  - `GET /api/conversions/quota` — returns `{ actorType, limit, used, remaining, resetAt }`. No auth required (anonymous is a valid actor).
+  - `POST /api/conversions/reserve` — body `{ pages?: number, toolSlug?: string }`. Returns `{ remaining, used }` on success, 429 `{ error: "limit_reached", details: { used, limit, remaining: 0 } }` on overage.
+- **Admin quota routes** (under `/api/admin/quotas`):
+  - `GET` — `{ anonymous: { pagesPer24h, updatedAt, updatedBy }, registered: { ... } }`.
+  - `PATCH` — body `{ anonymous?: number, registered?: number }`. At least one field required; values are `int >= 0`. Uses existing admin auth + CSRF.
+
 > **DOX scope.** This is a child of the root [`AGENTS.md`](../../AGENTS.md). **Read the root first** for the Core DOX contract (Read Before Editing, Update After Editing, Closeout). The root's Child DOX Index lists this file as the owner of the API surface. The "Ownership" section below enumerates which routes and supporting files this child contract governs. When you add or change an endpoint, update this file's Endpoint reference + OpenAPI spec + Postman collection.
 
 ---

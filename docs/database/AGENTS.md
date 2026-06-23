@@ -2,6 +2,17 @@
 
 Owns the Cloudflare D1 persistence layer for Widgetly: schema, migrations, query helpers, and operational CLI.
 
+---
+
+## Recent additions (June 2026)
+
+- **Quota tables** (migration `0007_quota.sql`):
+  - `usage_quota_settings` — one row per actor type (`anonymous`, `registered`). Holds the `pages_per_24h` limit, plus `updated_at` and `updated_by` for the audit trail. Seed defaults: anonymous=1, registered=5.
+  - `conversion_usage_events` — append-only event log. One row per page consumed. Columns: `actor_type`, `actor_id` (wly_anon UUID for anonymous, Clerk userId for registered), `utc_day` (YYYY-MM-DD in UTC), `pages`, `tool_slug`, `created_at`. Indexed on `(actor_type, actor_id, utc_day)` for the SUM-by-day hot path; indexed on `created_at` for periodic GC.
+- **Quota service** (`src/lib/quota/server.ts`):
+  - `getQuotaState({ actorType, actorId })` — reads limit + used, returns `remaining = max(0, limit - used)`.
+  - `reservePages(actor, pages, { toolSlug })` — INSERT + SUM check; returns `{ ok: true, newUsed, remaining }` or `{ ok: false, reason: "limit_reached", ... }`. Note: D1's transaction API is more robust against concurrent reservations; we use plain INSERT + SUM for now because the race window is negligible with a single Writer.
+
 > **DOX scope.** This is a child of the root [`AGENTS.md`](../../AGENTS.md). **Read the root first** for the Core DOX contract (Read Before Editing, Update After Editing, Closeout). The root's Child DOX Index lists this file as the owner of the D1 surface. The "Ownership" section below enumerates which files, scripts, and operations this child contract governs. When you change schema, migrations, or query helpers, update this file.
 
 ---

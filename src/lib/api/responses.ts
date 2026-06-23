@@ -117,11 +117,15 @@ export function jsonError(
   status: number,
   code: string,
   message: string,
-  fields?: ReadonlyArray<{ path: string; message: string }>
+  fields?: ReadonlyArray<{ path: string; message: string }> | Record<string, unknown>
 ) {
+  // Two shapes: the validation shape (array of {path,message}) or
+  // a free-form details object (used by /api/conversions/reserve
+  // to return { used, limit, remaining } alongside the error).
+  const extra = Array.isArray(fields) ? { fields: [...fields] } : fields ? { details: fields } : {};
   const body: ApiErrorResponse = {
     ok: false,
-    error: { code, message, ...(fields ? { fields: [...fields] } : {}) },
+    error: { code, message, ...extra },
   };
   return NextResponse.json(body, { status });
 }

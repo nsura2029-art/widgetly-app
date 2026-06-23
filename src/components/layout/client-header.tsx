@@ -3,6 +3,7 @@
 import * as React from "react";
 import { motion } from "framer-motion";
 import { Lightbulb, Menu, X } from "lucide-react";
+import { SignInButton, SignUpButton, UserButton, useUser } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/shared/logo";
 import { Link, usePathname } from "@/i18n/navigation";
@@ -21,8 +22,17 @@ import { cn } from "@/lib/utils";
  *     so all internal links automatically get the current locale prefix.
  *   - Nav labels and aria attributes are pulled from the `header.*`
  *     namespace via `useTranslations()`.
+ *
+ * Auth UI:
+ *   - Signed-out: render the "Sign in" + "Sign up" text buttons.
+ *   - Signed-in: render Clerk's <UserButton /> (avatar + dropdown).
+ *   - We use Clerk v7's `useUser()` instead of the v6 `<SignedIn>` /
+ *     `<SignedOut>` helpers (which were removed in v7). The header
+ *     re-renders on auth-state change because `useUser()` is
+ *     reactive.
  */
 export default function ClientHeader() {
+  const { isLoaded, isSignedIn } = useUser();
   const [open, setOpen] = React.useState(false);
   const pathname = usePathname();
   const t = useTranslations();
@@ -103,6 +113,53 @@ export default function ClientHeader() {
               <span>{t("header.actions.suggestTool")}</span>
             </Link>
           </Button>
+
+          {/*
+            Auth UI. Signed-out visitors see "Sign in" + "Sign up" as
+            text buttons (no modal — Clerk's SignInButton opens its
+            hosted sign-in flow at /sign-in, which is locale-aware via
+            Clerk's appearance config). Signed-in visitors get the
+            <UserButton /> which shows the avatar + a dropdown with
+            account / sign-out.
+          */}
+          {!isLoaded ? (
+            // Loading skeleton while Clerk resolves the session.
+            // The button group below is hidden until we know the
+            // auth state — avoids a flash where signed-out buttons
+            // appear briefly before swapping to UserButton.
+            <div className="bg-muted/30 h-9 w-32 animate-pulse rounded-lg" />
+          ) : !isSignedIn ? (
+            <>
+              <SignInButton mode="modal">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-muted hover:text-foreground h-9 rounded-lg px-3 text-sm font-medium"
+                  aria-label={t("header.aria.signIn")}
+                >
+                  {t("header.actions.signIn")}
+                </Button>
+              </SignInButton>
+              <SignUpButton mode="modal">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-9 rounded-lg px-3 text-sm font-medium"
+                  aria-label={t("header.aria.signUp")}
+                >
+                  {t("header.actions.signUp")}
+                </Button>
+              </SignUpButton>
+            </>
+          ) : (
+            <UserButton
+              appearance={{
+                elements: {
+                  avatarBox: "h-9 w-9",
+                },
+              }}
+            />
+          )}
         </div>
 
         {/* Mobile: menu trigger only — language picker lives in the
@@ -152,6 +209,37 @@ export default function ClientHeader() {
               <Lightbulb className="h-4 w-4" aria-hidden="true" />
               {t("header.actions.suggestTool")}
             </Link>
+            {/* Mobile auth: text buttons for signed-out, full-width
+                UserButton for signed-in. Same Clerk components as
+                desktop, just stacked vertically to fit the sheet.
+                We pull the auth state from useUser() in the parent
+                (ClientHeader) — see the desktop comment. */}
+            {!isLoaded ? (
+              <div className="bg-muted/30 h-11 w-full animate-pulse rounded-xl" />
+            ) : !isSignedIn ? (
+              <>
+                <SignInButton mode="modal">
+                  <button
+                    type="button"
+                    className="border-border text-foreground hover:bg-muted/5 inline-flex h-11 w-full items-center justify-center rounded-xl border px-5 text-sm font-medium transition-colors"
+                  >
+                    {t("header.actions.signIn")}
+                  </button>
+                </SignInButton>
+                <SignUpButton mode="modal">
+                  <button
+                    type="button"
+                    className="bg-foreground text-background hover:bg-foreground/90 inline-flex h-11 w-full items-center justify-center rounded-xl px-5 text-sm font-medium transition-colors"
+                  >
+                    {t("header.actions.signUp")}
+                  </button>
+                </SignUpButton>
+              </>
+            ) : (
+              <div className="flex justify-center pt-2">
+                <UserButton appearance={{ elements: { avatarBox: "h-11 w-11" } }} />
+              </div>
+            )}
           </div>
         </div>
       </div>

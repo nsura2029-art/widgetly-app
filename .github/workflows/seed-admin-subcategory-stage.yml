@@ -61,4 +61,4 @@ jobs:
       - name: Done
         run: |
           echo "✓ Subcategory backfill complete on widgetly-stage."
-          echo "→ Hover any chip at https://beta.widgetly.tech/en to see the new menu structure."# force-refresh
+          echo "→ Hover any chip at https://beta.widgetly.tech/en to see the new menu structure."

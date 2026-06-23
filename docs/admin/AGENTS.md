@@ -2,6 +2,12 @@
 
 Owns the `/admin/**` pages, the `/api/admin/**` API routes, the admin authentication layer, the admin D1 helpers, and the D1 schema migrations that back them.
 
+---
+
+## Recent additions (June 2026)
+
+- **`/admin/quotas` page** (and `src/app/api/admin/quotas/route.ts`): read + edit the `usage_quota_settings` rows. Each tier (Anonymous, Registered) has its own input + Save button. Backed by `lib/quota/server.ts` (`getQuotaSettings`, `setQuotaLimit`).
+
 > **DOX scope.** This is a child of the root [`AGENTS.md`](../../AGENTS.md). **Read the root first** for the Core DOX contract (Read Before Editing, Update After Editing, Closeout). The root's Child DOX Index lists this file as the owner of the admin surface. The API surface (request/response shapes, error codes) is documented in [`docs/api/AGENTS.md`](../api/AGENTS.md) — this file owns the pages, auth library, D1 schema, and operational scripts. The "Ownership" section below enumerates which files and folders this child contract governs.
 
 ---

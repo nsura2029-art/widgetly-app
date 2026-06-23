@@ -1,0 +1,68 @@
+/**
+ * Server-side auth helpers. Thin wrappers around Clerk's `auth()`
+ * that give us a stable, project-specific shape and a single place
+ * to handle the "not signed in" case.
+ *
+ * Why a project-specific helper:
+ *   - Components can `import { requireUser } from "@/lib/auth/server"`
+ *     and get a typed result without knowing about Clerk's API.
+ *   - Easier to mock in tests: replace the helper rather than
+ *     every call site that imports Clerk.
+ *   - Centralizes the email-extraction logic (Clerk primary email
+ *     vs. fallback to `null`) so the suggest API doesn't have to
+ *     duplicate the work.
+ */
+import { auth, currentUser } from "@clerk/nextjs/server";
+
+export type AuthedUser = {
+  /** Clerk user id, e.g. `user_2abc...`. */
+  userId: string;
+  /** Primary email address (verified). Null if the user has no
+   *  verified email on file. */
+  email: string | null;
+  /** Display name. Falls back to firstName + lastName, then
+   *  username, then userId-prefix. Never null. */
+  displayName: string;
+};
+
+/**
+ * Return the current user, or null if not signed in. Cheap — just
+ * a JWT check, no DB hit. Use this in pages that should render
+ * different content for signed-in vs signed-out visitors.
+ */
+export async function getUser(): Promise<AuthedUser | null> {
+  const { userId } = await auth();
+  if (!userId) return null;
+  return loadUser(userId);
+}
+
+/**
+ * Same as getUser but throws if not signed in. Use in API routes
+ * that require auth (POST /api/suggest, etc.). The thrown error
+ * is caught by withErrorHandling and returned as 401.
+ */
+export async function requireUser(): Promise<AuthedUser> {
+  const u = await getUser();
+  if (!u) {
+    const err = new Error("Sign in required");
+    (err as Error & { status?: number }).status = 401;
+    throw err;
+  }
+  return u;
+}
+
+async function loadUser(userId: string): Promise<AuthedUser> {
+  const user = await currentUser();
+  if (!user) {
+    // Defensive: auth() said userId is set but currentUser() came
+    // back null. This can happen briefly during session
+    // transitions. Return a stub.
+    return { userId, email: null, displayName: userId.slice(0, 8) };
+  }
+  const email = user.primaryEmailAddress?.emailAddress ?? null;
+  const first = user.firstName ?? "";
+  const last = user.lastName ?? "";
+  const full = `${first} ${last}`.trim();
+  const displayName = full || user.username || userId.slice(0, 8);
+  return { userId, email, displayName };
+}

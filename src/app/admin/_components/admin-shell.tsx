@@ -29,6 +29,7 @@ import {
   LogOut,
   Menu,
   RefreshCw,
+  Settings2,
   ShieldCheck,
   Wrench,
   X,
@@ -38,6 +39,7 @@ import { cn } from "@/lib/utils";
 const NAV = [
   { href: "/admin", label: "Dashboard", icon: BarChart3, exact: true },
   { href: "/admin/tools", label: "Tools", icon: Wrench },
+  { href: "/admin/quotas", label: "Quotas", icon: Settings2 },
 ];
 
 export function AdminShell({ children }: { children: React.ReactNode }) {
@@ -69,7 +71,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
       probeDoneRef.current = false;
       return;
     }
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+
     setAuth({ state: "loading" });
     probeDoneRef.current = false;
     let cancelled = false;
@@ -81,15 +83,13 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           const { user } = (await r.json()) as {
             user: { id: number; username: string; display_name: string };
           };
-          // eslint-disable-next-line react-hooks/set-state-in-effect
+
           setAuth({ state: "authed", user });
         } else {
-          // eslint-disable-next-line react-hooks/set-state-in-effect
           setAuth({ state: "anon" });
         }
       } catch {
         if (!cancelled) {
-          // eslint-disable-next-line react-hooks/set-state-in-effect
           setAuth({ state: "anon" });
         }
       } finally {

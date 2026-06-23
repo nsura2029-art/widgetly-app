@@ -8,6 +8,7 @@ import {
   normalizeSort,
 } from "@/lib/d1/suggestions";
 import { suggestionFormSchema } from "@/lib/suggestions/validation";
+import { requireUser } from "@/lib/auth/server";
 
 export const runtime = "nodejs";
 
@@ -36,6 +37,19 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   return withErrorHandling(async () => {
+    // Auth gate: suggestions require a Clerk sign-in. We use the
+    // Clerk primary email as the suggestion's contact email,
+    // overriding whatever the client sent. This prevents spam
+    // and lets the per-email rate limit do its job.
+    const user = await requireUser();
+    if (!user.email) {
+      return jsonError(
+        400,
+        "email_required",
+        "Your account needs a verified email to submit suggestions."
+      );
+    }
+
     if (!isD1Configured()) {
       return jsonError(503, "d1_not_configured", "Suggestion storage is not configured.");
     }
@@ -65,7 +79,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const submittedToday = await countSuggestionsByEmailToday(parsed.data.email);
+    // Override the client-provided email with the Clerk-verified
+    // one. We don't trust the client to know its own email —
+    // only Clerk's auth state does.
+    const payload = { ...parsed.data, email: user.email };
+
+    const submittedToday = await countSuggestionsByEmailToday(payload.email);
     if (submittedToday >= 3) {
       return jsonError(
         429,
@@ -74,7 +93,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const suggestion = await createSuggestion(parsed.data);
+    const suggestion = await createSuggestion(payload);
     return NextResponse.json({ ok: true, suggestion }, { status: 201 });
   });
 }

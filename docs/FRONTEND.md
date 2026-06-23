@@ -6,6 +6,15 @@ public-facing API and the deploy story, see
 
 ---
 
+## Recent additions (June 2026)
+
+- **Clerk auth integration** at the public site. `ClerkProvider` wraps `[locale]/layout.tsx`; `src/middleware.ts` combines `clerkMiddleware` with the next-intl middleware per Clerk's docs. Header shows Sign in / Sign up for signed-out visitors, `<UserButton />` (Clerk v7) for signed-in.
+- **Auth-gated suggest**. `/[locale]/suggest/new` shows a "Sign in to submit" panel for signed-out visitors; the actual form requires `<SignedIn>` (Clerk context).
+- **Conversion quota** on tool detail pages. The `<ConversionCta>` component reads `/api/conversions/quota` and reserves a page via `/api/conversions/reserve`. Shows the "limit reached" state with a sign-up CTA when over quota.
+- **Pricing page** at `/[locale]/pricing` with two free tiers. Reads the live `pages_per_24h` from `usage_quota_settings` so admin changes propagate without redeploy.
+
+---
+
 ## Stack
 
 | Layer         | Choice                              | Why                                                                                 |
