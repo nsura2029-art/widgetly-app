@@ -41,6 +41,43 @@ import {
   type LocaleCode,
 } from "./i18n/config";
 
+/**
+ * OpenNext's Cloudflare adapter calls the middleware's default export
+ * with a plain object ({ url, headers, method, nextConfig, body, geo })
+ * — NOT a NextRequest. The original Next.js Cloudflare adapter used to
+ * pass a NextRequest, but the OpenNext worker passes a different shape
+ * (the one Vercel's @vercel/functions uses for the Node/edge runtime).
+ *
+ * To make this work with both shapes, we check for .nextUrl: if absent
+ * (OpenNext), we construct a NextRequest from .url + .headers. next-intl
+ * and our cookie logic both expect the NextRequest interface.
+ *
+ * This shim is a no-op if the caller already passes a NextRequest (the
+ * early return on "nextUrl" in input) — so it's safe regardless of
+ * which adapter ends up calling us.
+ */
+function asRequest(input: unknown): NextRequest {
+  if (!input) return new NextRequest(new URL("http://localhost/"));
+  if (typeof input === "object" && input !== null && "nextUrl" in input) {
+    return input as NextRequest;
+  }
+  const obj = input as {
+    url: string;
+    headers: Headers | Record<string, string>;
+    method?: string;
+    body?: BodyInit | null;
+  };
+  const headers =
+    obj.headers instanceof Headers
+      ? obj.headers
+      : new Headers(obj.headers as Record<string, string>);
+  return new NextRequest(obj.url, {
+    method: obj.method ?? "GET",
+    headers,
+    body: obj.body ?? undefined,
+  });
+}
+
 const intl = createIntlMiddleware(routing);
 
 export const config = {
@@ -114,7 +151,7 @@ const intlHandler = async (authOrReq: unknown, maybeReq?: NextRequest) => {
 };
 
 const intlHandlerInner = async (authOrReq: unknown, maybeReq?: NextRequest) => {
-  const req = maybeReq ?? (authOrReq as NextRequest);
+  const req = maybeReq ? asRequest(maybeReq) : asRequest(authOrReq);
   // Run the next-intl middleware first. It may issue a 308 redirect
   // (we capture and return that as-is) or a pass-through NextResponse
   // for already-prefixed URLs.
