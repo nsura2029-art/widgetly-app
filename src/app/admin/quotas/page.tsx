@@ -4,6 +4,8 @@ import { AdminShell } from "../_components/admin-shell";
 import { getQuotaSettings } from "@/lib/quota/server";
 import { QuotaSettingsForm } from "./_components/quota-settings-form";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Quota settings",
   description: "Per-actor daily page limits for the conversion quota system.",

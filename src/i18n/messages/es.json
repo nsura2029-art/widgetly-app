@@ -1,6 +1,6 @@
 {
   "site": {
-    "name": "Widgetly",
+    "name": "[es] Widgetly",
     "tagline": "Todo lo que necesitas. Nada que no necesites.",
     "description": "Widgetly es la plataforma integral de herramientas de IA: más de 500 herramientas online gratuitas, calculadoras, conversores, generadores, editores de PDF y asistentes de IA, todo en una plataforma rápida, privada y optimizada para dispositivos móviles."
   },
@@ -18,7 +18,9 @@
       "openMenu": "Abrir menú",
       "closeMenu": "Cerrar menú",
       "homeLink": "Inicio de {siteName}",
-      "suggestTool": "Sugerir una herramienta"
+      "suggestTool": "Sugerir una herramienta",
+      "signIn": "[es] Sign in to your account",
+      "signUp": "[es] Create a new account"
     },
     "localePicker": {
       "label": "Seleccionar idioma",
@@ -40,7 +42,7 @@
       "developerTools": "Herramientas para desarrolladores",
       "suggest": "Sugerir una herramienta",
       "joinWaitlist": "Unirse a la lista de espera",
-      "blog": "Blog",
+      "blog": "[es] Blog",
       "help": "Centro de ayuda",
       "changelog": "Registro de cambios",
       "status": "Estado",
@@ -51,9 +53,9 @@
       "cookies": "Política de Cookies",
       "security": "Seguridad",
       "dpa": "Acuerdo de Procesamiento de Datos",
-      "github": "GitHub",
-      "twitter": "Twitter",
-      "discord": "Discord",
+      "github": "[es] GitHub",
+      "twitter": "[es] Twitter",
+      "discord": "[es] Discord",
       "imageEditor": "Editor de Imágenes",
       "seoSuite": "Suite SEO",
       "developer": "Desarrollo",
@@ -201,7 +203,7 @@
         "name": "Herramientas para PDF",
         "shortDesc": "Combinar, dividir, comprimir, convertir",
         "longDesc": "Herramientas PDF online gratuitas: fusionar, dividir, comprimir, convertir a Word/Excel/JPG, editar, firmar, proteger. Sin límites de subida, sin marcas de agua, funciona en tu navegador.",
-        "shortName": "PDF"
+        "shortName": "[es] PDF"
       },
       "image": {
         "name": "Herramientas de imagen",
@@ -225,7 +227,7 @@
         "name": "Calculadoras",
         "shortDesc": "Finanzas, matemáticas, salud y más",
         "longDesc": "Cientos de calculadoras online gratuitas: hipotecas, préstamos, IMC, calorías, propinas, porcentajes, edad, nota media, calificaciones, científicas, financieras, de salud y matemáticas.",
-        "shortName": "Calc"
+        "shortName": "[es] Calc"
       },
       "converters": {
         "name": "Convertidores",
@@ -237,19 +239,19 @@
         "name": "Herramientas SEO",
         "shortDesc": "Palabras clave, metaetiquetas, auditoría",
         "longDesc": "Herramientas SEO gratuitas: generador de metaetiquetas, verificador de densidad de palabras clave, generador de mapas de sitio, comprobador de robots.txt, vista previa de SERP, verificador de backlinks, análisis de velocidad de página.",
-        "shortName": "SEO"
+        "shortName": "[es] SEO"
       },
       "education": {
         "name": "Herramientas educativas",
         "shortDesc": "Planes de clase, cuestionarios, estudio",
         "longDesc": "Herramientas para profesores y estudiantes: generador de planes de clase, creador de cuestionarios, fichas de estudio, temporizador de estudio, calculadora de nota media, generador de citas, solucionador de matemáticas, temas de redacción.",
-        "shortName": "Edu"
+        "shortName": "[es] Edu"
       },
       "developer": {
         "name": "Herramientas para desarrolladores",
         "shortDesc": "JSON, expresiones regulares, codificadores",
         "longDesc": "Utilidades gratuitas para desarrolladores: formateador y validador de JSON, comprobador de expresiones regulares, codificador Base64, codificador de URL, decodificador JWT, minificador de CSS, comparador de diferencias, generador de hash.",
-        "shortName": "Dev"
+        "shortName": "[es] Dev"
       },
       "business": {
         "name": "Herramientas empresariales",
@@ -272,7 +274,7 @@
     "statsTitle": "En cifras",
     "stats": {
       "tools": {
-        "value": "500+",
+        "value": "[es] 500+",
         "label": "Herramientas disponibles, gratis"
       },
       "browserFirst": {
@@ -338,7 +340,7 @@
     },
     "contactTitle": "Ponte en contacto",
     "contactBody": "Preguntas, ideas de colaboración o una herramienta que te gustaría ver: lo leemos todo.",
-    "contactEmail": "hello@widgetly.app",
+    "contactEmail": "[es] hello@widgetly.app",
     "contactEmailLabel": "Escríbenos",
     "footerNote": "Construido por un equipo pequeño. Alojado en Cloudflare Workers. Abiertos sobre cómo funciona."
   },
@@ -347,9 +349,9 @@
     "subtitle": "¿Tienes alguna pregunta, idea de colaboración o consulta de prensa? Envíanos un mensaje.",
     "form": {
       "nameLabel": "Tu nombre",
-      "namePlaceholder": "Ava Martinez",
+      "namePlaceholder": "[es] Ava Martinez",
       "emailLabel": "Correo electrónico",
-      "emailPlaceholder": "you@example.com",
+      "emailPlaceholder": "[es] you@example.com",
       "subjectLabel": "Asunto",
       "subjectPlaceholder": "¿De qué se trata?",
       "messageLabel": "Mensaje",
@@ -363,7 +365,7 @@
     },
     "altTitle": "Otras formas de contactarnos",
     "emailLabel": "Correo electrónico",
-    "githubLabel": "GitHub",
+    "githubLabel": "[es] GitHub",
     "githubBody": "Crea una incidencia, envía una solicitud de incorporación de cambios o marca el repositorio como favorito.",
     "socialLabel": "Redes sociales"
   },
@@ -376,7 +378,7 @@
       "descriptionLabel": "¿Qué debería hacer?",
       "descriptionPlaceholder": "Generar tarjetas de estudio a partir de cualquier texto o PDF, repetición espaciada, exportar a Anki…",
       "emailLabel": "Correo electrónico (opcional, para actualizaciones de estado)",
-      "emailPlaceholder": "you@example.com",
+      "emailPlaceholder": "[es] you@example.com",
       "submit": "Enviar sugerencia",
       "submitting": "Enviando…",
       "success": "¡Gracias! Tu idea está en la cola. Te enviaremos un correo electrónico si se selecciona.",
@@ -425,9 +427,9 @@
       "copyLink": "Copiar enlace",
       "copied": "Copiado",
       "viewSuggestion": "Ver sugerencia",
-      "shareOnX": "X",
-      "shareOnLinkedIn": "LinkedIn",
-      "shareOnReddit": "Reddit",
+      "shareOnX": "[es] X",
+      "shareOnLinkedIn": "[es] LinkedIn",
+      "shareOnReddit": "[es] Reddit",
       "serverErrorFallback": "No se pudo enviar esta sugerencia.",
       "networkError": "No pudimos contactar con el servidor. Inténtalo de nuevo.",
       "errors": {
@@ -441,7 +443,12 @@
         "emailRequired": "El correo electrónico es obligatorio.",
         "emailMax": "El correo electrónico debe tener 254 caracteres o menos.",
         "emailInvalid": "Por favor, introduce una dirección de correo electrónico válida."
-      }
+      },
+      "emailFromAccount": "[es] Using your account's primary email. Edit it in your account settings.",
+      "signInTitle": "[es] Sign in to submit a suggestion",
+      "signInBody": "[es] We ask you to sign in so we can show you the status of your suggestions, credit you for accepted ideas, and prevent spam. One click, no password to remember.",
+      "signInAction": "[es] Sign in",
+      "signUpAction": "[es] Create account"
     }
   },
   "blog": {
@@ -521,80 +528,130 @@
     "liveSectionTitle": "En vivo ahora",
     "liveSectionHint": "Herramientas recién publicadas en el catálogo. Se actualiza a medida que se publican nuevas.",
     "liveLoading": "Cargando herramientas en vivo…",
-    "liveFailed": "No se pudieron cargar las herramientas en vivo; mostrando el catálogo estático."
+    "liveFailed": "No se pudieron cargar las herramientas en vivo; mostrando el catálogo estático.",
+    "emptyHint": "[es] No {category} tools are live yet — check back soon."
   },
   "toolPage": {
-    "comingSoonBadge": "Coming soon",
-    "headline": "{toolName} — coming soon to Widgetly",
-    "intro": "We're building {toolName} and it'll be ready soon. Run it in your browser, no upload, no signup — just like every other Widgetly tool.",
-    "getNotifiedCta": "Get notified when {toolName} launches",
-    "getNotifiedSubtitle": "Drop your email and we'll send a one-line ping the day it ships. No marketing, no spam.",
-    "whatItWillDoTitle": "What this tool will do",
-    "featuresIntro": "{toolName} will handle the everyday {categoryName} jobs you used to fire up a desktop app for.",
-    "featureFree": "Free, with no usage caps during launch",
-    "featurePrivate": "Files stay in your browser — no upload to our servers",
-    "featureFast": "Runs at the edge on Cloudflare's network",
-    "featureMobile": "Works on phone, tablet, and desktop",
-    "featureNoSignup": "No account required to use it",
-    "relatedToolsTitle": "Other {categoryName}",
-    "exploreOtherCategoriesTitle": "Explore other categories",
-    "schemaBreadcrumbCategory": "{categoryName}",
-    "schemaBreadcrumbTool": "{toolName}"
+    "comingSoonBadge": "[es] Coming soon",
+    "headline": "[es] {toolName} — coming soon to Widgetly",
+    "intro": "[es] We're building {toolName} and it'll be ready soon. Run it in your browser, no upload, no signup — just like every other Widgetly tool.",
+    "getNotifiedCta": "[es] Get notified when {toolName} launches",
+    "getNotifiedSubtitle": "[es] Drop your email and we'll send a one-line ping the day it ships. No marketing, no spam.",
+    "whatItWillDoTitle": "[es] What this tool will do",
+    "featuresIntro": "[es] {toolName} will handle the everyday {categoryName} jobs you used to fire up a desktop app for.",
+    "featureFree": "[es] Free, with no usage caps during launch",
+    "featurePrivate": "[es] Files stay in your browser — no upload to our servers",
+    "featureFast": "[es] Runs at the edge on Cloudflare's network",
+    "featureMobile": "[es] Works on phone, tablet, and desktop",
+    "featureNoSignup": "[es] No account required to use it",
+    "relatedToolsTitle": "[es] Other {categoryName}",
+    "exploreOtherCategoriesTitle": "[es] Explore other categories",
+    "schemaBreadcrumbCategory": "[es] {categoryName}",
+    "schemaBreadcrumbTool": "[es] {toolName}"
   },
   "leaderboard": {
     "title": "Clasificación",
     "subtitle": "Las personas que construyen herramientas en Widgetly. Clasificadas por contribuciones, con insignias por hitos.",
     "featuredHeading": "Destacado de la semana",
     "featuredSubtitle": "Creador más reciente en la clasificación.",
-    "tabsLabel": "Time window",
+    "tabsLabel": "[es] Time window",
     "allTime": "Todo el tiempo",
     "thisMonth": "Este mes",
     "thisWeek": "Esta semana",
     "today": "Hoy",
-    "contributions_one": "{count} contribution",
-    "contributions_other": "{count} contributions",
-    "tools_one": "{count} tool",
-    "tools_other": "{count} tools",
-    "rank": "Rank",
-    "creator": "Creator",
-    "badges": "Badges",
-    "noCreatorsTitle": "No contributors yet",
-    "noCreatorsBody": "Be the first to ship a tool to the Widgetly library. Your name will land at the top.",
+    "contributions_one": "[es] {count} contribution",
+    "contributions_other": "[es] {count} contributions",
+    "tools_one": "[es] {count} tool",
+    "tools_other": "[es] {count} tools",
+    "rank": "[es] Rank",
+    "creator": "[es] Creator",
+    "badges": "[es] Badges",
+    "noCreatorsTitle": "[es] No contributors yet",
+    "noCreatorsBody": "[es] Be the first to ship a tool to the Widgetly library. Your name will land at the top.",
     "contributeCta": "Sugerir una herramienta",
-    "empty": "No creators ranked in this window yet.",
+    "empty": "[es] No creators ranked in this window yet.",
     "badge": {
       "first-tool": {
-        "name": "First Tool",
-        "description": "Shipped their first tool to the platform."
+        "name": "[es] First Tool",
+        "description": "[es] Shipped their first tool to the platform."
       },
       "pioneer": {
-        "name": "Pioneer",
-        "description": "Early contributor to the Widgetly library."
+        "name": "[es] Pioneer",
+        "description": "[es] Early contributor to the Widgetly library."
       },
       "top-week": {
-        "name": "Top This Week",
-        "description": "Ranked #1 in the last 7 days."
+        "name": "[es] Top This Week",
+        "description": "[es] Ranked #1 in the last 7 days."
       },
       "top-month": {
-        "name": "Top This Month",
-        "description": "Ranked #1 in the last 30 days."
+        "name": "[es] Top This Month",
+        "description": "[es] Ranked #1 in the last 30 days."
       },
       "top-all": {
-        "name": "All-Time #1",
-        "description": "Top of the all-time leaderboard."
+        "name": "[es] All-Time #1",
+        "description": "[es] Top of the all-time leaderboard."
       },
       "polyglot": {
-        "name": "Polyglot",
-        "description": "Contributed tools across 4+ categories."
+        "name": "[es] Polyglot",
+        "description": "[es] Contributed tools across 4+ categories."
       },
       "streak-7": {
-        "name": "7-Day Streak",
-        "description": "Contributed on 7+ distinct days in a month."
+        "name": "[es] 7-Day Streak",
+        "description": "[es] Contributed on 7+ distinct days in a month."
       },
       "streak-30": {
-        "name": "30-Day Streak",
-        "description": "Contributed on 20+ distinct days in a quarter."
+        "name": "[es] 30-Day Streak",
+        "description": "[es] Contributed on 20+ distinct days in a quarter."
       }
     }
+  },
+  "conversionCta": {
+    "readyTitle": "[es] You have {remaining} of {limit} pages left today",
+    "readyBody": "[es] You've used {used} of {limit} pages in the last 24 hours. Each tool run costs 1 page.",
+    "useOne": "[es] Use 1 of {remaining}",
+    "reserving": "[es] Reserving…",
+    "limitTitle": "[es] Daily limit reached",
+    "limitBody": "[es] You've used all {limit} pages for today (resets at {resetAt}). Sign in to get more pages per day, or wait for the reset.",
+    "signInForMore": "[es] Sign in for more pages",
+    "comeBackAt": "[es] Come back at {resetAt} for more pages.",
+    "browseAll": "[es] Browse all tools",
+    "error": "[es] Something went wrong. Please try again.",
+    "networkError": "[es] Couldn't reach the server. Check your connection."
+  },
+  "pricing": {
+    "title": "[es] Simple, free pricing",
+    "subtitle": "[es] Two ways to use Widgetly. No credit card, no trial period, no surprise upgrades.",
+    "anonymous": {
+      "name": "[es] Anonymous",
+      "price": "[es] Free",
+      "tagline": "[es] Browse and try 1 tool every day, no account needed.",
+      "featureDailyPages": "[es] 1 page per day",
+      "featureNoAccount": "[es] No account required",
+      "featureBrowse": "[es] Browse all tools",
+      "featureSuggest": "[es] Suggest tools (with sign-in)",
+      "cta": "[es] Continue as guest"
+    },
+    "registered": {
+      "name": "[es] Registered",
+      "price": "[es] Free",
+      "tagline": "[es] 5 pages every day, plus saved suggestions and early access to new tools.",
+      "featureDailyPages": "[es] 5 pages per day",
+      "featureAccount": "[es] Saved suggestions",
+      "featureEarlyAccess": "[es] Early access to new tools",
+      "featureNoAds": "[es] No ads, ever",
+      "cta": "[es] Create free account"
+    },
+    "moreComing": "[es] More tiers coming as we add paid features."
+  },
+  "adminQuotas": {
+    "title": "[es] Quota settings",
+    "subtitle": "[es] Daily page limits per actor type. Changes apply immediately to the public site.",
+    "anonymous": "[es] Anonymous visitors",
+    "registered": "[es] Signed-in users",
+    "pagesPer24h": "[es] Pages per 24 hours",
+    "save": "[es] Save changes",
+    "saved": "[es] Saved.",
+    "currentUsage": "[es] Current usage (last 7 days): {used}",
+    "error": "[es] Couldn't save. Check the form and try again."
   }
 }
