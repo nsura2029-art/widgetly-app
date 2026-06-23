@@ -182,10 +182,27 @@ const MEGA_PANEL_ID = "tools-mega-panel";
  * menu — it would only show on /tools/[category] and on the
  * /suggest?status=live board. Now we fetch
  * /api/public/tools?format=grouped once on mount and append a
- * "Live now" column to each panel listing any DB tools that
- * aren't already covered by the static groups. The fetch is
- * edge-cached at s-maxage=10 so admin status changes propagate
- * within ~10s, matching the cache policy on the category pages.
+ * "Live now" column to each panel listing the DB tools that are
+ * `status='live'` for that category. The fetch is edge-cached at
+ * s-maxage=10 so admin status changes propagate within ~10s,
+ * matching the cache policy on the category pages.
+ *
+ * ### Why we don't dedupe the Live column against static groups
+ *
+ * Earlier this filter was `extras = liveTools.filter((t) =>
+ * !staticAnchors.has(t.slug))` — only show DB tools NOT in the
+ * static list. With the current seed catalog, every admin tool is
+ * a duplicate of a static tool (same slug, same display name), so
+ * `extras` was always empty and the column never rendered. Users
+ * who marked tools live in the admin saw no confirmation in the
+ * menu and reasonably concluded "menu is broken".
+ *
+ * The Live column now shows every DB row for the category,
+ * regardless of overlap with the static groups. The green dot in
+ * the column header is the visible signal "these are live right
+ * now" — answering the user's actual question. Duplicates with
+ * static groups are kept; the column adds information (live
+ * status) rather than competing for the same slot.
  *
  * Accessibility:
  *  - Chip is a button with aria-expanded + aria-controls.
@@ -345,58 +362,6 @@ export function ToolsBanner() {
 }
 
 /**
- * Compute the set of "already covered" anchors for a category, so
- * the "Live now" column only shows tools that aren't already
- * represented in the static sub-groups. We match on the slugified
- * display name (lowercase + hyphens) since that's how the static
- * items and the DB slugs both key their anchors.
- */
-function buildStaticAnchors(category: (typeof FEATURED)[number]): Set<string> {
-  const out = new Set<string>();
-  const subgroups = getSubgroups(category.slug);
-  if (subgroups) {
-    for (const g of subgroups) {
-      for (const item of g.items) out.add(toAnchor(item.name));
-    }
-  } else {
-    for (const name of category.examples) out.add(toAnchor(name));
-  }
-  return out;
-}
-
-/**
- * Pick the static item (if any) that represents the same tool as a
- * given DB slug. Used so the DB entry replaces the static placeholder
- * in the menu rather than getting deduplicated against it (which
- * previously hid admin-live tools from the mega menu).
- *
- * Returns the static item display name when the slug matches a
- * static anchor — that's the entry we want to suppress in the
- * static groups so the DB entry is the only one shown. Returns
- * undefined when the DB tool is genuinely new (no static
- * equivalent).
- */
-function findStaticItemNameForSlug(
-  category: (typeof FEATURED)[number],
-  slug: string,
-  staticAnchors: Set<string>
-): string | undefined {
-  if (!staticAnchors.has(slug)) return undefined;
-  const subgroups = getSubgroups(category.slug);
-  if (subgroups) {
-    for (const g of subgroups) {
-      for (const item of g.items) {
-        if (toAnchor(item.name) === slug) return item.name;
-      }
-    }
-  }
-  for (const name of category.examples) {
-    if (toAnchor(name) === slug) return name;
-  }
-  return undefined;
-}
-
-/**
  * Full-width mega panel anchored to the banner. Positions itself
  * just below the sticky banner via the shared sticky chrome variables.
  * Stretches full viewport width but uses `container` inside so
@@ -432,24 +397,15 @@ function MegaPanel({
   onMouseLeave: () => void;
 }) {
   const subgroups = getSubgroups(category.slug);
-  const staticAnchors = buildStaticAnchors(category);
-
-  // Static items hidden because the DB has a live row for the same
-  // tool. The DB entry replaces them in the Live column rather than
-  // showing the same tool twice (once as a static placeholder, once
-  // in the Live column) — which previously caused admin-marked-live
-  // tools to be missing from the menu entirely.
-  const hiddenStaticNames = new Set(
-    liveTools
-      .map((t) => findStaticItemNameForSlug(category, t.slug, staticAnchors))
-      .filter((x): x is string => Boolean(x))
-  );
-
-  // DB tools that have no static equivalent — genuinely-new
-  // admin-added tools. Used for the "(N new)" hint on the Live
-  // column header. Cosmetic only; the rendered links always include
-  // every live tool regardless.
-  const extrasOnly = liveTools.filter((t) => !staticAnchors.has(t.slug));
+  // The full live list for this category (not deduped against static
+  // groups). The user expects "I marked these live in the admin and
+  // I should see them in the menu" — the green-dot column is the
+  // signal that DB-driven admin additions are visible. Showing it
+  // only for tools NOT already in static groups was wrong UX: with
+  // the seed catalog, every admin tool is a duplicate of a static
+  // tool, so the column never rendered and the user thought the
+  // menu was empty.
+  const live = liveTools;
 
   return (
     // Outer wrapper spans the full container width and handles centering
@@ -515,7 +471,6 @@ function MegaPanel({
                     categorySlug={category.slug}
                     subIcons={subIcons}
                     onLinkClick={onLinkClick}
-                    hiddenNames={hiddenStaticNames}
                   />
                 </div>
               ))
@@ -529,31 +484,28 @@ function MegaPanel({
                   examples={category.examples}
                   categorySlug={category.slug}
                   onLinkClick={onLinkClick}
-                  hiddenNames={hiddenStaticNames}
                 />
               </div>
             )}
-            {/* Live catalog — every DB-live tool for this category.
-                The previous implementation filtered with `extras`
-                (only DB tools not already covered by a static
-                anchor) which silently hid admin-marked-live tools
-                from the menu. We now render every live row and let
-                the static-columns suppress the duplicates via
-                `hiddenStaticNames`. Hidden entirely when the
-                category has no live rows yet (loading or D1 empty),
-                so the panel doesn't grow an empty column. */}
-            {liveTools.length > 0 ? (
+            {/* Live catalog — every live DB tool in this category,
+                shown alongside the static groups. The green dot in
+                the column header signals "these are live right now
+                in the admin", which is the user-visible answer to
+                "I marked them live, where are they?". Hidden only
+                when D1 returns nothing (no live tools at all) or the
+                fetch is still loading. Error states are non-blocking
+                — the static groups still render underneath. */}
+            {live.length > 0 ? (
               <div className="w-[200px] shrink-0">
                 <LiveColumn
-                  tools={liveTools}
-                  extrasOnly={extrasOnly}
+                  tools={live}
                   title={liveSectionTitle}
                   categorySlug={category.slug}
                   onLinkClick={onLinkClick}
                 />
               </div>
             ) : null}
-            {liveStatus === "error" && liveTools.length === 0 ? (
+            {liveStatus === "error" ? (
               <p className="text-muted-foreground sr-only" aria-live="polite">
                 {liveSectionHint}
               </p>
@@ -570,26 +522,19 @@ function SubgroupColumn({
   categorySlug,
   subIcons,
   onLinkClick,
-  hiddenNames,
 }: {
   group: Subgroup;
   categorySlug: string;
   subIcons: Record<string, ReturnType<typeof getIcon>>;
   onLinkClick: () => void;
-  hiddenNames: Set<string>;
 }) {
-  const visible = group.items.filter((item) => !hiddenNames.has(item.name));
-  // Drop the whole column if every entry is hidden by the DB merge —
-  // better to skip an empty heading than render a column with just
-  // a title and zero links.
-  if (visible.length === 0) return null;
   return (
     <div>
       <h3 className="text-muted-foreground mb-2 text-[11px] font-semibold tracking-wider uppercase">
         {group.title}
       </h3>
       <ul className="space-y-0.5">
-        {visible.map((item) => (
+        {group.items.map((item) => (
           <li key={item.name}>
             <SubToolLink
               item={item}
@@ -607,19 +552,11 @@ function SubgroupColumn({
 
 function LiveColumn({
   tools,
-  extrasOnly,
   title,
   categorySlug,
   onLinkClick,
 }: {
   tools: LiveTool[];
-  /**
-   * DB tools that aren't also represented by a static placeholder.
-   * Used purely to label whether the column is showing "new" tools
-   * only or a mixed list — purely cosmetic, doesn't filter the
-   * rendered links.
-   */
-  extrasOnly: LiveTool[];
   title: string;
   categorySlug: string;
   onLinkClick: () => void;
@@ -629,12 +566,6 @@ function LiveColumn({
       <h3 className="text-muted-foreground mb-2 flex items-center gap-1.5 text-[11px] font-semibold tracking-wider uppercase">
         <span aria-hidden="true" className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500" />
         {title}
-        <span className="text-muted-foreground/70 ml-1 text-[10px] font-normal tracking-normal normal-case">
-          · {tools.length}
-          {extrasOnly.length > 0 && extrasOnly.length < tools.length
-            ? ` (${extrasOnly.length} new)`
-            : ""}
-        </span>
       </h3>
       <ul className="space-y-0.5">
         {tools.map((t) => (
@@ -702,22 +633,18 @@ function FallbackColumn({
   examples,
   categorySlug,
   onLinkClick,
-  hiddenNames,
 }: {
   examples: readonly string[];
   categorySlug: string;
   onLinkClick: () => void;
-  hiddenNames: Set<string>;
 }) {
-  const visible = examples.filter((name) => !hiddenNames.has(name));
-  if (visible.length === 0) return null;
   return (
     <div>
       <h3 className="text-muted-foreground mb-2 text-[11px] font-semibold tracking-wider uppercase">
         Examples
       </h3>
       <ul className="space-y-0.5">
-        {visible.map((name) => (
+        {examples.map((name) => (
           <li key={name}>
             <SubToolLink
               item={{ name, icon: "Sparkles" }}
