@@ -7,6 +7,7 @@ import { getTranslations } from "next-intl/server";
 import { PageShell } from "@/components/layout/page-shell";
 import { BreadcrumbConfig } from "@/components/layout/breadcrumb-nav";
 import { Badge } from "@/components/ui/badge";
+import { ConversionCta } from "@/components/quota/ConversionCta";
 import { buildMetadata } from "@/lib/seo";
 import {
   getAllToolStaticParams,
@@ -275,6 +276,16 @@ export default async function ToolDetailPage({ params }: { params: Promise<Param
           <p className="text-muted-foreground mt-2 max-w-md text-xs">
             {t("getNotifiedSubtitle", { toolName: toolPage.name })}
           </p>
+
+          {/* Quota-gated "Use this tool" CTA. Reads the current actor
+              state (anon vs Clerk-signed-in) and shows remaining
+              pages. On click, reserves a page via the API; on
+              success, navigates to /tools (real tool UIs replace
+              this navigation when they land). On 429, shows the
+              "limit reached" state with a sign-up prompt. */}
+          <div className="mt-6">
+            <ConversionCta toolSlug={toolPage.slug} />
+          </div>
         </div>
       </header>
 

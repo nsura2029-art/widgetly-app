@@ -2,6 +2,17 @@
 
 Owns how secrets are created, stored, rotated, and consumed across local dev, CI, and Cloudflare Workers.
 
+---
+
+## Recent additions (June 2026)
+
+- **Clerk auth** (required for the public-site auth flows):
+  - `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` — exposed to the browser; the publishable key (NOT a secret) that Clerk uses to bootstrap the client SDK. Get from `https://dashboard.clerk.com` → API Keys. Safe to commit to GitHub.
+  - `CLERK_SECRET_KEY` — server-only; the secret key Clerk uses to verify session JWTs. Get from the same page. Treat as a secret.
+  - **Local dev**: set both in `.env.local` (not `.env.example`, which is committed). Copy the lines from `.env.example`.
+  - **Cloudflare**: `wrangler secret put NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` and `wrangler secret put CLERK_SECRET_KEY` for each env (stage + production). The deploy-stage workflow handles the rest.
+  - **Without these keys**: the app builds but every auth-gated route 500s. Signed-out users still see a working header / footer / pricing / suggest page; signed-in gating is bypassed.
+
 > **DOX scope.** This is a child of the root [`AGENTS.md`](../../AGENTS.md). **Read the root first** for the Core DOX contract (Read Before Editing, Update After Editing, Closeout). The root's Child DOX Index lists this file as the owner of the secrets lifecycle. The "Ownership" section below enumerates which files and tools this child contract governs. When you add, rotate, or remove any secret, update this file's Secret registry.
 
 ---

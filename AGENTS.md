@@ -4,6 +4,16 @@ DOX hierarchy for the `widgetly-app` repository.
 
 ---
 
+## Recent additions (June 2026)
+
+- **Clerk auth** on the public site. `ClerkProvider` wraps `[locale]/layout.tsx`. Middleware combines `clerkMiddleware` with the next-intl middleware per Clerk's docs. Required env: `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` + `CLERK_SECRET_KEY` (see `docs/secrets/AGENTS.md`).
+- **Auth-gated suggest**. `POST /api/suggest` and `POST /api/suggestions` require a Clerk user; the server overrides the client-supplied email with the Clerk-verified primary. The `/[locale]/suggest/new` form shows a sign-in panel when signed-out.
+- **Conversion quota**. `usage_quota_settings` (admin-editable limits) + `conversion_usage_events` (per-actor per-day event log) tables back a per-actor daily page quota. `src/lib/quota/server.ts` exposes `getQuotaState` and `reservePages`; routes are `/api/conversions/quota` (GET) and `/api/conversions/reserve` (POST). Defaults: anonymous 1/day, registered 5/day.
+- **Pricing page** at `/[locale]/pricing` with two free tiers (Anonymous, Registered) sourced from `usage_quota_settings`.
+- **Admin quotas page** at `/admin/quotas` with PATCH `/api/admin/quotas` to update the daily page limits.
+
+---
+
 ## Core DOX contract
 
 **These instructions are binding for every agent (human or AI) that edits this repository.** If you only read one section of this document, read this one.
