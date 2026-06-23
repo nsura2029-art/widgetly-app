@@ -38,7 +38,7 @@
  * need it here — auth is checked per-route in server components and
  * API handlers, not globally in middleware.
  */
-// import { clerkMiddleware } from "@clerk/nextjs/server"; // re-enable when Clerk secrets are configured
+import { clerkMiddleware } from "@clerk/nextjs/server";
 import { NextRequest } from "next/server";
 import createIntlMiddleware from "next-intl/middleware";
 import { routing } from "../next-intl.config";
@@ -112,7 +112,7 @@ function resolveLocaleFromRequest(req: NextRequest): LocaleCode {
  *     should be public.
  *   - It's easier to test (no global middleware state to mock).
  */
-const intlHandler = async (req: NextRequest) => {
+const intlHandler = async (_auth: unknown, req: NextRequest) => {
   // Run the next-intl middleware first. It may issue a 308 redirect
   // (we capture and return that as-is) or a pass-through NextResponse
   // for already-prefixed URLs.
@@ -195,4 +195,10 @@ const intlHandler = async (req: NextRequest) => {
   return response;
 };
 
-export default intlHandler;
+// clerkMiddleware needs a publishable key at runtime. When the env
+// var is missing, we skip Clerk entirely. This is critical because
+// the Clerk SDK does init-time work that requires a valid key.
+const clerkEnabled = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
+const handler = clerkEnabled ? clerkMiddleware(intlHandler) : intlHandler;
+
+export default handler;
