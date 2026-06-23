@@ -1,6 +1,11 @@
-name: Seed admin user (stage)
+name: Seed admin user + tools (stage)
 
-# One-shot workflow to create the first admin user in the stage D1.
+# One-shot workflow to seed the stage D1:
+#   1. Create the first admin user (INSERT OR IGNORE)
+#   2. Seed the static tool catalog into admin_tools (status='live')
+#      so the /admin/tools dashboard is populated and the public
+#      /tools/[category] menu is DB-driven on stage.
+#
 # Uses workflow_dispatch so it never runs on push. The CLOUDFLARE_API_TOKEN
 # GitHub Actions secret is already present from the deploy workflows,
 # so no local Cloudflare auth is needed.
@@ -8,11 +13,18 @@ name: Seed admin user (stage)
 # Trigger from the Actions tab:
 #   1. Go to https://github.com/nsura2029-art/widgetly-app/actions/workflows/seed-admin-stage.yml
 #   2. Click "Run workflow"
-#   3. Fill in username + password
+#   3. Fill in username + password (use the existing stage-admin password
+#      if you're only re-running for the tools seed — INSERT OR IGNORE
+#      makes both steps safe to re-run)
 #   4. Click "Run workflow"
 #
-# After it succeeds, sign in at https://beta.widgetly.tech/admin/sign-in
-# with the credentials you provided.
+# After it succeeds:
+#   - Sign in at https://beta.widgetly.tech/admin/sign-in
+#   - /admin/tools shows all 105 catalog tools grouped by category, all in `live`
+#   - /en/tools/pdf (and every /en/tools/<category>) renders live D1 rows
+#     instead of the static fallback
+#   - Flip any tool to status='in_progress' in the admin UI; the public
+#     menu will hide it within one request
 
 on:
   workflow_dispatch:
@@ -32,9 +44,9 @@ on:
 
 jobs:
   seed:
-    name: Insert admin user into stage D1
+    name: Insert admin user + admin_tools into stage D1
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     environment: stage
 
     steps:
@@ -90,7 +102,7 @@ jobs:
           cat /tmp/seed-admin/insert.sql
           echo "--- end SQL ---"
 
-      - name: Apply to stage D1
+      - name: Apply admin user to stage D1
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
@@ -100,6 +112,21 @@ jobs:
             --env stage \
             --remote \
             --file=/tmp/seed-admin/insert.sql
+
+      - name: Seed admin_tools (status='live') from static catalog
+        env:
+          ADMIN_USERNAME: ${{ inputs.username }}
+          ADMIN_PASSWORD: ${{ inputs.password }}
+          ADMIN_DISPLAY_NAME: ${{ inputs.display_name }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          # The seed script does INSERT OR IGNORE for the admin user
+          # (so re-runs don't break the existing login) AND writes
+          # ~105 admin_tools rows with status='live' from the static
+          # catalog. Safe to re-run any number of times.
+          node scripts/seed-admin.mjs --remote --env stage
 
       - name: Verify the user exists
         env:
@@ -111,9 +138,23 @@ jobs:
             --remote \
             --command "SELECT id, username, display_name, is_active, must_change_password FROM admin_users WHERE username = '${{ inputs.username }}';"
 
+      - name: Verify the tool counts per category
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          pnpm exec wrangler d1 execute widgetly-stage \
+            --env stage \
+            --remote \
+            --command "SELECT category, COUNT(*) AS n FROM admin_tools WHERE status='live' GROUP BY category ORDER BY category;"
+
       - name: Done
         env:
           USERNAME: ${{ inputs.username }}
         run: |
-          echo "✓ Stage admin user '$USERNAME' created."
+          echo "✓ Stage admin user '$USERNAME' ready (idempotent — existing login still works)."
+          echo "✓ Stage admin_tools seeded with status='live' rows from the static catalog."
           echo "→ Sign in at https://beta.widgetly.tech/admin/sign-in"
+          echo "→ Dashboard: https://beta.widgetly.tech/admin/tools"
+          echo "→ Public menu: https://beta.widgetly.tech/en/tools/pdf"

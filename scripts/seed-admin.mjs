@@ -14,11 +14,23 @@
  *   ADMIN_PASSWORD       — required (≥ 10 chars)
  *   ADMIN_DISPLAY_NAME   — optional
  *   ADMIN_EMAIL          — optional
- *   D1_BINDING           — 'local' (default) or 'remote'
+ *
+ * CLI flags:
+ *   --local / --remote   target D1 (default: local). Cross-platform
+ *                        (PowerShell-safe); preferred over the legacy
+ *                        D1_BINDING env var.
+ *   --env <name>         wrangler environment (default: none).
+ *                        Use 'stage' to seed the widgetly-stage D1,
+ *                        'production' to seed widgetly (the default).
+ *                        When set, the D1 name becomes
+ *                        `widgetly-<name>` and the wrangler command
+ *                        adds `--env <name>`.
  *
  * Usage:
  *   pnpm seed:admin:local
- *   D1_BINDING=remote pnpm seed:admin:remote
+ *   pnpm seed:admin:remote
+ *   node scripts/seed-admin.mjs --remote --env stage
+ *   ADMIN_PASSWORD=... node scripts/seed-admin.mjs --remote --env production
  *
  * Implementation note: we write a single .sql file and pass it to
  * `wrangler d1 execute --file=`. That avoids the per-row execSync
@@ -31,7 +43,21 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { execSync } from "node:child_process";
 
-const D1_BINDING = process.env.D1_BINDING ?? "local";
+// Parse --remote / --local as a CLI flag (preferred on Windows /
+// PowerShell where the `KEY=value command` idiom doesn't work) and
+// fall back to the D1_BINDING env var for backwards compatibility.
+function parseTarget() {
+  const cliFlag = process.argv.find((a) => a === "--remote" || a === "--local");
+  if (cliFlag) return cliFlag.slice(2);
+  return process.env.D1_BINDING ?? "local";
+}
+function parseEnv() {
+  const i = process.argv.indexOf("--env");
+  if (i >= 0 && process.argv[i + 1]) return process.argv[i + 1];
+  return process.env.SEED_ENV ?? "";
+}
+const D1_BINDING = parseTarget();
+const SEED_ENV = parseEnv();
 const USERNAME = process.env.ADMIN_USERNAME ?? "admin";
 const PASSWORD = process.env.ADMIN_PASSWORD ?? "";
 const DISPLAY_NAME = process.env.ADMIN_DISPLAY_NAME ?? "Admin";
@@ -39,7 +65,12 @@ const EMAIL = process.env.ADMIN_EMAIL ?? null;
 
 if (!PASSWORD || PASSWORD.length < 10) {
   console.error("✗ Set ADMIN_PASSWORD (≥ 10 chars) before running this script.");
-  console.error("  Example: ADMIN_PASSWORD='your-strong-password' pnpm seed:admin:local");
+  // Cross-platform examples: PowerShell needs `$env:VAR = "value"`, bash/zsh
+  // accepts the `VAR=value command` form inline. Show both so either shell
+  // can copy-paste the right one.
+  console.error("");
+  console.error("  PowerShell:  $env:ADMIN_PASSWORD = 'your-strong-password'; pnpm seed:admin:remote");
+  console.error("  bash / zsh:  ADMIN_PASSWORD='your-strong-password' pnpm seed:admin:remote");
   process.exit(1);
 }
 
@@ -229,11 +260,21 @@ console.log(`Seeding admin user "${USERNAME}" (bcrypt cost 12)…`);
 console.log(`Seeding ${totalTools} tools into admin_tools (status='live')…`);
 
 const target = D1_BINDING === "remote" ? "--remote" : "--local";
-const cmd = `pnpm exec wrangler d1 execute widgetly ${target} --file=${sqlPath}`;
+// When --env <name> is passed, the D1 is widgetly-<name> and we need
+// to pass --env <name> to wrangler so the right [env.<name>] block
+// in wrangler.toml is selected. When --env is not passed we target
+// the default D1 (widgetly) without an --env flag (no top-level D1
+// binding exists in wrangler.toml — only [env.production] and
+// [env.stage] blocks do).
+const dbName = SEED_ENV ? `widgetly-${SEED_ENV}` : "widgetly";
+const envFlag = SEED_ENV ? `--env ${SEED_ENV}` : "";
+const cmd = `pnpm exec wrangler d1 execute ${dbName} ${target} ${envFlag} --file=${sqlPath}`.trim().replace(/\s+/g, " ");
 
+console.log(`→ ${cmd}`);
 try {
   execSync(cmd, { stdio: "inherit" });
-  console.log(`✓ Seed complete. Sign in at /admin/sign-in with username="${USERNAME}".`);
+  const targetUrl = SEED_ENV === "stage" ? "https://beta.widgetly.tech" : "https://widgetly.tech";
+  console.log(`✓ Seed complete. Sign in at ${targetUrl}/admin/sign-in with username="${USERNAME}".`);
 } catch (e) {
   console.error("✗ Wrangler d1 execute failed. See output above.");
   process.exitCode = 1;

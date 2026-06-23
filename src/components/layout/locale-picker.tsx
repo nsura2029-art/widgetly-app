@@ -124,7 +124,7 @@ export function LocalePicker() {
         <ul
           role="menu"
           aria-label={t("label")}
-          className="border-border/80 shadow-soft-lg absolute right-0 z-50 mt-2 max-h-96 w-56 overflow-y-auto rounded-xl border bg-white"
+          className="border-border/80 shadow-soft-lg absolute right-0 bottom-full z-50 mb-2 max-h-96 w-56 overflow-y-auto rounded-xl border bg-white"
         >
           {LOCALES.map((loc) => {
             const isCurrent = loc.code === current;

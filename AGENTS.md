@@ -65,6 +65,7 @@ This AGENTS.md is the binding work contract for the whole repository. Every chil
 - **Secrets:** Stored in the platform's encrypted secret store + Cloudflare Worker secrets via `pnpm setup:secrets`. Never commit plaintext tokens. See `docs/secrets/AGENTS.md`.
 - **SEO surface:** `sitemap.ts`, `robots.ts`, per-page metadata, JSON-LD builders in `src/lib/seo.ts`. See `docs/seo/AGENTS.md`.
 - **API:** All routes under `src/app/api/`. See `docs/api/AGENTS.md`.
+- **Admin dashboard:** Pages under `src/app/admin/**`, auth in `src/lib/admin/**`, `admin_*` D1 tables, seed script. See `docs/admin/AGENTS.md`.
 
 ---
 
@@ -129,6 +130,34 @@ This AGENTS.md is the binding work contract for the whole repository. Every chil
 - React 19. Server Components by default; mark `"use client"` only when needed.
 - i18n: next-intl with `localePrefix: "always"` (en/es/fr). Use `Link` from `@/i18n/navigation` for all internal links.
 - OpenNext Cloudflare adapter: D1 bindings exposed via `getCloudflareContext().env.DB`, not `globalThis.DB`.
+
+### Layout chrome (sticky / scroll behavior)
+
+The visible chrome above every page is `<ClientHeader>` + `<ToolsBanner>` +
+`<BreadcrumbNav>`. Sticky behavior is intentionally minimal — only the
+brand header stays pinned:
+
+- **Header (`ClientHeader`)** — `sticky top-0 z-50`. Always visible. Holds
+  the brand mark, the "Suggest a tool" primary CTA (gradient `default`
+  variant — the only CTA in the header), and the mobile menu trigger.
+- **Tools banner (`ToolsBanner`)** — **non-sticky** (in normal document
+  flow). The category chip row sits directly under the header on first
+  paint and scrolls away with the page. Mega panels are anchored
+  `absolute top-full` to the banner so they follow it in flow (no longer
+  `fixed` to the viewport). Rationale: only the brand mark belongs at
+  the top of every viewport; a sticky menu fights the user's eye for
+  attention and pins real estate that would otherwise be content.
+- **Breadcrumb (`BreadcrumbNav`)** — **non-sticky**. Same rationale as
+  the banner: reappears whenever the user scrolls back up.
+- **Footer language picker (`LocalePicker`)** — the popover opens
+  **upward** (`bottom-full mb-2`) because the trigger sits at the very
+  bottom of the page; opening downward would push the menu off-screen.
+- **Document scroll** is the only scroll context. There is no separate
+  scroll container for "content area". The only sticky element is the
+  header, so by construction, all scrollbar travel affects page content.
+- **Hash navigation `scroll-margin-top`** in `globals.css` is sized for
+  the header only (`var(--wly-header-height) + 1.5rem`) since the banner
+  and breadcrumb no longer occupy viewport space during scroll.
 
 ### Forbidden
 
@@ -216,6 +245,14 @@ Each role defines: specialty, activates when, skills to load, owns (which child 
 - **Skills:** next-intl 3.x APIs (`useTranslations`, `getTranslations`, `setRequestLocale`, message file loading), ICU MessageFormat for plurals/genders, locale-prefixed URL strategy (en/es/fr), hreflang alternates, l10n text length tolerance (es ~25% longer, fr ~20% longer than en — UI must accommodate), translation memory + glossary consistency, fallback strategy when a key is missing in a locale.
 - **Owns:** `docs/i18n-translation.md` (legacy; future migration to DOX child).
 - **Style:** never hardcode English strings in components — always `useTranslations`; every new string gets added to all three locale files in the same commit; UI strings must accommodate the longest locale's expansion; numeric/date formatting uses `Intl.*` (never hand-rolled).
+
+#### 7. Admin Dashboard Engineer
+
+- **Specialty:** The admin panel under `/admin/**` — pages, auth, D1 CRUD, lifecycle, CSRF, rate limiting, bcrypt.
+- **Activates when:** task touches `src/app/admin/**`, `src/lib/admin/**`, the `admin_*` tables in `migrations/0004_admin.sql`, `scripts/seed-admin.mjs`, or the public catalog read path under `src/lib/d1/public-tools.ts` (because the public menu is gated on `status='live'` from those tables).
+- **Skills:** bcrypt (cost 12), HMAC session token mint/verify, constant-time auth responses, server-side session store in D1 (revocable), CSRF token double-submit, sliding-window rate limit in D1, Zod request validation, Server Components + client component patterns for the auth-aware shell (`probeDoneRef` race-condition fix), `force-dynamic` on admin pages, the `admin_tools` lifecycle (suggested → under_review → in_progress → live → deprecated; rejected is a terminal off-ramp), the public-menu DB-vs-static fallback contract, idempotent seed scripts.
+- **Owns:** `docs/admin/AGENTS.md` (cross-references `docs/api/AGENTS.md` for the API surface).
+- **Style:** every state-changing endpoint validates the `x-csrf-token` header; never logs passwords or hashes; rate-limits the auth endpoints from day one; when the public menu render touches D1, always has a static fallback so the site is never broken during the seed window; the canonical status filter is `WHERE status='live'` and the public read path is in `src/lib/d1/public-tools.ts` (read-only), not `src/lib/admin/tools.ts` (write/admin).
 
 ### Multi-role tasks
 
@@ -427,13 +464,14 @@ cheaper than a half-shipped change.
 
 ## Child DOX Index
 
-| Subtree            | Owns                                                                                                          | AGENTS.md                                                                                                                                                                                                                      |
-| ------------------ | ------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `docs/seo/`        | SEO surface — sitemap, robots, metadata, JSON-LD schema, programmatic SEO, manual outreach checklist          | [`docs/seo/AGENTS.md`](./docs/seo/AGENTS.md)                                                                                                                                                                                   |
-| `docs/secrets/`    | Secrets management — local `.env.local`, Cloudflare Worker secrets, `pnpm setup:secrets`, rotation policy     | [`docs/secrets/AGENTS.md`](./docs/secrets/AGENTS.md)                                                                                                                                                                           |
-| `docs/database/`   | Cloudflare D1 persistence — schema migrations, query helpers, wrangler CLI, backup/restore                    | [`docs/database/AGENTS.md`](./docs/database/AGENTS.md)                                                                                                                                                                         |
-| `docs/operations/` | pnpm scripts, common command sequences, deploy workflow, troubleshooting, Cloudflare performance/caching plan | [`docs/operations/AGENTS.md`](./docs/operations/AGENTS.md) + [`docs/operations/cloudflare-optimization.md`](./docs/operations/cloudflare-optimization.md) + [`docs/operations/cache-test.md`](./docs/operations/cache-test.md) |
-| `docs/api/`        | API routes — endpoints, request/response shapes, error codes, runtime notes                                   | [`docs/api/AGENTS.md`](./docs/api/AGENTS.md)                                                                                                                                                                                   |
+| Subtree            | Owns                                                                                                                                                                         | AGENTS.md                                                                                                                                                                                                                      |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `docs/seo/`        | SEO surface — sitemap, robots, metadata, JSON-LD schema, programmatic SEO, manual outreach checklist                                                                         | [`docs/seo/AGENTS.md`](./docs/seo/AGENTS.md)                                                                                                                                                                                   |
+| `docs/secrets/`    | Secrets management — local `.env.local`, Cloudflare Worker secrets, `pnpm setup:secrets`, rotation policy                                                                    | [`docs/secrets/AGENTS.md`](./docs/secrets/AGENTS.md)                                                                                                                                                                           |
+| `docs/database/`   | Cloudflare D1 persistence — schema migrations, query helpers, wrangler CLI, backup/restore                                                                                   | [`docs/database/AGENTS.md`](./docs/database/AGENTS.md)                                                                                                                                                                         |
+| `docs/operations/` | pnpm scripts, common command sequences, deploy workflow, troubleshooting, Cloudflare performance/caching plan                                                                | [`docs/operations/AGENTS.md`](./docs/operations/AGENTS.md) + [`docs/operations/cloudflare-optimization.md`](./docs/operations/cloudflare-optimization.md) + [`docs/operations/cache-test.md`](./docs/operations/cache-test.md) |
+| `docs/api/`        | API routes — endpoints, request/response shapes, error codes, runtime notes                                                                                                  | [`docs/api/AGENTS.md`](./docs/api/AGENTS.md)                                                                                                                                                                                   |
+| `docs/admin/`      | Admin dashboard — pages under `src/app/admin/**`, auth library, D1 schema (`admin_*` tables), seed scripts. Cross-references `docs/api/AGENTS.md` for the admin API surface. | [`docs/admin/AGENTS.md`](./docs/admin/AGENTS.md)                                                                                                                                                                               |
 
 ### Legacy docs (not yet migrated to DOX shape — superseded by their child AGENTS.md above where overlap exists)
 

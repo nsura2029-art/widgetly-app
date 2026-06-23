@@ -5,11 +5,13 @@
  *
  * Query params:
  *   category   — filter by category slug (default: all categories)
- *   limit      — max results (1-200, default 100)
- *   format     — "json" (default) | "jsonl" — JSON Lines for streaming
+ *   limit      — max results (1-500, default 200)
+ *   format     — "json" (default) | "jsonl" | "count" — JSON Lines for streaming, count for a single integer
  *
  * Response shape:
- *   { tools: PublicTool[], total: number, category?: string }
+ *   - format=json:    { tools: PublicTool[], total: number, category?: string }
+ *   - format=jsonl:   one JSON object per line (newline-delimited)
+ *   - format=count:   { category: string, count: number }
  *
  * The route reads from D1 admin_tools via src/lib/d1/public-tools.ts.
  * If D1 isn't bound or the table is empty, returns an empty list
@@ -29,7 +31,7 @@ export const runtime = "nodejs";
 export async function GET(req: NextRequest) {
   const url = new URL(req.url);
   const category = url.searchParams.get("category")?.trim() || null;
-  const limit = Math.min(Math.max(Number(url.searchParams.get("limit") ?? "100") || 100, 1), 200);
+  const limit = Math.min(Math.max(Number(url.searchParams.get("limit") ?? "200") || 200, 1), 500);
   const format = url.searchParams.get("format") ?? "json";
 
   try {
@@ -37,6 +39,9 @@ export async function GET(req: NextRequest) {
       const tools = (await getLiveToolsForCategoryPublic(category)).slice(0, limit);
       if (format === "jsonl") {
         return jsonlResponse(tools);
+      }
+      if (format === "count") {
+        return NextResponse.json({ category, count: tools.length });
       }
       return NextResponse.json({ tools, total: tools.length, category });
     }

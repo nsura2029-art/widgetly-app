@@ -214,6 +214,22 @@ Remove an upvote for the current anonymous session or registered user.
 
 - Response: `{ ok: true, upvotes, voted: false }`.
 
+### `GET /api/public/tools`
+
+Public read-only access to the live tool catalog (no auth, no rate limit). Mirrors the data rendered in `/tools/[category]` for callers that want a machine-readable source.
+
+- Query params:
+  - `category` (optional) — slug of a single category. When present, returns the live tools in that category ordered by `sort_order ASC`.
+  - `limit` (optional, default 200, max 500) — cap on the result list.
+  - `format` (optional, default `json`) — one of:
+    - `json` — `{ tools: PublicTool[], total: number, category?: string }`
+    - `jsonl` — newline-delimited JSON, one tool per line
+    - `count` — `{ category: string, count: number }` (only meaningful with `category`)
+- When `category` is omitted, returns aggregated counts: `{ counts: Record<category, number>, total: number }`.
+- `PublicTool` shape: `{ id, slug, category, name, description, pricing_tier, icon_url, accent_color, sort_order, status, live_at }`.
+- Returns 500 with `{ tools: [], total: 0, error: "internal" }` if D1 throws.
+- The endpoint always returns `status='live'` rows only; the DB is the source of truth for the public menu.
+
 ### `POST /api/contact`
 
 Contact form submission. Forwards to webhook or D1.
@@ -232,6 +248,99 @@ Contact form submission. Forwards to webhook or D1.
 ### `GET /api/diag/consent`
 
 **Dev-only.** Returns the current cookie consent state. 404 in production.
+
+---
+
+## Admin API surface
+
+All admin routes are under `/api/admin/`. They all run on Node.js and require a valid `wly_admin` session cookie unless explicitly noted. State-changing routes (`POST`/`PATCH`/`DELETE`) additionally require a valid `x-csrf-token` header that matches the `wly_admin_csrf` cookie. The auth flow:
+
+1. `POST /api/admin/auth/login` → sets `wly_admin` (HttpOnly, SameSite=Strict) and `wly_admin_csrf` (non-HttpOnly so JS can read it) cookies.
+2. Client reads `csrfToken = document.cookie` or `GET /api/admin/csrf-token`, then sends `x-csrf-token: <value>` on every subsequent state-changing call.
+3. `POST /api/admin/auth/logout` revokes the D1 session row and clears both cookies.
+
+### `POST /api/admin/auth/login`
+
+- Body: `{ username: string, password: string }`.
+- Hardening: bcrypt cost 12, 5 attempts / IP / minute sliding window, constant-time response on no-such-user, never reveals which of username/password was wrong.
+- Response 200: `{ user: { id, username, display_name, must_change_password, csrf_token } }`. Sets `wly_admin` + `wly_admin_csrf` cookies.
+- Response 400: invalid body. 401: bad credentials. 403: account disabled. 429: rate limited.
+
+### `POST /api/admin/auth/logout`
+
+- Auth: not required (idempotent — stale tabs can always sign out).
+- Revokes the current D1 session row, clears both cookies, audits the event into `admin_login_attempts` with `success=1 reason='logout'`.
+- Always 200.
+
+### `GET /api/admin/auth/me`
+
+- Auth: required.
+- Response 200: `{ user: { id, username, display_name, must_change_password } }`.
+- 401 if no valid session.
+
+### `GET /api/admin/auth/session`
+
+- Auth: required.
+- Lightweight probe used by the admin layout. 200 on valid session, 401 otherwise. No body.
+
+### `GET /api/admin/csrf-token`
+
+- Auth: not required.
+- Returns `{ token: string }` (read from the `wly_admin_csrf` cookie). If the cookie is absent, a fresh token is minted and the cookie is set in the response.
+- Used to prime the client before the first state-changing call.
+
+### `POST /api/admin/account/forgot-password`
+
+- Auth: not required.
+- Body: `{ username: string }`.
+- Rate limit: 3 / 10 minutes / IP.
+- Issues a one-time reset token. Response is the same shape regardless of whether the username exists; `reset_url` is only present when the user exists. (No email channel yet — token is returned in the response so the requester can copy it. When email is added, send via email and remove `reset_url`.)
+- 400 on bad body. 200 on success.
+
+### `POST /api/admin/account/reset-password`
+
+- Auth: not required (token is the entire proof of identity).
+- Body: `{ token: string, new_password: string, confirm_password: string }`.
+- Single-use: the token row is marked `used_at`. Sets new bcrypt hash, clears `must_change_password`.
+- 410 Gone for expired/used tokens. 400 for other validation errors. 200 on success.
+
+### `PATCH /api/admin/account/password`
+
+- Auth: required (session + CSRF header).
+- Body: `{ current_password: string, new_password: string, confirm_password: string }`.
+- Updates the authenticated admin's password. Clears `must_change_password`. Does **not** invalidate other sessions.
+- 400 on bad body or `result.error` from the bcrypt compare. 403 on missing/invalid CSRF. 401 on no session. 200 on success.
+
+### `GET /api/admin/tools`
+
+- Auth: required.
+- Query params (all optional, validated by Zod `ListToolsQuery`): `status` (`all | suggested | under_review | in_progress | live | deprecated | rejected`), `category`, `q` (substring match against name/description/slug), `sort` (`live_first | newest | oldest | alpha`), `limit` (≤200, default 50), `offset` (default 0), `page` (1-indexed).
+- Response: `{ rows: AdminTool[], total: number }`.
+- Used by the admin tools page; the new grouped dashboard prefers the bucketed helper `listToolsGroupedByCategory()` from `src/lib/admin/tools.ts` (see [docs/admin/AGENTS.md](../admin/AGENTS.md)) and falls back to this route via the same auth context.
+
+### `POST /api/admin/tools`
+
+- Auth: required + CSRF.
+- Body: validated by Zod `CreateToolBody`. `slug` must match `^[a-z0-9-]{3,80}$`, `category` must be a known slug, `name` 3-100 chars, `pricing_tier` ∈ `{free, freemium, paid}`, `status` defaults to `suggested`.
+- Creates a tool. 201 on success with `{ tool: AdminTool }`. 400 on bad body. 409 if the slug already exists in this category.
+
+### `GET /api/admin/tools/[id]`
+
+- Auth: required.
+- Response: `{ tool: AdminTool, history: AdminStatusHistory[] }`. 404 if not found.
+
+### `PATCH /api/admin/tools/[id]`
+
+- Auth: required + CSRF.
+- Body: validated by Zod `UpdateToolBody`. Supports partial updates of any field plus a `notes` string appended to the audit history.
+- Status transitions are validated by `canTransition` (see `src/lib/admin/tools.ts`); illegal transitions return 409. Not-found returns 404. 200 on success with `{ tool: AdminTool }`.
+
+### `DELETE /api/admin/tools/[id]`
+
+- Auth: required + CSRF.
+- Hard-deletes a tool. Audit log rows are preserved. 200 with `{ ok: true }`.
+
+---
 
 ---
 
@@ -273,4 +382,6 @@ Each folder has automated shape tests (response is JSON, `ok` field present, exp
 
 ## Child DOX Index
 
-_No children. The API surface is a leaf domain — every route is documented in this AGENTS.md._
+| Subtree                    | Owns                                                                                                                                                                                                                           | AGENTS.md                                    |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------- |
+| Admin pages and D1 surface | Pages under `src/app/admin/**` + the admin D1 helpers in `src/lib/admin/**` and `src/lib/d1/admin.ts` + the `admin_*` tables in `migrations/0004_admin.sql`. Cross-references the admin API endpoints documented in this file. | [`docs/admin/AGENTS.md`](../admin/AGENTS.md) |
