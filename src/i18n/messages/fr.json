@@ -80,7 +80,8 @@
         "businesses": "Entreprises"
       },
       "suggestTool": "Suggérer un outil",
-      "joinWaitlist": "Rejoignez la liste d'attente"
+      "joinWaitlist": "Rejoignez la liste d'attente",
+      "browseTools": "Parcourir les outils"
     },
     "features": {
       "title": "Tout ce dont vous avez besoin. Rien de superflu.",

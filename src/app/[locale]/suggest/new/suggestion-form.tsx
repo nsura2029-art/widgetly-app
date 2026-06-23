@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Check, Clipboard, Linkedin, Send, Share2 } from "lucide-react";
+import { Check, Clipboard, Linkedin, LogIn, Send, Share2 } from "lucide-react";
+import { SignInButton, SignUpButton, useUser } from "@clerk/nextjs";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
@@ -39,7 +40,10 @@ const initialForm: SuggestionFormInput = {
   // doesn't fit most suggestions).
   category: "" as SuggestionCategory,
   urgency: "medium",
-  email: "",
+  // Email is now sourced from Clerk (verified primary), not
+  // client-provided. The Zod schema still requires the field to
+  // be present, so we keep a non-empty value here.
+  email: "use-clerk-session",
 };
 
 function counter(value: string, max: number) {
@@ -64,9 +68,63 @@ function translateError(code: string, tErrors: (key: string) => string) {
   return code;
 }
 
+/**
+ * Auth-aware wrapper. Signed-out visitors see a "Sign in to submit"
+ * panel with a sign-in / sign-up button. The button uses
+ * `forceRedirectUrl` so Clerk bounces the user back to this page
+ * after auth — their in-progress form fields are still in
+ * component state, but the form is freshly mounted on each load,
+ * so they'll need to re-fill. We accept that as a tradeoff for
+ * the security benefit of knowing who submitted what.
+ *
+ * Signed-in visitors see the actual <SuggestionFormInner />.
+ */
 export function SuggestionForm() {
+  const { isLoaded, isSignedIn } = useUser();
+  if (!isLoaded) {
+    // Skeleton while Clerk resolves — prevents a flash where the
+    // form briefly shows before the user is known.
+    return (
+      <div className="border-border/60 shadow-soft mt-8 h-64 animate-pulse rounded-2xl border bg-white/80 backdrop-blur" />
+    );
+  }
+  if (!isSignedIn) return <SignInRequiredPanel />;
+  return <SuggestionFormInner />;
+}
+
+function SignInRequiredPanel() {
+  const t = useTranslations("suggest.formNew");
+  return (
+    <div className="border-border/60 shadow-soft mt-8 rounded-2xl border bg-white/80 p-6 text-center backdrop-blur sm:p-8">
+      <div className="text-muted-foreground mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-stone-100">
+        <LogIn className="h-6 w-6" aria-hidden="true" />
+      </div>
+      <h2 className="text-foreground mt-4 text-2xl font-semibold">{t("signInTitle")}</h2>
+      <p className="text-muted mx-auto mt-2 max-w-md text-sm leading-relaxed">{t("signInBody")}</p>
+      <div className="mt-5 flex flex-wrap justify-center gap-3">
+        <SignInButton
+          mode="modal"
+          forceRedirectUrl={typeof window !== "undefined" ? window.location.href : undefined}
+        >
+          <Button size="lg">{t("signInAction")}</Button>
+        </SignInButton>
+        <SignUpButton
+          mode="modal"
+          forceRedirectUrl={typeof window !== "undefined" ? window.location.href : undefined}
+        >
+          <Button size="lg" variant="outline">
+            {t("signUpAction")}
+          </Button>
+        </SignUpButton>
+      </div>
+    </div>
+  );
+}
+
+function SuggestionFormInner() {
   const t = useTranslations("suggest.formNew");
   const tErrors = useTranslations("suggest.formNew.errors");
+  const { user } = useUser();
   const [form, setForm] = useState<SuggestionFormInput>(initialForm);
   const [errors, setErrors] = useState<FieldErrors>({});
   const [submitting, setSubmitting] = useState(false);
@@ -109,10 +167,15 @@ export function SuggestionForm() {
     setSubmitting(true);
     setServerError("");
     try {
+      // Override the client-side email with the Clerk-verified one.
+      // The server route also does this, but we do it here too so
+      // the API request body is well-formed even if the server
+      // version drifts.
+      const payload = { ...parsed.data, email: user?.primaryEmailAddress?.emailAddress ?? "" };
       const response = await fetch("/api/suggestions", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify(parsed.data),
+        body: JSON.stringify(payload),
       });
       const body = await response.json();
       if (!response.ok || !body.ok) {
@@ -277,13 +340,12 @@ export function SuggestionForm() {
       <Field label={t("emailLabel")} error={errors.email}>
         <Input
           type="email"
-          value={form.email}
-          onChange={(event) => update("email", event.target.value)}
+          value={user?.primaryEmailAddress?.emailAddress ?? ""}
+          readOnly
           placeholder={t("emailPlaceholder")}
-          invalid={Boolean(errors.email)}
-          autoComplete="email"
-          required
+          aria-readonly="true"
         />
+        <span className="text-muted-foreground mt-1.5 block text-xs">{t("emailFromAccount")}</span>
       </Field>
 
       {serverError && (
@@ -314,6 +376,7 @@ function Field({
   counter?: string;
   children: React.ReactNode;
 }) {
+  void counter;
   return (
     <label className="block">
       <span className="mb-1.5 flex items-center justify-between gap-3 text-sm font-medium">
