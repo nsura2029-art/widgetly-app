@@ -4,7 +4,6 @@ import { Hero } from "@/components/landing/hero";
 import { Features } from "@/components/landing/features";
 import { Categories } from "@/components/landing/categories";
 import { SocialProof } from "@/components/landing/social-proof";
-import { Waitlist } from "@/components/landing/waitlist";
 import { CategoriesShowcase } from "@/components/landing/categories-showcase";
 import { SeoCopy } from "@/components/landing/seo-copy";
 // CtaStrip + AdZone are disabled pre-launch; kept here for easy re-enable.
@@ -38,8 +37,14 @@ import { SeoCopy } from "@/components/landing/seo-copy";
 
 /**
  * Single-page landing — sections composed in a deliberate funnel:
- * Hero → Features → Categories → SocialProof → Waitlist → SEO copy →
+ * Hero → Features → Categories → SocialProof → SEO copy →
  * CategoriesShowcase.
+ *
+ * The Waitlist section was removed in 2026-06 per product decision:
+ * the public launch is close enough that the friction of email signup
+ * outweighs the lead-capture benefit. The `/api/waitlist` endpoint and
+ * the waitlist D1 table remain in place — we may re-enable the section
+ * in a future iteration, e.g. for a beta program.
  *
  * The CategoriesShowcase (above the footer) replaces the previous
  * `<FaqSection />`. Rationale: bottom-of-page decisions convert better
@@ -80,7 +85,6 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
       <Features />
       <Categories />
       <SocialProof />
-      <Waitlist />
       <SeoCopy />
       <CategoriesShowcase />
     </>

@@ -146,15 +146,15 @@ export function Hero({ mascotSeed }: { mascotSeed?: number } = {}) {
               transition={{ delay: 0.55, duration: 0.6 }}
               className="mt-6 flex w-full max-w-sm flex-col gap-3 min-[390px]:flex-row"
             >
-              <Button asChild size="lg" variant="secondary" className="w-full">
+              <Button asChild size="lg" className="w-full">
                 <Link href="/suggest">
                   {t("suggestTool")}
                   <ArrowRight className="ml-2" />
                 </Link>
               </Button>
-              <Button asChild size="lg" className="w-full">
-                <Link href="#waitlist">
-                  {t("joinWaitlist")}
+              <Button asChild size="lg" variant="secondary" className="w-full">
+                <Link href="/tools">
+                  {t("browseTools", { defaultValue: "Browse tools" })}
                   <ArrowRight className="ml-2" />
                 </Link>
               </Button>
