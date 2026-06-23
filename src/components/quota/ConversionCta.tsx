@@ -24,7 +24,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { useUser } from "@clerk/nextjs";
+import { useSafeUser } from "@/lib/auth/use-safe-user";
 import { useTranslations } from "next-intl";
 import { Sparkles, Lock, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -41,7 +41,7 @@ type QuotaState = {
 
 export function ConversionCta({ toolSlug, className }: { toolSlug: string; className?: string }) {
   const t = useTranslations("conversionCta");
-  const { isLoaded, isSignedIn } = useUser();
+  const { isLoaded, isSignedIn } = useSafeUser();
   const router = useRouter();
   const [state, setState] = React.useState<QuotaState | null>(null);
   const [busy, setBusy] = React.useState(false);

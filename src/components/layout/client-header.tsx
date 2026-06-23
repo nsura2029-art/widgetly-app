@@ -3,7 +3,8 @@
 import * as React from "react";
 import { motion } from "framer-motion";
 import { Lightbulb, Menu, X } from "lucide-react";
-import { SignInButton, SignUpButton, UserButton, useUser } from "@clerk/nextjs";
+import { SignInButton, SignUpButton, UserButton } from "@clerk/nextjs";
+import { useSafeUser } from "@/lib/auth/use-safe-user";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/shared/logo";
 import { Link, usePathname } from "@/i18n/navigation";
@@ -32,7 +33,7 @@ import { cn } from "@/lib/utils";
  *     reactive.
  */
 export default function ClientHeader() {
-  const { isLoaded, isSignedIn } = useUser();
+  const { isLoaded, isSignedIn } = useSafeUser();
   const [open, setOpen] = React.useState(false);
   const pathname = usePathname();
   const t = useTranslations();

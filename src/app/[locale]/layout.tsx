@@ -133,61 +133,64 @@ export default async function LocaleLayout({
   const jsonLdWebSite = websiteJsonLd();
   const jsonLdOrg = organizationJsonLd();
 
-  // Clerk is always wrapped here. When the publishable key is
-  // missing (e.g. local dev without Clerk, or stage before the
-  // secrets are set), Clerk's "keyless mode" auto-creates a dev
-  // instance so the provider still works — every <SignedIn>/
-  // <SignedOut> branch degrades to "signed out" (no UserButton,
-  // but no crash either). The user's signed-in gate still
-  // returns 401 on the API side, which is the right behavior.
-  return (
-    <ClerkProvider>
-      <html lang={locale} dir={dir} className={inter.variable} suppressHydrationWarning>
-        <head>
-          <link rel="preconnect" href="https://fonts.googleapis.com" />
-          <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-          {/* DNS prefetch is a low-cost resolution hint, not a script
+  // Clerk is conditionally wrapped. When the publishable key
+  // env var is missing (e.g. local dev without Clerk, or stage
+  // before the secrets are set), we skip ClerkProvider entirely
+  // — `useSafeUser()` in our components returns a "signed out"
+  // stub in that case. When the key IS set, ClerkProvider
+  // initializes normally and useSafeUser forwards to the real
+  // hook. This avoids Clerk's keyless mode (which makes network
+  // calls on first request and can timeout).
+  const clerkEnabled = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
+
+  const inner = (
+    <html lang={locale} dir={dir} className={inter.variable} suppressHydrationWarning>
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        {/* DNS prefetch is a low-cost resolution hint, not a script
             load — but if we later add a real Google Analytics tag, it
             should be moved into <ConsentGate category="analytics"> so
             it doesn't fire before the user opts in. */}
-          <link rel="dns-prefetch" href="//www.google-analytics.com" />
-          <link rel="dns-prefetch" href="//cdn.jsdelivr.net" />
-          <script
-            type="application/ld+json"
-            dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdWebSite) }}
-          />
-          <script
-            type="application/ld+json"
-            dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdOrg) }}
-          />
-        </head>
-        <body className="bg-background min-h-screen font-sans antialiased">
-          <NextIntlClientProvider locale={locale} messages={messages}>
-            <ConsentProvider region={consentRegion}>
-              <a
-                href="#main"
-                className="focus:bg-foreground focus:text-background sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[100] focus:rounded-md focus:px-3 focus:py-2 focus:text-sm"
-              >
-                Skip to content
-              </a>
-              <ClientHeader />
+        <link rel="dns-prefetch" href="//www.google-analytics.com" />
+        <link rel="dns-prefetch" href="//cdn.jsdelivr.net" />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdWebSite) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdOrg) }}
+        />
+      </head>
+      <body className="bg-background min-h-screen font-sans antialiased">
+        <NextIntlClientProvider locale={locale} messages={messages}>
+          <ConsentProvider region={consentRegion}>
+            <a
+              href="#main"
+              className="focus:bg-foreground focus:text-background sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[100] focus:rounded-md focus:px-3 focus:py-2 focus:text-sm"
+            >
+              Skip to content
+            </a>
+            <ClientHeader />
 
-              <main id="main">
-                <ToolsBanner />
-                <BreadcrumbNav />
-                {children}
-              </main>
-              <Footer />
-              <ConsentBanner />
-              {/* Watches for hash changes on cross-page navigation and
+            <main id="main">
+              <ToolsBanner />
+              <BreadcrumbNav />
+              {children}
+            </main>
+            <Footer />
+            <ConsentBanner />
+            {/* Watches for hash changes on cross-page navigation and
                 scrolls the matching element into view. Fixes a Next.js
                 App Router quirk where hash links fail on soft
                 navigations. See component file for details. */}
-              <ScrollToHash />
-            </ConsentProvider>
-          </NextIntlClientProvider>
-        </body>
-      </html>
-    </ClerkProvider>
+            <ScrollToHash />
+          </ConsentProvider>
+        </NextIntlClientProvider>
+      </body>
+    </html>
   );
+
+  return clerkEnabled ? <ClerkProvider>{inner}</ClerkProvider> : inner;
 }
