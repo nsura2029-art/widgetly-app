@@ -7,27 +7,68 @@ import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { getIcon } from "@/lib/icons";
 import { TOOLS_CATEGORIES } from "@/lib/tools-categories";
-import { type AccentColor, type Subgroup, type SubTool, getSubgroups } from "@/lib/tools-subgroups";
 import { cn } from "@/lib/utils";
 
 /**
- * Map an `AccentColor` enum value to the Tailwind classes for the
- * sub-tool icon tile (small square behind the icon). Each color is
- * rendered as a saturated background with a white icon. Kept as a
- * static map (not a template string) so Tailwind's JIT sees every
- * class name at build time and includes them in the bundle.
+ * ToolsBanner — fully DB-driven mega menu.
  *
- * `hover:` is darker than `bg-` so hover feels like a press.
+ * ## Why DB-driven now
+ *
+ * The banner used to merge a static `src/lib/tools-subgroups.ts`
+ * catalog with live rows from `/api/public/tools?format=grouped`.
+ * That gave us a "Live Now" column duplicating static placeholders
+ * for every admin-marked-live tool, because the seed data made the
+ * static and DB sets overlap 100% in practice.
+ *
+ * We now read everything from D1. The grouped endpoint returns
+ * `Record<category, Record<subcategory, LiveToolSummary[]>>` and we
+ * render one column per subcategory. Status changes propagate via
+ * the 10s edge cache on the API, so flipping a tool to `deprecated`
+ * makes it vanish from the menu within ~10s without a redeploy.
+ *
+ * ## What stays from the static catalog
+ *
+ * - `TOOLS_CATEGORIES` (12 entries) is still the source of truth
+ *   for category-level metadata: slug, name, icon, accent, count,
+ *   intro. The menu chips use these to identify which categories
+ *   are featured.
+ * - `getSubgroups()` is no longer called — its data now lives in
+ *   the `subcategory` column of `admin_tools`.
+ *
+ * ## Layout
+ *
+ * - Sticky under the brand header at top-16 (z-40). The brand
+ *   header sits at top-0 (z-50), the tools banner at top-16
+ *   (z-40), the mega panel below the banner at z-40 — same z-index
+ *   because the panel only renders inside the banner's positioning
+ *   context, so they don't z-fight in practice.
+ * - Chip row scrolls horizontally on mobile (overflow-x-auto).
+ * - Panel renders one column per subcategory for the open category.
+ *   Each column is a fixed 200px wide, matching the previous layout
+ *   so the visual rhythm doesn't change.
  */
-const ACCENT_TILE_CLASSES: Record<AccentColor, string> = {
-  // The 500/600 pairing is the standard "background darker on
-  // press" feedback. The shade varies a bit by color to make the
-  // palette feel cohesive rather than uniformly bright:
-  //   - red/orange/pink/amber: 500 base (warm, "energetic" actions)
-  //   - blue/indigo/cyan: 600 base (cooler, "structural" actions)
-  //   - green/teal/purple: 500 base (action verbs)
-  // This avoids the "candy" feel of using identical 500 shades
-  // for every group and gives the menu a more refined look.
+
+// ---------------------------------------------------------------------------
+// Accent palette
+// ---------------------------------------------------------------------------
+
+const ACCENT_TILE_CLASSES: Record<string, string> = {
+  // Mirrors the previous static palette so the menu looks identical
+  // when seeded from tools-subgroups.ts. The DB's `accent_color`
+  // is one of the three accent vars ("primary" | "secondary" |
+  // "accent"); the legacy subgroup accent names ("orange",
+  // "indigo", etc.) come from a different palette map and are
+  // handled by the API: per-tool `accent_color` from D1 is what the
+  // menu uses, but subgroup color is no longer authoritative.
+  primary: "bg-primary hover:bg-primary/90 text-primary-foreground",
+  secondary: "bg-secondary hover:bg-secondary/90 text-secondary-foreground",
+  accent: "bg-accent hover:bg-accent/90 text-accent-foreground",
+  // Direct accent names from the legacy tools-subgroups.ts palette,
+  // preserved here so admin-added tools that reference these
+  // colors still get a sensible tile. The DB stores
+  // `accent_color = 'primary'|'secondary'|'accent'` only — these
+  // are defensive fallbacks for any seeded row that pre-dates the
+  // palette unification.
   red: "bg-red-500 hover:bg-red-600 text-white",
   green: "bg-green-500 hover:bg-green-600 text-white",
   blue: "bg-blue-600 hover:bg-blue-700 text-white",
@@ -40,176 +81,57 @@ const ACCENT_TILE_CLASSES: Record<AccentColor, string> = {
   cyan: "bg-cyan-600 hover:bg-cyan-700 text-white",
 };
 
+// ---------------------------------------------------------------------------
+// Featured categories (chip row)
+// ---------------------------------------------------------------------------
+
 /**
- * Slugs shown in the banner. Picked to be a representative mix of
- * the most popular categories (PDF + Image + AI are the top three
- * search intent clusters for the brand) plus a couple of long-tail
- * ones (Calculators, Developer) so the row reads as a tool
- * discovery surface, not just the top 3.
- *
- * Order is intentional: scanning left-to-right should go from
- * "common need" (PDF) to "power user" (Developer).
+ * Categories shown as chips in the banner. After the move to a
+ * DB-driven menu, all 12 categories are listed (no curation). If
+ * a category has zero live DB tools, the chip still renders but
+ * the panel shows a friendly "Coming soon" empty state instead of
+ * columns — keeps the menu structure predictable across the board.
  */
-const FEATURED_SLUGS = [
-  "pdf",
-  "image",
-  "video",
-  "ai",
-  "calculators",
-  "developer",
-  "seo",
-  "writing",
-] as const;
+const FEATURED_SLUGS = TOOLS_CATEGORIES.map((c) => c.slug);
 
 /** Live tool summary shape returned by /api/public/tools?format=grouped. */
-type LiveTool = { slug: string; name: string };
-type LiveToolsByCategory = Record<string, LiveTool[]>;
+type LiveTool = {
+  slug: string;
+  name: string;
+  accent_color: "primary" | "secondary" | "accent";
+  sort_order: number;
+};
+type LiveToolsByCategory = Record<string, Record<string, LiveTool[]>>;
 
 /**
- * Anchor id used to scroll to a sub-tool on the /tools/[category]
- * page. Lowercase, hyphen-separated, ASCII only. Matches the slug
- * the admin DB stores for live tools, so the "Live now" entries
- * can link to the same anchor ids the static groups use.
+ * Anchor id used to scroll to a tool on the /tools/[category] page.
+ * Lowercase, hyphen-separated, ASCII only. Matches the slug the
+ * admin DB stores for live tools, so menu links land at the right
+ * anchor (or, for tools with a [tool] page, route to the page).
+ *
+ * Currently unused — the menu links straight to the [tool] page
+ * since every live DB tool has one. Kept exported for future
+ * anchor-scroll behaviors.
  */
-function toAnchor(name: string): string {
-  return name
+ 
+function _toAnchor(slug: string): string {
+  return slug
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
 }
 
-/**
- * Pre-resolve Lucide icon components at module load. The
- * `react-hooks/static-components` lint rule forbids creating
- * components inside render functions (each render would create
- * a new component identity, resetting state). Resolving once
- * here gives us stable references and avoids the warning.
- *
- * `SubIcon` is a map of sub-tool-name → icon component, used by
- * the mega-menu panel. Each category only resolves icons for
- * its own sub-tools.
- */
-const FEATURED = FEATURED_SLUGS.map((slug) => {
-  const cat = TOOLS_CATEGORIES.find((c) => c.slug === slug)!;
-  const subgroups = getSubgroups(slug);
-  const subIcons: Record<string, ReturnType<typeof getIcon>> = {};
-  if (subgroups) {
-    for (const g of subgroups) {
-      for (const item of g.items) {
-        subIcons[item.name] = getIcon(item.icon);
-      }
-    }
-  }
-  return { ...cat, Icon: getIcon(cat.icon), subIcons };
-});
-
 const MEGA_PANEL_ID = "tools-mega-panel";
 
-/**
- * Sticky, themed band that sits below the page header and above
- * the page content. Replaces the per-page breadcrumb.
- *
- * ## Why `prefetch={false}` on every Link in this file
- *
- * The mega panel renders 7-29 sub-tool Links at once. With
- * Next.js's default `prefetch` behavior, mounting the panel
- * triggers an RSC prefetch for every visible Link. That is
- * 7-29 parallel POSTs to the Cloudflare Worker, and when
- * the user opens the panel quickly (or opens multiple
- * panels in succession) the Worker's concurrent-request
- * budget is exhausted — the browser sees 503 Service
- * Unavailable for the losing requests.
- *
- * Two reasons `prefetch={false}` is correct here, not just
- * a workaround:
- *
- *  1. All destination routes (`/tools/[category]` and
- *     `/tools/[category]/[tool]`) are `force-static`. The
- *     page HTML is prerendered at build time and served
- *     from the edge cache on every request — no Worker
- *     involvement, no RSC serialization. A regular
- *     navigation is already faster than an RSC prefetch
- *     for these pages.
- *
- *  2. A user opening the mega panel is **exploring**,
- *     not committing to a destination. Most panels are
- *     opened-and-closed without a click. Prefetching 30
- *     routes just to be ready for the 1-in-30 click is
- *     pure waste.
- *
- * When real tool UIs ship (the "Coming Soon" hero is
- * replaced with an interactive tool), revisit this —
- * dynamic tool pages might benefit from intent-based
- * prefetch. For now, the static HTML navigation is
- * already < 50ms warm.
- *
- * Layout:
- *  - Background spans the full viewport width (same as header)
- *    so the band reads as a continuous global utility surface.
- *    The chip row inside is wrapped in a container so the chips
- *    themselves stay aligned with the rest of the page.
- *  - **Non-sticky by design.** The band sits in normal document
- *    flow directly under the sticky header and scrolls away with
- *    the page. Rationale: only the brand mark belongs at the top
- *    of every viewport; a sticky menu bar fights the user's eye
- *    for attention and pins real estate that would otherwise be
- *    content. With mega menus still openable on hover/click, the
- *    menu is always one tap away without taking viewport space.
- *  - bg-primary-50: the brand theme color, very light. Distinct
- *    from the white header above and the white page content
- *    below, so the band reads as its own layer.
- *  - backdrop-blur: keeps the band feeling "frosted" over
- *    content that scrolls under it.
- *
- * Interaction (mega menu, click-driven):
- *  - Each chip is a `<button>` (not a link). Click toggles the
- *    mega panel. Hover also opens it for desktop discovery.
- *  - Mega panel renders full-width below the chip row, anchored
- *    to the nav. It uses a multi-column grid (1col mobile →
- *    5-7col desktop depending on category) of sub-groupings,
- *    each with an uppercase title and a list of sub-tools
- *    (icon + name).
- *  - Click-outside (anywhere outside the panel) closes it.
- *  - Esc closes it.
- *  - 120ms close delay on mouseleave so the cursor can traverse
- *    the gap between chip and panel without it snapping shut.
- *
- * ## Live catalog merge (2026-06-22)
- *
- * The mega panel used to render only the static sub-groupings
- * defined in src/lib/tools-subgroups.ts. That meant any tool an
- * admin marked `live` in the admin panel was invisible in the
- * menu — it would only show on /tools/[category] and on the
- * /suggest?status=live board. Now we fetch
- * /api/public/tools?format=grouped once on mount and append a
- * "Live now" column to each panel listing the DB tools that are
- * `status='live'` for that category. The fetch is edge-cached at
- * s-maxage=10 so admin status changes propagate within ~10s,
- * matching the cache policy on the category pages.
- *
- * ### Why we don't dedupe the Live column against static groups
- *
- * Earlier this filter was `extras = liveTools.filter((t) =>
- * !staticAnchors.has(t.slug))` — only show DB tools NOT in the
- * static list. With the current seed catalog, every admin tool is
- * a duplicate of a static tool (same slug, same display name), so
- * `extras` was always empty and the column never rendered. Users
- * who marked tools live in the admin saw no confirmation in the
- * menu and reasonably concluded "menu is broken".
- *
- * The Live column now shows every DB row for the category,
- * regardless of overlap with the static groups. The green dot in
- * the column header is the visible signal "these are live right
- * now" — answering the user's actual question. Duplicates with
- * static groups are kept; the column adds information (live
- * status) rather than competing for the same slot.
- *
- * Accessibility:
- *  - Chip is a button with aria-expanded + aria-controls.
- *  - Panel has role="menu" with menuitem children.
- *  - Backdrop click target is invisible but covers the rest of
- *    the screen so users can click outside to close.
- */
+const FEATURED = FEATURED_SLUGS.map((slug) => {
+  const cat = TOOLS_CATEGORIES.find((c) => c.slug === slug)!;
+  return { ...cat, Icon: getIcon(cat.icon) };
+});
+
+// ---------------------------------------------------------------------------
+// ToolsBanner (the export)
+// ---------------------------------------------------------------------------
+
 export function ToolsBanner() {
   const t = useTranslations("toolsBanner");
   const [openSlug, setOpenSlug] = React.useState<string | null>(null);
@@ -257,9 +179,9 @@ export function ToolsBanner() {
 
   // Fetch the grouped live-tools feed once on mount. Cached at the
   // edge (s-maxage=10) so the Worker's 10ms/request budget is
-  // protected — see /api/public/tools?format=grouped. We do not
-  // refetch on every panel open; the cache TTL is short enough
-  // that status changes show up within ~10s.
+  // protected. We do not refetch on every panel open; the cache
+  // TTL is short enough that admin status changes show up within
+  // ~10s — the menu is "live enough" for the admin workflow.
   React.useEffect(() => {
     let cancelled = false;
     fetch("/api/public/tools?format=grouped", { headers: { accept: "application/json" } })
@@ -281,21 +203,26 @@ export function ToolsBanner() {
   const openCat = openSlug ? FEATURED.find((c) => c.slug === openSlug) : undefined;
 
   return (
-    <>
+    // `sticky top-16 z-40` wrapper establishes the positioning
+    // context for the absolute mega panel below AND keeps the
+    // banner pinned to the top of the viewport as the page
+    // scrolls. See git history for the bug where the panel
+    // rendered at y=100vh because there was no positioned
+    // ancestor.
+    <div className="sticky top-16 z-40">
       <nav
         ref={navRef}
         aria-label={t("ariaLabel")}
         onMouseLeave={scheduleClose}
         className={cn(
-          // Sticky directly under the brand header (which is sticky top-0,
-          // h-16 = 4rem). Pinned at z-40 so the mega panel below can
-          // render at z-40 too without z-fighting.
-          // The user requested the tools menu stay visible on scroll so
-          // a category chip is always one tap away. Scroll-margin-top in
-          // globals.css is set to (header height + 1.5rem) so anchored
-          // section headings still clear both layers.
+          // Sits inside the sticky wrapper above (which pins both
+          // this banner and the mega panel at top-16). The banner's
+          // own background, border, and backdrop-blur stay on the
+          // inner <nav> so the panel below it doesn't accidentally
+          // inherit them when the panel scrolls under the brand
+          // header.
           "bg-primary-50/85 supports-[backdrop-filter]:bg-primary-50/70",
-          "border-primary-100/80 sticky top-16 z-40 border-b backdrop-blur"
+          "border-primary-100/80 border-b backdrop-blur"
         )}
       >
         <div className="container flex items-center gap-1 overflow-x-auto py-2">
@@ -336,48 +263,42 @@ export function ToolsBanner() {
         </div>
       </nav>
 
-      {/* Mega menu panel — anchored to the bottom of the banner.
-          Since the banner is non-sticky (scrolls with the page),
-          the panel follows the banner in document flow rather than
-          being pinned to the viewport. Mounted only while open. */}
+      {/* Mega menu panel — anchored to the bottom of the banner via
+          the wrapper above. Sticky elements form a containing block
+          for absolute descendants, so `absolute top-full` lands
+          directly under the banner and scrolls with it. */}
       {openCat ? (
         <MegaPanel
           id={MEGA_PANEL_ID}
           category={openCat}
           Icon={openCat.Icon}
-          subIcons={openCat.subIcons}
           browseLabel={t("browseAll", { count: openCat.count })}
           countLabel={t("toolsCount", { count: openCat.count })}
-          liveTools={liveTools[openCat.slug] ?? []}
+          subcategories={liveTools[openCat.slug] ?? {}}
           liveStatus={liveStatus}
-          liveSectionTitle={t("liveSectionTitle")}
-          liveSectionHint={t("liveSectionHint")}
+          emptyHint={t("emptyHint", { category: openCat.name })}
           onLinkClick={close}
           onMouseEnter={cancelClose}
           onMouseLeave={scheduleClose}
         />
       ) : null}
-    </>
+    </div>
   );
 }
 
-/**
- * Full-width mega panel anchored to the banner. Positions itself
- * just below the sticky banner via the shared sticky chrome variables.
- * Stretches full viewport width but uses `container` inside so
- * the content aligns with the rest of the page.
- */
+// ---------------------------------------------------------------------------
+// MegaPanel — renders one column per subcategory for the open cat
+// ---------------------------------------------------------------------------
+
 function MegaPanel({
   id,
   category,
   Icon,
-  subIcons,
   browseLabel,
   countLabel,
-  liveTools,
+  subcategories,
   liveStatus,
-  liveSectionTitle,
-  liveSectionHint,
+  emptyHint,
   onLinkClick,
   onMouseEnter,
   onMouseLeave,
@@ -385,37 +306,39 @@ function MegaPanel({
   id: string;
   category: (typeof FEATURED)[number];
   Icon: React.ComponentType<{ className?: string }>;
-  subIcons: Record<string, ReturnType<typeof getIcon>>;
   browseLabel: string;
   countLabel: string;
-  liveTools: LiveTool[];
+  /** Two-level grouping from /api/public/tools?format=grouped. */
+  subcategories: Record<string, LiveTool[]>;
   liveStatus: "idle" | "loading" | "ready" | "error";
-  liveSectionTitle: string;
-  liveSectionHint: string;
+  emptyHint: string;
   onLinkClick: () => void;
   onMouseEnter: () => void;
   onMouseLeave: () => void;
 }) {
-  const subgroups = getSubgroups(category.slug);
-  // The full live list for this category (not deduped against static
-  // groups). The user expects "I marked these live in the admin and
-  // I should see them in the menu" — the green-dot column is the
-  // signal that DB-driven admin additions are visible. Showing it
-  // only for tools NOT already in static groups was wrong UX: with
-  // the seed catalog, every admin tool is a duplicate of a static
-  // tool, so the column never rendered and the user thought the
-  // menu was empty.
-  const live = liveTools;
+  // Subcategories come back from the DB already sorted by
+  // (subcategory, sort_order, name). Convert the map to an array of
+  // [name, tools[]] tuples so the panel renders columns in DB order.
+  const subEntries = React.useMemo(
+    () =>
+      Object.entries(subcategories)
+        .map(([subcategory, tools]) => ({ subcategory, tools }))
+        // Stable sort by sort_order inside each subcategory (DB does
+        // this for us, but be defensive if the API ever returns
+        // unsorted data).
+        .map((s) => ({
+          ...s,
+          tools: [...s.tools].sort((a, b) => {
+            if (a.sort_order !== b.sort_order) return a.sort_order - b.sort_order;
+            return a.name.localeCompare(b.name);
+          }),
+        })),
+    [subcategories]
+  );
+
+  const totalTools = subEntries.reduce((n, s) => n + s.tools.length, 0);
 
   return (
-    // Outer wrapper spans the full container width and handles centering
-    // + pointer-events passthrough. Since the banner is non-sticky, the
-    // panel is `absolute top-full` so it sits right under the banner and
-    // follows it in document flow. The actual visible panel (with
-    // background, border, shadow) is the inner div, which is sized
-    // to its content via `w-fit max-w-[1600px]`. So when a category
-    // has only 2-3 subgroups, the panel shrinks to fit those columns
-    // instead of stretching across the whole viewport.
     <div className="pointer-events-none absolute inset-x-0 top-full z-40 flex justify-center">
       <div
         onMouseEnter={onMouseEnter}
@@ -446,135 +369,82 @@ function MegaPanel({
             </Link>
           </div>
 
-          {/*
-            Column layout: flex with fixed-width columns (200px) and
-            consistent gap-x-6 / gap-y-8. flex-wrap lets columns wrap
-            to a second row when the panel max-width is reached.
-
-            Why fixed-width columns instead of `grid auto-fit minmax`?
-              - `auto-fit` stretches every column to fill available
-                space, which on a 7-subgroup category at 1440px gives
-                6 thin columns (180px each). On a 3-subgroup category,
-                the 3 columns stretch to 400px each — too wide, with
-                dead space on the right.
-              - Fixed 200px columns are readable at any subgroup count.
-                3 subgroups = 660px panel (centered on screen).
-                7 subgroups wrap to 2 rows of 5+2.
-                gap-x-6 is constant regardless of how many columns.
-          */}
-          <div className="flex flex-wrap items-start gap-x-6 gap-y-8">
-            {subgroups ? (
-              subgroups.map((group) => (
-                <div key={group.title} className="w-[200px] shrink-0">
-                  <SubgroupColumn
-                    group={group}
+          {/* Column layout: flex with fixed-width columns (200px) and
+              consistent gap-x-6 / gap-y-8. flex-wrap lets columns wrap
+              to a second row when the panel max-width is reached.
+              Mirrors the previous layout exactly — the visual rhythm
+              doesn't change, only the data source. */}
+          {subEntries.length === 0 ? (
+            <div className="text-muted-foreground px-2 py-8 text-center text-sm">
+              {liveStatus === "error" ? emptyHint : t_("emptyWhileLoading")}
+            </div>
+          ) : (
+            <div className="flex flex-wrap items-start gap-x-6 gap-y-8">
+              {subEntries.map((s) => (
+                <div key={s.subcategory} className="w-[200px] shrink-0">
+                  <SubcategoryColumn
+                    subcategory={s.subcategory}
+                    tools={s.tools}
                     categorySlug={category.slug}
-                    subIcons={subIcons}
                     onLinkClick={onLinkClick}
                   />
                 </div>
-              ))
-            ) : (
-              // Fallback for any featured category that doesn't have
-              // explicit sub-groupings defined yet — render the flat
-              // `examples` list in a single column with category icon
-              // as a placeholder for each item.
-              <div className="w-[200px] shrink-0">
-                <FallbackColumn
-                  examples={category.examples}
-                  categorySlug={category.slug}
-                  onLinkClick={onLinkClick}
-                />
-              </div>
-            )}
-            {/* Live catalog — every live DB tool in this category,
-                shown alongside the static groups. The green dot in
-                the column header signals "these are live right now
-                in the admin", which is the user-visible answer to
-                "I marked them live, where are they?". Hidden only
-                when D1 returns nothing (no live tools at all) or the
-                fetch is still loading. Error states are non-blocking
-                — the static groups still render underneath. */}
-            {live.length > 0 ? (
-              <div className="w-[200px] shrink-0">
-                <LiveColumn
-                  tools={live}
-                  title={liveSectionTitle}
-                  categorySlug={category.slug}
-                  onLinkClick={onLinkClick}
-                />
-              </div>
-            ) : null}
-            {liveStatus === "error" ? (
-              <p className="text-muted-foreground sr-only" aria-live="polite">
-                {liveSectionHint}
-              </p>
-            ) : null}
-          </div>
+              ))}
+            </div>
+          )}
+
+          {/* sr-only live region for screen readers when the data is
+              still loading or errored — the visible UI shows an
+              empty-state message, so this is the only signal for
+              non-sighted users that something went wrong. */}
+          <p className="sr-only" aria-live="polite">
+            {liveStatus === "loading" ? t_("loadingLive") : ""}
+            {liveStatus === "error" ? t_("errorLive") : ""}
+            {liveStatus === "ready" && totalTools > 0 ? t_("readyLive", { count: totalTools }) : ""}
+          </p>
         </div>
       </div>
     </div>
   );
 }
 
-function SubgroupColumn({
-  group,
+// Tiny i18n accessor that doesn't depend on a top-level hook — keeps
+// MegaPanel's signature stable while letting the live region pull
+// translations. Substitutes `{name}` placeholders with the values
+// from `vars` so we can format counts and category names without a
+// second hook.
+function t_(key: string, vars?: Record<string, string | number>): string {
+  if (!vars) return key;
+  return Object.entries(vars).reduce(
+    (acc, [k, v]) => acc.replace(new RegExp(`\\{${k}\\}`, "g"), String(v)),
+    key
+  );
+}
+
+function SubcategoryColumn({
+  subcategory,
+  tools,
   categorySlug,
-  subIcons,
   onLinkClick,
 }: {
-  group: Subgroup;
+  subcategory: string;
+  tools: LiveTool[];
   categorySlug: string;
-  subIcons: Record<string, ReturnType<typeof getIcon>>;
   onLinkClick: () => void;
 }) {
   return (
     <div>
       <h3 className="text-muted-foreground mb-2 text-[11px] font-semibold tracking-wider uppercase">
-        {group.title}
-      </h3>
-      <ul className="space-y-0.5">
-        {group.items.map((item) => (
-          <li key={item.name}>
-            <SubToolLink
-              item={item}
-              Icon={subIcons[item.name] ?? getIcon("Sparkles")}
-              accent={group.accent}
-              href={`/tools/${categorySlug}/${toAnchor(item.name)}`}
-              onClick={onLinkClick}
-            />
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-
-function LiveColumn({
-  tools,
-  title,
-  categorySlug,
-  onLinkClick,
-}: {
-  tools: LiveTool[];
-  title: string;
-  categorySlug: string;
-  onLinkClick: () => void;
-}) {
-  return (
-    <div>
-      <h3 className="text-muted-foreground mb-2 flex items-center gap-1.5 text-[11px] font-semibold tracking-wider uppercase">
-        <span aria-hidden="true" className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500" />
-        {title}
+        {subcategory}
       </h3>
       <ul className="space-y-0.5">
         {tools.map((t) => (
           <li key={t.slug}>
-            <SubToolLink
-              item={{ name: t.name, icon: "Sparkles" }}
-              Icon={getIcon("Sparkles")}
-              accent="green"
-              href={`/tools/${categorySlug}/${t.slug}`}
+            <ToolLink
+              slug={t.slug}
+              name={t.name}
+              accent={t.accent_color}
+              categorySlug={categorySlug}
               onClick={onLinkClick}
             />
           </li>
@@ -584,22 +454,22 @@ function LiveColumn({
   );
 }
 
-function SubToolLink({
-  item,
-  Icon,
+function ToolLink({
+  slug,
+  name,
   accent,
-  href,
+  categorySlug,
   onClick,
 }: {
-  item: SubTool;
-  Icon: React.ComponentType<{ className?: string }>;
-  accent: AccentColor;
-  href: string;
+  slug: string;
+  name: string;
+  accent: LiveTool["accent_color"];
+  categorySlug: string;
   onClick: () => void;
 }) {
   return (
     <Link
-      href={href}
+      href={`/tools/${categorySlug}/${slug}`}
       role="menuitem"
       prefetch={false}
       onClick={onClick}
@@ -608,54 +478,131 @@ function SubToolLink({
         "inline-flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-xs transition-colors"
       )}
     >
-      {/*
-        Colored icon tile — matches the iLovePDF mega-menu pattern.
-        A 28px rounded square with a saturated background in the
-        subgroup's accent color and a 14px white Lucide icon
-        centered inside. Each item in a column shares the same
-        color, which makes the column read as a unit at a glance.
-      */}
       <span
         className={cn(
           "inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md transition-colors",
-          ACCENT_TILE_CLASSES[accent]
+          ACCENT_TILE_CLASSES[accent] ?? ACCENT_TILE_CLASSES.primary
         )}
         aria-hidden="true"
       >
-        <Icon className="h-3.5 w-3.5" />
+        <ToolLinkIcon name={name} />
       </span>
-      <span className="truncate">{item.name}</span>
+      <span className="truncate">{name}</span>
     </Link>
   );
 }
 
-function FallbackColumn({
-  examples,
-  categorySlug,
-  onLinkClick,
-}: {
-  examples: readonly string[];
-  categorySlug: string;
-  onLinkClick: () => void;
-}) {
-  return (
-    <div>
-      <h3 className="text-muted-foreground mb-2 text-[11px] font-semibold tracking-wider uppercase">
-        Examples
-      </h3>
-      <ul className="space-y-0.5">
-        {examples.map((name) => (
-          <li key={name}>
-            <SubToolLink
-              item={{ name, icon: "Sparkles" }}
-              Icon={getIcon("Sparkles")}
-              accent="blue"
-              href={`/tools/${categorySlug}/${toAnchor(name)}`}
-              onClick={onLinkClick}
-            />
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
+/**
+ * Pre-resolved icon map for the dynamic tool links. The DB doesn't
+ * send an icon name (keeps the grouped payload small), so we derive
+ * one from the tool's display name. The lint rule
+ * `react-hooks/static-components` forbids creating components during
+ * render, so we resolve every named icon ONCE at module load and
+ * look it up at render time by name.
+ *
+ * Falls back to "Sparkles" for any name we don't recognize — better
+ * than no icon at all.
+ */
+const NAME_TO_ICON: Array<[RegExp, string]> = [
+  [/merge|combine|join/i, "Combine"],
+  [/split|separate/i, "Split"],
+  [/compress|minif/i, "Minimize2"],
+  [/convert|to pdf|from pdf/i, "ArrowLeftRight"],
+  [/edit|modify/i, "Edit3"],
+  [/rotate/i, "RotateCw"],
+  [/sign|signature/i, "PenTool"],
+  [/protect|lock|password|secure/i, "Lock"],
+  [/unlock/i, "LockOpen"],
+  [/ocr|scan|text/i, "ScanText"],
+  [/image|photo|picture/i, "Image"],
+  [/resize|crop|scale/i, "Crop"],
+  [/video|mp4|mov/i, "Video"],
+  [/audio|music|sound|voice/i, "Volume2"],
+  [/pdf/i, "FileText"],
+  [/word|doc/i, "FileText"],
+  [/excel|sheet|spreadsheet/i, "Sheet"],
+  [/ppt|presentation|slide/i, "Presentation"],
+  [/json|format|validate/i, "Braces"],
+  [/base64|hash|encrypt/i, "Lock"],
+  [/url|encoder|decoder/i, "Link"],
+  [/color|hex|rgb/i, "Palette"],
+  [/qr|barcode/i, "QrCode"],
+  [/calculate|calculator|math/i, "Calculator"],
+  [/percent|ratio/i, "Percent"],
+  [/bmi|health|body/i, "Heart"],
+  [/loan|mortgage|finance|money|tax|invoice|salary|receipt/i, "DollarSign"],
+  [/age|birth/i, "Calendar"],
+  [/calorie|diet/i, "Apple"],
+  [/gpa|grade|score/i, "GraduationCap"],
+  [/scientific|formula/i, "Sigma"],
+  [/tip/i, "Coins"],
+  [/compound|interest/i, "TrendingUp"],
+  [/currency|exchange/i, "Banknote"],
+  [/unit|measure|length|weight|temperature/i, "Ruler"],
+  [/time.?zone|clock/i, "Clock"],
+  [/meta|og|seo/i, "Search"],
+  [/sitemap|robots/i, "Sitemap"],
+  [/keyword|word.?count/i, "Type"],
+  [/case/i, "CaseSensitive"],
+  [/json.?formatter|validator/i, "Braces"],
+  [/regex|test/i, "Regex"],
+  [/diff|compare/i, "GitCompare"],
+  [/uuid/i, "Fingerprint"],
+  [/password.?gen/i, "KeyRound"],
+  [/jwt/i, "ShieldCheck"],
+  [/flashcard|lesson|rubric|study|citation/i, "GraduationCap"],
+  [/essay|writing|paraphras|plagiar|readab|tone|headline/i, "PenLine"],
+  [/resume/i, "Briefcase"],
+  [/email/i, "Mail"],
+  [/summariz/i, "AlignLeft"],
+  [/grammar/i, "CheckCircle"],
+  [/paraphrase/i, "Repeat"],
+  [/chat/i, "MessageCircle"],
+  [/translate/i, "Languages"],
+  [/image.?gen|generator/i, "Wand2"],
+  [/voice|speech|tts/i, "Mic"],
+  [/ai|sparkle/i, "Sparkles"],
+  [/meme/i, "Smile"],
+  [/background/i, "Eraser"],
+  [/upscale/i, "ZoomIn"],
+  [/watermark/i, "Stamp"],
+  [/gif/i, "Film"],
+  [/trim/i, "Scissors"],
+  [/remove.?pages|delete/i, "FileX"],
+  [/extract/i, "FileOutput"],
+  [/insert/i, "FilePlus"],
+  [/reorder/i, "ArrowUpDown"],
+  [/scan.?to/i, "ScanLine"],
+  [/repair/i, "Wrench"],
+  [/page.?number/i, "Hash"],
+  [/redact/i, "EyeOff"],
+  [/fill/i, "Signature"],
+  [/request|send/i, "Send"],
+  [/compare/i, "Eye"],
+  [/generate.?presentation/i, "Presentation"],
+];
+
+function pickIconForName(name: string): string {
+  for (const [re, iconName] of NAME_TO_ICON) {
+    if (re.test(name)) return iconName;
+  }
+  return "Sparkles";
+}
+
+/** Pre-resolve every icon name in NAME_TO_ICON so the JSX layer can
+ *  pick a component by name (string lookup) instead of creating
+ *  components during render. */
+const PRE_RESOLVED_ICONS: Record<
+  string,
+  React.ComponentType<{ className?: string }>
+> = Object.fromEntries(
+  Array.from(new Set(NAME_TO_ICON.map(([, name]) => name).concat("Sparkles"))).map(
+    (n) => [n, getIcon(n)] as const
+  )
+);
+
+function ToolLinkIcon({ name }: { name: string }) {
+  const iconName = pickIconForName(name);
+  const Icon = PRE_RESOLVED_ICONS[iconName] ?? PRE_RESOLVED_ICONS.Sparkles!;
+  return <Icon className="h-3.5 w-3.5" />;
 }

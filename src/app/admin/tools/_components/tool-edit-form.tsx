@@ -11,7 +11,7 @@ import Link from "next/link";
 import { Loader2, Save } from "lucide-react";
 import { StatusChangeModal } from "./status-change-modal";
 import { csrfFetch } from "@/lib/admin/csrf-client";
-import { TOOL_STATUSES, type AdminTool, type ToolStatus } from "@/lib/admin/tools";
+import { type AdminTool, type ToolStatus } from "@/lib/admin/tools";
 
 const TIERS = ["free", "freemium", "paid"] as const;
 const ACCENTS = ["primary", "secondary", "accent"] as const;
@@ -22,6 +22,7 @@ export function ToolEditForm({ tool }: { tool: AdminTool }) {
     name: tool.name,
     slug: tool.slug,
     category: tool.category,
+    subcategory: tool.subcategory,
     description: tool.description,
     long_description: tool.long_description,
     api_endpoint: tool.api_endpoint ?? "",
@@ -54,6 +55,7 @@ export function ToolEditForm({ tool }: { tool: AdminTool }) {
           name: form.name,
           slug: form.slug,
           category: form.category,
+          subcategory: form.subcategory || "Other",
           description: form.description,
           long_description: form.long_description,
           api_endpoint: form.api_endpoint || null,
@@ -169,6 +171,18 @@ export function ToolEditForm({ tool }: { tool: AdminTool }) {
             value={form.category}
             onChange={(e) => patch("category", e.target.value)}
             required
+            className="border-border focus:border-primary focus:ring-primary/20 h-10 w-full rounded-lg border bg-white px-3 text-sm focus:ring-2 focus:outline-none"
+          />
+        </Field>
+        <Field
+          label="Subcategory"
+          hint="Display label for the sub-menu column (e.g. 'Finance', 'Health'). Leave blank for 'Other'."
+        >
+          <input
+            value={form.subcategory}
+            onChange={(e) => patch("subcategory", e.target.value)}
+            placeholder="Other"
+            maxLength={60}
             className="border-border focus:border-primary focus:ring-primary/20 h-10 w-full rounded-lg border bg-white px-3 text-sm focus:ring-2 focus:outline-none"
           />
         </Field>

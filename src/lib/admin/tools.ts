@@ -29,6 +29,10 @@ export type AdminTool = {
   id: number;
   slug: string;
   category: string;
+  /** Sub-menu group within the category (e.g. "Finance", "Health").
+   *  Free-form display label, 1-60 chars. Defaults to "Other" when
+   *  the admin hasn't picked one. */
+  subcategory: string;
   name: string;
   description: string;
   long_description: string;
@@ -72,6 +76,7 @@ export function canTransition(from: ToolStatus, to: ToolStatus): boolean {
 export type ListToolsOptions = {
   status?: ToolStatus | "all";
   category?: string | "all";
+  subcategory?: string | "all";
   q?: string;
   sort?: "live_first" | "updated_desc" | "updated_asc" | "name_asc" | "name_desc" | "sort_asc";
   limit?: number;
@@ -105,6 +110,10 @@ export async function listTools(opts: ListToolsOptions = {}): Promise<{
   if (opts.category && opts.category !== "all") {
     where.push("category = ?");
     binds.push(opts.category);
+  }
+  if (opts.subcategory && opts.subcategory !== "all") {
+    where.push("subcategory = ?");
+    binds.push(opts.subcategory);
   }
   if (opts.q) {
     where.push("(name LIKE ? OR description LIKE ? OR slug LIKE ?)");
@@ -154,7 +163,17 @@ export type AdminToolRow = Omit<AdminTool, "long_description" | "notes">;
 export async function listToolsGroupedByCategory(): Promise<{
   groups: Array<{
     category: string;
+    /** Flat list of all tools in the category. Kept for backwards
+     *  compat with the admin dashboard components that pre-date the
+     *  subcategory UI. */
     tools: AdminToolRow[];
+    /** Tools bucketed by subcategory, preserving the DB's sort order
+     *  (category, subcategory, sort_order, name). Used by the admin
+     *  dashboard to render Category → Subcategory → Tool hierarchy. */
+    subcategories: Array<{
+      subcategory: string;
+      tools: AdminToolRow[];
+    }>;
     counts: Record<ToolStatus, number>;
   }>;
   total: number;
@@ -164,22 +183,31 @@ export async function listToolsGroupedByCategory(): Promise<{
     async () => {
       const rows = await db
         .prepare(
-          `SELECT id, slug, category, name, description, api_endpoint,
+          `SELECT id, slug, category, subcategory, name, description, api_endpoint,
                   pricing_tier, icon_url, accent_color, sort_order,
                   status, created_by, created_at, updated_at, live_at
              FROM admin_tools
-            ORDER BY category ASC, sort_order ASC, name COLLATE NOCASE ASC`
+            ORDER BY category ASC, subcategory ASC, sort_order ASC, name COLLATE NOCASE ASC`
         )
         .all<AdminToolRow>();
       const list = rows.results ?? [];
-      // Bucket by category, preserving D1's order (which is alpha-sorted
-      // by category thanks to the ORDER BY).
-      const map = new Map<string, { tools: AdminToolRow[]; counts: Record<ToolStatus, number> }>();
+      // Bucket by category, then by subcategory, preserving D1's
+      // order. The outer Map walks categories in the DB's natural
+      // order; the inner Map walks subcategories in the same.
+      const catMap = new Map<
+        string,
+        {
+          tools: AdminToolRow[];
+          subMap: Map<string, AdminToolRow[]>;
+          counts: Record<ToolStatus, number>;
+        }
+      >();
       for (const t of list) {
-        let g = map.get(t.category);
-        if (!g) {
-          g = {
+        let c = catMap.get(t.category);
+        if (!c) {
+          c = {
             tools: [],
+            subMap: new Map(),
             counts: {
               suggested: 0,
               under_review: 0,
@@ -189,16 +217,27 @@ export async function listToolsGroupedByCategory(): Promise<{
               rejected: 0,
             },
           };
-          map.set(t.category, g);
+          catMap.set(t.category, c);
         }
-        g.tools.push(t);
-        g.counts[t.status]++;
+        c.tools.push(t);
+        const subKey = t.subcategory || "Other";
+        let subTools = c.subMap.get(subKey);
+        if (!subTools) {
+          subTools = [];
+          c.subMap.set(subKey, subTools);
+        }
+        subTools.push(t);
+        c.counts[t.status]++;
       }
       return {
-        groups: Array.from(map.entries()).map(([category, v]) => ({
+        groups: Array.from(catMap.entries()).map(([category, c]) => ({
           category,
-          tools: v.tools,
-          counts: v.counts,
+          tools: c.tools,
+          subcategories: Array.from(c.subMap.entries()).map(([subcategory, tools]) => ({
+            subcategory,
+            tools,
+          })),
+          counts: c.counts,
         })),
         total: list.length,
       };
@@ -290,10 +329,11 @@ export async function createTool(input: ToolCreate, userId: number): Promise<Adm
   const db = getDb();
   const now = new Date().toISOString();
   const liveAt = input.status === "live" ? now : null;
+  const subcategory = input.subcategory?.trim() || "Other";
   const result = await db
     .prepare(
       `INSERT INTO admin_tools
-        (slug, category, name, description, long_description,
+        (slug, category, subcategory, name, description, long_description,
          api_endpoint, pricing_tier, icon_url, accent_color,
          sort_order, status, notes, created_by, created_at, updated_at, live_at)
        VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?14, ?15)
@@ -302,6 +342,7 @@ export async function createTool(input: ToolCreate, userId: number): Promise<Adm
     .bind(
       input.slug,
       input.category,
+      subcategory,
       input.name,
       input.description,
       input.long_description,
@@ -352,29 +393,34 @@ export async function updateTool(
   if (patch.status === "live" && current.status !== "live" && !current.live_at) {
     merged.live_at = new Date().toISOString();
   }
+  // Normalize subcategory: empty / whitespace → "Other" so the DB
+  // CHECK constraint can never see a blank.
+  const subcategory = (merged.subcategory ?? "").trim() || "Other";
 
   await db
     .prepare(
       `UPDATE admin_tools SET
          slug            = ?1,
          category        = ?2,
-         name            = ?3,
-         description     = ?4,
-         long_description= ?5,
-         api_endpoint    = ?6,
-         pricing_tier    = ?7,
-         icon_url        = ?8,
-         accent_color    = ?9,
-         sort_order      = ?10,
-         status          = ?11,
-         notes           = ?12,
-         live_at         = ?13,
-         updated_at      = ?14
-       WHERE id = ?15`
+         subcategory     = ?3,
+         name            = ?4,
+         description     = ?5,
+         long_description= ?6,
+         api_endpoint    = ?7,
+         pricing_tier    = ?8,
+         icon_url        = ?9,
+         accent_color    = ?10,
+         sort_order      = ?11,
+         status          = ?12,
+         notes           = ?13,
+         live_at         = ?14,
+         updated_at      = ?15
+       WHERE id = ?16`
     )
     .bind(
       merged.slug,
       merged.category,
+      subcategory,
       merged.name,
       merged.description,
       merged.long_description,

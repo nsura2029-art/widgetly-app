@@ -35,6 +35,13 @@ const SLUG = z
 
 const CATEGORY = z.string().min(1).max(60);
 
+// Subcategory is a display label (not a URL slug), so spaces and
+// mixed case are fine. Empty / whitespace is normalized to "Other"
+// by the create/update functions, not the schema — that way the
+// server can accept "" from older clients without 400-ing, while
+// always storing a non-empty value.
+const SUBCATEGORY = z.string().max(60);
+
 // Short, human-friendly URL strings. Empty string → null in DB.
 const OPTIONAL_URL = z
   .string()
@@ -90,6 +97,10 @@ export type ResetPasswordBody = z.infer<typeof ResetPasswordBody>;
 const ToolBaseFields = {
   slug: SLUG,
   category: CATEGORY,
+  /** Sub-menu group inside the category (e.g. "Finance"). Display
+   *  label only — never appears in URLs. Defaults to "Other" when
+   *  omitted. */
+  subcategory: SUBCATEGORY.default("Other"),
   name: z.string().trim().min(1).max(120),
   description: z.string().max(280).default(""),
   long_description: z.string().max(4000).default(""),
@@ -121,6 +132,7 @@ export type UpdateToolBody = z.infer<typeof UpdateToolBody>;
 export const ListToolsQuery = z.object({
   status: z.union([TOOL_STATUS, z.literal("all")]).default("all"),
   category: z.string().default("all"),
+  subcategory: z.string().default("all"),
   q: z.string().default(""),
   sort: z
     .enum(["updated_desc", "updated_asc", "name_asc", "name_desc", "sort_asc", "live_first"])

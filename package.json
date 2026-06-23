@@ -47,6 +47,9 @@
     "seed:admin:local": "node scripts/seed-admin.mjs",
     "seed:admin:remote": "node scripts/seed-admin.mjs --remote",
     "seed:admin:stage": "node scripts/seed-admin.mjs --remote --env stage",
+    "seed:admin:subcategory:local": "node scripts/seed-admin-subcategory.mjs",
+    "seed:admin:subcategory:remote": "node scripts/seed-admin-subcategory.mjs --remote",
+    "seed:admin:subcategory:stage": "node scripts/seed-admin-subcategory.mjs --remote --env stage",
     "deploy:stage": "opennextjs-cloudflare build && wrangler deploy --env stage",
     "db:migrate:stage": "wrangler d1 migrations apply widgetly-stage --remote --env stage"
   },

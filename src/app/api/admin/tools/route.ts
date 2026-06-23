@@ -19,6 +19,7 @@ export async function GET(req: NextRequest) {
   const parsed = ListToolsQuery.safeParse({
     status: url.searchParams.get("status") ?? undefined,
     category: url.searchParams.get("category") ?? undefined,
+    subcategory: url.searchParams.get("subcategory") ?? undefined,
     q: url.searchParams.get("q") ?? undefined,
     sort: url.searchParams.get("sort") ?? undefined,
     limit: url.searchParams.get("limit") ?? undefined,
@@ -35,6 +36,7 @@ export async function GET(req: NextRequest) {
   const result = await listTools({
     status: q.status,
     category: q.category,
+    subcategory: q.subcategory,
     q: q.q,
     sort: q.sort,
     limit: q.limit,
@@ -64,6 +66,7 @@ export async function POST(req: NextRequest) {
     {
       slug: body.slug,
       category: body.category,
+      subcategory: body.subcategory ?? "Other",
       name: body.name,
       description: body.description ?? "",
       long_description: body.long_description ?? "",
