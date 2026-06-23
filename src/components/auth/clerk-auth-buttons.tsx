@@ -13,7 +13,6 @@
 
 import * as React from "react";
 import { usePathname } from "next/navigation";
-import NextLink from "next/link";
 import { Button } from "@/components/ui/button";
 
 type ClerkMod = {
@@ -72,11 +71,11 @@ export function ClerkSignInButton({
   const clerk = useClerk();
   const redirect = useForceRedirectUrl();
   if (!clerk) {
-    return (
-      <Button asChild variant={variant} size={size}>
-        <NextLink href="/admin/sign-in">{label}</NextLink>
-      </Button>
-    );
+    // Clerk not configured — the public site's Sign in button is
+    // user-facing Clerk auth, NOT the admin dashboard sign-in. When
+    // Clerk keys are missing, hide the button entirely. The admin
+    // sign-in lives at /admin/sign-in and is reachable directly.
+    return null;
   }
   const SignInButton = clerk.SignInButton;
   return (
@@ -100,11 +99,11 @@ export function ClerkSignUpButton({
   const clerk = useClerk();
   const redirect = useForceRedirectUrl();
   if (!clerk) {
-    return (
-      <Button asChild variant={variant} size={size}>
-        <NextLink href="/admin/sign-in">{label}</NextLink>
-      </Button>
-    );
+    // Clerk not configured — the public site's Sign in button is
+    // user-facing Clerk auth, NOT the admin dashboard sign-in. When
+    // Clerk keys are missing, hide the button entirely. The admin
+    // sign-in lives at /admin/sign-in and is reachable directly.
+    return null;
   }
   const SignUpButton = clerk.SignUpButton;
   return (

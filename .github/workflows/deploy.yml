@@ -48,14 +48,14 @@ jobs:
       # the deploy workflow has no dependency on a local script file.
       # ---------------------------------------------------------------------------
       - name: Sync Supabase + webhook secrets to Cloudflare Worker
-        if: ${{ env.SUPABASE_URL != '' || env.SUPABASE_SERVICE_ROLE_KEY != '' || env.WAITLIST_WEBHOOK_URL != '' || env.SUGGEST_WEBHOOK_URL != '' || env.NEXT_PUBLIC_ANALYTICS_TOKEN != '' || env.ADMIN_SESSION_SECRET != '' }}
+        if: ${{ env.SUPABASE_URL != '' || env.SUPABASE_SERVICE_ROLE_KEY != '' || env.WAITLIST_WEBHOOK_URL != '' || env.SUGGEST_WEBHOOK_URL != '' || env.NEXT_PUBLIC_ANALYTICS_TOKEN != '' || env.ADMIN_SESSION_SECRET != '' || env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY != '' || env.CLERK_SECRET_KEY != '' }}
         run: |
           set -e
           # Explicit verbose log so the CI output makes it obvious which
           # secrets are present (and which were skipped because the GH
           # secret wasn't set). Empty values are skipped below.
           echo "secrets present in this run:"
-          for n in SUPABASE_URL SUPABASE_SERVICE_ROLE_KEY WAITLIST_WEBHOOK_URL SUGGEST_WEBHOOK_URL NEXT_PUBLIC_ANALYTICS_TOKEN ADMIN_SESSION_SECRET; do
+          for n in SUPABASE_URL SUPABASE_SERVICE_ROLE_KEY WAITLIST_WEBHOOK_URL SUGGEST_WEBHOOK_URL NEXT_PUBLIC_ANALYTICS_TOKEN ADMIN_SESSION_SECRET NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY CLERK_SECRET_KEY; do
             v=$(eval echo "\$$n")
             if [ -n "$v" ]; then echo "  $n: set (length ${#v})"; else echo "  $n: (not set, skipping)"; fi
           done
@@ -71,6 +71,8 @@ jobs:
           [ -n "$SUGGEST_WEBHOOK_URL" ]       && printf '%s' "$SUGGEST_WEBHOOK_URL"       | pnpm exec wrangler secret put SUGGEST_WEBHOOK_URL       || true
           [ -n "$NEXT_PUBLIC_ANALYTICS_TOKEN" ] && printf '%s' "$NEXT_PUBLIC_ANALYTICS_TOKEN" | pnpm exec wrangler secret put NEXT_PUBLIC_ANALYTICS_TOKEN || true
           [ -n "$ADMIN_SESSION_SECRET" ]      && printf '%s' "$ADMIN_SESSION_SECRET"      | pnpm exec wrangler secret put ADMIN_SESSION_SECRET      --env production || true
+          [ -n "$NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY" ] && printf '%s' "$NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY" | pnpm exec wrangler secret put NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || true
+          [ -n "$CLERK_SECRET_KEY" ]              && printf '%s' "$CLERK_SECRET_KEY"              | pnpm exec wrangler secret put CLERK_SECRET_KEY              || true
           echo "secrets sync complete"
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -78,6 +80,8 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           WAITLIST_WEBHOOK_URL: ${{ secrets.WAITLIST_WEBHOOK_URL }}
+          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
+          CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
           SUGGEST_WEBHOOK_URL: ${{ secrets.SUGGEST_WEBHOOK_URL }}
           NEXT_PUBLIC_ANALYTICS_TOKEN: ${{ secrets.NEXT_PUBLIC_ANALYTICS_TOKEN }}
           ADMIN_SESSION_SECRET: ${{ secrets.ADMIN_SESSION_SECRET }}
@@ -104,6 +108,8 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
+          CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
           NEXT_TELEMETRY_DISABLED: 1
 
       # ---------------------------------------------------------------------------

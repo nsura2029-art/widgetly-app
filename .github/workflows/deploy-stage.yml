@@ -69,6 +69,8 @@ jobs:
           SUGGEST_WEBHOOK_URL: ${{ secrets.SUGGEST_WEBHOOK_URL }}
           NEXT_PUBLIC_ANALYTICS_TOKEN: ${{ secrets.NEXT_PUBLIC_ANALYTICS_TOKEN }}
           ADMIN_SESSION_SECRET: ${{ secrets.ADMIN_SESSION_SECRET }}
+          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
+          CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
 
       # Apply any pending D1 migrations BEFORE deploying so the new
       # Worker code finds the new tables on its first request.
@@ -86,6 +88,14 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          # Clerk env vars MUST be present at build time so the
+          # @clerk/nextjs components resolve to the right publishable
+          # key. The Clerk auth wrappers in src/components/auth/ check
+          # NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY at build time to decide
+          # whether to render Clerk's <SignInButton> or fall back to
+          # a plain <Link>.
+          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
+          CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
           OPEN_NEXT_DEPLOY: "true"
           NEXT_TELEMETRY_DISABLED: 1
 

@@ -53,12 +53,14 @@ export function PricingCtaButton({ cta, accent }: { cta: string; accent: "primar
     );
   }
   if (accent === "primary") {
-    // Clerk not configured — show a CTA that links to the admin
-    // sign-in page so the user can still register when an admin
-    // turns on Clerk.
+    // Clerk not configured — disable the CTA so it doesn't link
+    // to the admin sign-in page (which is for admins, not for the
+    // users this pricing page targets). When the user sets Clerk
+    // keys, this code path is skipped entirely and the real
+    // <SignUpButton> modal opens.
     return (
-      <Button asChild className="w-full" size="lg">
-        <Link href="/admin/sign-in">{cta}</Link>
+      <Button className="w-full" size="lg" disabled>
+        {cta}
       </Button>
     );
   }
