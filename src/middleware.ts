@@ -153,17 +153,6 @@ function pickRequest(...args: unknown[]): NextRequest {
 }
 
 const intlHandler = async (...args: unknown[]) => {
-  try {
-    return await intlHandlerInner(...args);
-  } catch (err) {
-    const e = err as Error;
-    const msg = e?.message ?? String(err);
-    const stack = (e?.stack ?? "").split("\n").slice(0, 5).join(" | ");
-    return new Response(`MIDDLEWARE ERROR: ${msg}\nSTACK: ${stack}`, { status: 500 });
-  }
-};
-
-const intlHandlerInner = async (...args: unknown[]) => {
   const req = pickRequest(...args);
   // Run the next-intl middleware first. It may issue a 308 redirect
   // (we capture and return that as-is) or a pass-through NextResponse
