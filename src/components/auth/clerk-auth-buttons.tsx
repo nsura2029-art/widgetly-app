@@ -13,7 +13,7 @@
 
 import * as React from "react";
 import { usePathname } from "next/navigation";
-import { Link } from "@/i18n/navigation";
+import NextLink from "next/link";
 import { Button } from "@/components/ui/button";
 
 type ClerkMod = {
@@ -74,7 +74,7 @@ export function ClerkSignInButton({
   if (!clerk) {
     return (
       <Button asChild variant={variant} size={size}>
-        <Link href="/admin/sign-in">{label}</Link>
+        <NextLink href="/admin/sign-in">{label}</NextLink>
       </Button>
     );
   }
@@ -102,7 +102,7 @@ export function ClerkSignUpButton({
   if (!clerk) {
     return (
       <Button asChild variant={variant} size={size}>
-        <Link href="/admin/sign-in">{label}</Link>
+        <NextLink href="/admin/sign-in">{label}</NextLink>
       </Button>
     );
   }

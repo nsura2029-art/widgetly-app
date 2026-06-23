@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
-import { AdminShell } from "../_components/admin-shell";
 import { getQuotaSettings } from "@/lib/quota/server";
 import { QuotaSettingsForm } from "./_components/quota-settings-form";
 
@@ -15,7 +14,7 @@ export default async function AdminQuotasPage() {
   const t = await getTranslations("adminQuotas");
   const settings = await getQuotaSettings();
   return (
-    <AdminShell>
+    <>
       <header className="space-y-1">
         <h1 className="text-foreground text-2xl font-semibold tracking-tight">{t("title")}</h1>
         <p className="text-muted-foreground text-sm">{t("subtitle")}</p>
@@ -32,6 +31,6 @@ export default async function AdminQuotasPage() {
           error: t("error"),
         }}
       />
-    </AdminShell>
+    </>
   );
 }

@@ -326,7 +326,7 @@ function MegaPanel({
   const totalTools = subEntries.reduce((n, s) => n + s.tools.length, 0);
 
   return (
-    <div className="pointer-events-none absolute inset-x-0 top-full z-40 flex justify-center">
+    <div className="pointer-events-none absolute inset-x-0 top-full z-40 flex justify-start">
       <div
         onMouseEnter={onMouseEnter}
         onMouseLeave={onMouseLeave}
