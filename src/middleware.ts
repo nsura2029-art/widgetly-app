@@ -103,6 +103,15 @@ function resolveLocaleFromRequest(req: NextRequest): LocaleCode {
  *   - It's easier to test (no global middleware state to mock).
  */
 const intlHandler = async (authOrReq: unknown, maybeReq?: NextRequest) => {
+  try {
+    return await intlHandlerInner(authOrReq, maybeReq);
+  } catch (err) {
+    console.error("[middleware] error:", (err as Error)?.message, (err as Error)?.stack);
+    throw err;
+  }
+};
+
+const intlHandlerInner = async (authOrReq: unknown, maybeReq?: NextRequest) => {
   const req = maybeReq ?? (authOrReq as NextRequest);
   // Run the next-intl middleware first. It may issue a 308 redirect
   // (we capture and return that as-is) or a pass-through NextResponse
