@@ -1,12 +1,10 @@
 import type { Metadata } from "next";
 import { Check, Sparkles, User } from "lucide-react";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { SignUpButton } from "@clerk/nextjs";
 import { PageShell } from "@/components/layout/page-shell";
-import { Button } from "@/components/ui/button";
-import { Link } from "@/i18n/navigation";
 import { buildMetadata } from "@/lib/seo";
 import { getQuotaSettings } from "@/lib/quota/server";
+import { PricingCtaButton } from "./_components/pricing-cta-button";
 
 /**
  * /[locale]/pricing
@@ -161,17 +159,7 @@ function PricingCard({
       <ul className="mt-5 space-y-2.5">{children}</ul>
 
       <div className="mt-7">
-        {accent === "primary" ? (
-          <SignUpButton mode="modal">
-            <Button className="w-full" size="lg">
-              {cta}
-            </Button>
-          </SignUpButton>
-        ) : (
-          <Button asChild variant="outline" className="w-full" size="lg">
-            <Link href="/">{cta}</Link>
-          </Button>
-        )}
+        <PricingCtaButton cta={cta} accent={accent} />
       </div>
     </div>
   );

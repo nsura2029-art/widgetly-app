@@ -2,7 +2,8 @@
 
 import { useMemo, useState } from "react";
 import { Check, Clipboard, Linkedin, LogIn, Send, Share2 } from "lucide-react";
-import { SignInButton, SignUpButton, useUser } from "@clerk/nextjs";
+import { useSafeUser } from "@/lib/auth/use-safe-user";
+import { ClerkSignInButton, ClerkSignUpButton } from "@/components/auth/clerk-auth-buttons";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
@@ -80,7 +81,7 @@ function translateError(code: string, tErrors: (key: string) => string) {
  * Signed-in visitors see the actual <SuggestionFormInner />.
  */
 export function SuggestionForm() {
-  const { isLoaded, isSignedIn } = useUser();
+  const { isLoaded, isSignedIn } = useSafeUser();
   if (!isLoaded) {
     // Skeleton while Clerk resolves — prevents a flash where the
     // form briefly shows before the user is known.
@@ -102,20 +103,8 @@ function SignInRequiredPanel() {
       <h2 className="text-foreground mt-4 text-2xl font-semibold">{t("signInTitle")}</h2>
       <p className="text-muted mx-auto mt-2 max-w-md text-sm leading-relaxed">{t("signInBody")}</p>
       <div className="mt-5 flex flex-wrap justify-center gap-3">
-        <SignInButton
-          mode="modal"
-          forceRedirectUrl={typeof window !== "undefined" ? window.location.href : undefined}
-        >
-          <Button size="lg">{t("signInAction")}</Button>
-        </SignInButton>
-        <SignUpButton
-          mode="modal"
-          forceRedirectUrl={typeof window !== "undefined" ? window.location.href : undefined}
-        >
-          <Button size="lg" variant="outline">
-            {t("signUpAction")}
-          </Button>
-        </SignUpButton>
+        <ClerkSignInButton label={t("signInAction")} variant="default" size="lg" />
+        <ClerkSignUpButton label={t("signUpAction")} variant="outline" size="lg" />
       </div>
     </div>
   );
@@ -124,7 +113,7 @@ function SignInRequiredPanel() {
 function SuggestionFormInner() {
   const t = useTranslations("suggest.formNew");
   const tErrors = useTranslations("suggest.formNew.errors");
-  const { user } = useUser();
+  const { user } = useSafeUser();
   const [form, setForm] = useState<SuggestionFormInput>(initialForm);
   const [errors, setErrors] = useState<FieldErrors>({});
   const [submitting, setSubmitting] = useState(false);
