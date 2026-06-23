@@ -133,6 +133,13 @@ export default async function LocaleLayout({
   const jsonLdWebSite = websiteJsonLd();
   const jsonLdOrg = organizationJsonLd();
 
+  // Clerk is always wrapped here. When the publishable key is
+  // missing (e.g. local dev without Clerk, or stage before the
+  // secrets are set), Clerk's "keyless mode" auto-creates a dev
+  // instance so the provider still works — every <SignedIn>/
+  // <SignedOut> branch degrades to "signed out" (no UserButton,
+  // but no crash either). The user's signed-in gate still
+  // returns 401 on the API side, which is the right behavior.
   return (
     <ClerkProvider>
       <html lang={locale} dir={dir} className={inter.variable} suppressHydrationWarning>
