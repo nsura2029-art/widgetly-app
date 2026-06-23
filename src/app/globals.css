@@ -102,7 +102,7 @@
   );
 
   /* Container */
-  --container-2xl: 1440px;
+  --container-2xl: 1600px;
   --container-xl: 1120px;
   --container-lg: 1024px;
   --container-md: 768px;
@@ -118,7 +118,12 @@
  * Behaviour:
  *  - 100% width with auto side margins -> always horizontally centered.
  *  - Responsive horizontal padding (1rem on phones, 1.5rem >=sm, 2rem >=lg).
- *  - Caps at 1440px on >=2xl viewports, scaling down at each breakpoint.
+ *  - Caps at 1600px on wide viewports, scaling down at each breakpoint.
+ *    Updated 2026-06: bumped from 1440px to 1600px to give the
+ *    tool-category grids and suggestion boards more breathing room
+ *    on large monitors (1920px / 2560px) without making the column
+ *    text uncomfortably wide. The breakpoint was moved from
+ *    1536px->1440px to 1760px->1600px accordingly.
  *  - `padding-inline` keeps content away from the viewport edges so the
  *    hero text, header items, and page cards never hug the screen edge.
  * --------------------------------------------------------------------- */
@@ -149,8 +154,8 @@
   @media (min-width: 1280px) {
     max-width: 1280px;
   }
-  @media (min-width: 1536px) {
-    max-width: 1440px;
+  @media (min-width: 1760px) {
+    max-width: 1600px;
   }
 }
 

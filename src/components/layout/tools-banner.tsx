@@ -223,8 +223,15 @@ export function ToolsBanner() {
         aria-label={t("ariaLabel")}
         onMouseLeave={scheduleClose}
         className={cn(
+          // Sticky directly under the brand header (which is sticky top-0,
+          // h-16 = 4rem). Pinned at z-40 so the mega panel below can
+          // render at z-40 too without z-fighting.
+          // The user requested the tools menu stay visible on scroll so
+          // a category chip is always one tap away. Scroll-margin-top in
+          // globals.css is set to (header height + 1.5rem) so anchored
+          // section headings still clear both layers.
           "bg-primary-50/85 supports-[backdrop-filter]:bg-primary-50/70",
-          "border-primary-100/80 relative border-b backdrop-blur"
+          "border-primary-100/80 sticky top-16 z-40 border-b backdrop-blur"
         )}
       >
         <div className="container flex items-center gap-1 overflow-x-auto py-2">
@@ -321,7 +328,7 @@ function MegaPanel({
     // panel is `absolute top-full` so it sits right under the banner and
     // follows it in document flow. The actual visible panel (with
     // background, border, shadow) is the inner div, which is sized
-    // to its content via `w-fit max-w-[1440px]`. So when a category
+    // to its content via `w-fit max-w-[1600px]`. So when a category
     // has only 2-3 subgroups, the panel shrinks to fit those columns
     // instead of stretching across the whole viewport.
     <div className="pointer-events-none absolute inset-x-0 top-full z-40 flex justify-center">
@@ -329,7 +336,7 @@ function MegaPanel({
         onMouseEnter={onMouseEnter}
         onMouseLeave={onMouseLeave}
         className={cn(
-          "animate-fade-in pointer-events-auto w-fit max-w-[1440px]",
+          "animate-fade-in pointer-events-auto w-fit max-w-[1600px]",
           "border-border/60 bg-popover/98 supports-[backdrop-filter]:bg-popover/85",
           "rounded-b-xl border shadow-2xl backdrop-blur"
         )}
