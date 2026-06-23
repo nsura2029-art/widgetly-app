@@ -106,8 +106,10 @@ const intlHandler = async (authOrReq: unknown, maybeReq?: NextRequest) => {
   try {
     return await intlHandlerInner(authOrReq, maybeReq);
   } catch (err) {
-    console.error("[middleware] error:", (err as Error)?.message, (err as Error)?.stack);
-    throw err;
+    const e = err as Error;
+    const msg = e?.message ?? String(err);
+    const stack = (e?.stack ?? "").split("\n").slice(0, 5).join(" | ");
+    return new Response(`MIDDLEWARE ERROR: ${msg}\nSTACK: ${stack}`, { status: 500 });
   }
 };
 
