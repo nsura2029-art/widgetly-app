@@ -63,10 +63,11 @@ jobs:
         with:
           node-version: "22"
 
-      - name: Setup pnpm 9
+      - name: Setup pnpm (version from packageManager field)
         uses: pnpm/action-setup@v4
-        with:
-          version: 9.15.9
+        # No `version:` — let the action read from package.json's
+        # `packageManager` field. Setting both causes:
+        # "Multiple versions of pnpm specified" → ERR_PNPM_BAD_PM_VERSION
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
