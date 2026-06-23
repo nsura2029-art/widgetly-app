@@ -9,14 +9,18 @@
       "leaderboard": "Leaderboard"
     },
     "actions": {
-      "suggestTool": "Suggest a Tool"
+      "suggestTool": "Suggest a Tool",
+      "signIn": "Sign in",
+      "signUp": "Sign up"
     },
     "aria": {
       "mainNav": "Main navigation",
       "openMenu": "Open menu",
       "closeMenu": "Close menu",
       "homeLink": "{siteName} home",
-      "suggestTool": "Suggest a tool"
+      "suggestTool": "Suggest a tool",
+      "signIn": "Sign in to your account",
+      "signUp": "Create a new account"
     },
     "localePicker": {
       "label": "Select language",
@@ -413,6 +417,11 @@
       "urgencyHigh": "high",
       "emailLabel": "Email",
       "emailPlaceholder": "you@example.com",
+      "emailFromAccount": "Using your account's primary email. Edit it in your account settings.",
+      "signInTitle": "Sign in to submit a suggestion",
+      "signInBody": "We ask you to sign in so we can show you the status of your suggestions, credit you for accepted ideas, and prevent spam. One click, no password to remember.",
+      "signInAction": "Sign in",
+      "signUpAction": "Create account",
       "rateLimit": "Limit: 3 suggestions per email per day.",
       "submit": "Submit suggestion",
       "submitting": "Submitting...",
@@ -509,6 +518,55 @@
     "sectionHint": "Tool categories you've visited on this device. Stored locally, never sent anywhere.",
     "clearAll": "Clear",
     "emptyHidden": "You haven't visited any tool categories yet."
+  },
+  "conversionCta": {
+    "readyTitle": "You have {remaining} of {limit} pages left today",
+    "readyBody": "You've used {used} of {limit} pages in the last 24 hours. Each tool run costs 1 page.",
+    "useOne": "Use 1 of {remaining}",
+    "reserving": "Reserving…",
+    "limitTitle": "Daily limit reached",
+    "limitBody": "You've used all {limit} pages for today (resets at {resetAt}). Sign in to get more pages per day, or wait for the reset.",
+    "signInForMore": "Sign in for more pages",
+    "comeBackAt": "Come back at {resetAt} for more pages.",
+    "browseAll": "Browse all tools",
+    "error": "Something went wrong. Please try again.",
+    "networkError": "Couldn't reach the server. Check your connection."
+  },
+  "pricing": {
+    "title": "Simple, free pricing",
+    "subtitle": "Two ways to use Widgetly. No credit card, no trial period, no surprise upgrades.",
+    "anonymous": {
+      "name": "Anonymous",
+      "price": "Free",
+      "tagline": "Browse and try 1 tool every day, no account needed.",
+      "featureDailyPages": "1 page per day",
+      "featureNoAccount": "No account required",
+      "featureBrowse": "Browse all tools",
+      "featureSuggest": "Suggest tools (with sign-in)",
+      "cta": "Continue as guest"
+    },
+    "registered": {
+      "name": "Registered",
+      "price": "Free",
+      "tagline": "5 pages every day, plus saved suggestions and early access to new tools.",
+      "featureDailyPages": "5 pages per day",
+      "featureAccount": "Saved suggestions",
+      "featureEarlyAccess": "Early access to new tools",
+      "featureNoAds": "No ads, ever",
+      "cta": "Create free account"
+    },
+    "moreComing": "More tiers coming as we add paid features."
+  },
+  "adminQuotas": {
+    "title": "Quota settings",
+    "subtitle": "Daily page limits per actor type. Changes apply immediately to the public site.",
+    "anonymous": "Anonymous visitors",
+    "registered": "Signed-in users",
+    "pagesPer24h": "Pages per 24 hours",
+    "save": "Save changes",
+    "saved": "Saved.",
+    "currentUsage": "Current usage (last 7 days): {used}",
+    "error": "Couldn't save. Check the form and try again."
   },
   "toolsBanner": {
     "label": "Tools",

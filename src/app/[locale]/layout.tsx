@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations, setRequestLocale } from "next-intl/server";
 import { Inter } from "next/font/google";
+import { ClerkProvider } from "@clerk/nextjs";
 import { routing } from "../../../next-intl.config";
 import { isSupportedLocale, getDirection } from "@/i18n/config";
 import ClientHeader from "@/components/layout/client-header";
@@ -133,51 +134,53 @@ export default async function LocaleLayout({
   const jsonLdOrg = organizationJsonLd();
 
   return (
-    <html lang={locale} dir={dir} className={inter.variable} suppressHydrationWarning>
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        {/* DNS prefetch is a low-cost resolution hint, not a script
+    <ClerkProvider>
+      <html lang={locale} dir={dir} className={inter.variable} suppressHydrationWarning>
+        <head>
+          <link rel="preconnect" href="https://fonts.googleapis.com" />
+          <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+          {/* DNS prefetch is a low-cost resolution hint, not a script
             load — but if we later add a real Google Analytics tag, it
             should be moved into <ConsentGate category="analytics"> so
             it doesn't fire before the user opts in. */}
-        <link rel="dns-prefetch" href="//www.google-analytics.com" />
-        <link rel="dns-prefetch" href="//cdn.jsdelivr.net" />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdWebSite) }}
-        />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdOrg) }}
-        />
-      </head>
-      <body className="bg-background min-h-screen font-sans antialiased">
-        <NextIntlClientProvider locale={locale} messages={messages}>
-          <ConsentProvider region={consentRegion}>
-            <a
-              href="#main"
-              className="focus:bg-foreground focus:text-background sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[100] focus:rounded-md focus:px-3 focus:py-2 focus:text-sm"
-            >
-              Skip to content
-            </a>
-            <ClientHeader />
+          <link rel="dns-prefetch" href="//www.google-analytics.com" />
+          <link rel="dns-prefetch" href="//cdn.jsdelivr.net" />
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdWebSite) }}
+          />
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdOrg) }}
+          />
+        </head>
+        <body className="bg-background min-h-screen font-sans antialiased">
+          <NextIntlClientProvider locale={locale} messages={messages}>
+            <ConsentProvider region={consentRegion}>
+              <a
+                href="#main"
+                className="focus:bg-foreground focus:text-background sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[100] focus:rounded-md focus:px-3 focus:py-2 focus:text-sm"
+              >
+                Skip to content
+              </a>
+              <ClientHeader />
 
-            <main id="main">
-              <ToolsBanner />
-              <BreadcrumbNav />
-              {children}
-            </main>
-            <Footer />
-            <ConsentBanner />
-            {/* Watches for hash changes on cross-page navigation and
+              <main id="main">
+                <ToolsBanner />
+                <BreadcrumbNav />
+                {children}
+              </main>
+              <Footer />
+              <ConsentBanner />
+              {/* Watches for hash changes on cross-page navigation and
                 scrolls the matching element into view. Fixes a Next.js
                 App Router quirk where hash links fail on soft
                 navigations. See component file for details. */}
-            <ScrollToHash />
-          </ConsentProvider>
-        </NextIntlClientProvider>
-      </body>
-    </html>
+              <ScrollToHash />
+            </ConsentProvider>
+          </NextIntlClientProvider>
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }
