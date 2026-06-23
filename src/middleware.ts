@@ -1,20 +1,25 @@
 /**
- * Edge middleware: locale path-prefix routing + cookie persistence.
+ * Edge middleware: locale path-prefix routing + cookie persistence + Clerk auth.
  *
  * Runs in the Cloudflare Worker (via @opennextjs/cloudflare), before the
  * request reaches the Next.js renderer. Responsibilities:
  *
- *   1. Run the next-intl middleware (preserved from the prior middleware.ts convention) -- next-intl still uses the term "middleware" internally, which:
- *      - 308-redirects unprefixed URLs (`/blog/...`) to the resolved
- *        locale prefix (`/en/blog/...`).
- *      - Validates the locale segment on prefixed URLs.
- *   2. After the next-intl pass, persist the resolved locale as the
+ *   1. Run Clerk's `clerkMiddleware()` to authenticate the request. Clerk
+ *      attaches the session (if any) to `auth()` and exposes
+ *      `userId/sessionClaims/has()`. We use the auth context inside
+ *      protected route handlers — the middleware itself doesn't gate any
+ *      routes here because all gating is done per-route (in
+ *      `lib/auth/server.ts`) to keep behavior explicit and easy to test.
+ *   2. Run the next-intl middleware — 308-redirects unprefixed URLs
+ *      (`/blog/...`) to the resolved locale prefix (`/en/blog/...`) and
+ *      validates the locale segment on prefixed URLs.
+ *   3. After the next-intl pass, persist the resolved locale as the
  *      `wly_locale` cookie (365-day, Lax, Secure) so internal links stay
  *      consistent and the picker reflects the current language.
- *   3. Issue a `wly_anon` UUID cookie (2-year, HttpOnly) the first time a
- *      visitor arrives. The API route uses this as the KV key for
- *      per-user language preferences.
- *   4. Forward the resolved locale to the renderer via the
+ *   4. Issue a `wly_anon` UUID cookie (2-year, HttpOnly) the first time a
+ *      visitor arrives. The quota service uses this as the actor key for
+ *      anonymous visitors (see `lib/quota/server.ts`).
+ *   5. Forward the resolved locale to the renderer via the
  *      `x-wly-locale` request header.
  *
  * Detection hierarchy (when no URL prefix is present):
@@ -24,7 +29,16 @@
  *   - We want to consult `cf-ipcountry` (Cloudflare edge data) which
  *     next-intl doesn't know about.
  *   - We want to set the `wly_anon` cookie in the same pass.
+ *   - We want Clerk to see the resolved locale before auth() runs so
+ *     locale-aware routes can resolve the right Clerk session.
+ *
+ * Combining Clerk + next-intl: per Clerk's middleware docs, wrap
+ * `clerkMiddleware` around a callback that returns the next-intl
+ * response. The callback receives the `auth` context but we don't
+ * need it here — auth is checked per-route in server components and
+ * API handlers, not globally in middleware.
  */
+import { clerkMiddleware } from "@clerk/nextjs/server";
 import { NextRequest } from "next/server";
 import createIntlMiddleware from "next-intl/middleware";
 import { routing } from "../next-intl.config";
@@ -48,7 +62,12 @@ export const config = {
   // middleware here also means the admin URLs stay stable across
   // locale changes (e.g. /admin/sign-in works the same for an admin
   // whose browser is set to French).
-  matcher: ["/((?!api|_next|admin|.*\\..*).*)"],
+  //
+  // Clerk middleware also needs to see most paths (so the session
+  // cookie is read on every request), so we let it run on the same
+  // matcher. The /api/_diag/* and /api/z-diag/* paths are
+  // infrastructure-only and should still see locale routing.
+  matcher: ["/((?!_next|.*\\..*).*)"],
 };
 
 function resolveLocaleFromRequest(req: NextRequest): LocaleCode {
@@ -79,7 +98,27 @@ function resolveLocaleFromRequest(req: NextRequest): LocaleCode {
   return DEFAULT_LOCALE;
 }
 
-export function middleware(req: NextRequest) {
+/**
+ * The Clerk-wrapped middleware. Per Clerk's docs, `clerkMiddleware`
+ * accepts a callback that runs after Clerk authenticates the request.
+ * We return the next-intl response (with our cookie/header additions)
+ * so the standard locale routing still works.
+ *
+ * Note: the `auth` parameter is intentionally unused here. Auth is
+ * checked per-route in `lib/auth/server.ts` because:
+ *   - It keeps the protection rules explicit (each route documents
+ *     whether it requires auth).
+ *   - It avoids surprise redirects from middleware on routes that
+ *     should be public.
+ *   - It's easier to test (no global middleware state to mock).
+ */
+// clerkMiddleware needs a publishable key at runtime. When the env
+// var is missing (stage before Clerk is configured, or local dev without
+// Clerk), we skip Clerk entirely — it would otherwise fail to validate
+// every request and return 500s.
+const clerkEnabled = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
+
+const intlHandler = async (_auth: unknown, req: NextRequest) => {
   // Run the next-intl middleware first. It may issue a 308 redirect
   // (we capture and return that as-is) or a pass-through NextResponse
   // for already-prefixed URLs.
@@ -121,6 +160,10 @@ export function middleware(req: NextRequest) {
   }
 
   // `wly_anon` — only set on first visit (already correct pattern).
+  // This is the actor key for anonymous quota tracking. The cookie
+  // is httpOnly because the client never needs to read it — every
+  // quota check is server-side (the route handler reads the cookie
+  // off the request and asks the quota service).
   const existingAnon = req.cookies.get(COOKIE_ANON);
   if (!existingAnon) {
     response.cookies.set(COOKIE_ANON, crypto.randomUUID(), {
@@ -156,4 +199,8 @@ export function middleware(req: NextRequest) {
   response.headers.set("x-wly-locale", resolved);
 
   return response;
-}
+};
+
+const handler = clerkEnabled ? clerkMiddleware(intlHandler) : intlHandler;
+
+export default handler;
