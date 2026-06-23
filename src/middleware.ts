@@ -1,16 +1,10 @@
 /**
- * Edge middleware: locale path-prefix routing + cookie persistence + Clerk auth.
+ * Edge middleware: locale path-prefix routing + cookie persistence.
  *
  * Runs in the Cloudflare Worker (via @opennextjs/cloudflare), before the
  * request reaches the Next.js renderer. Responsibilities:
  *
- *   1. Run Clerk's `clerkMiddleware()` to authenticate the request. Clerk
- *      attaches the session (if any) to `auth()` and exposes
- *      `userId/sessionClaims/has()`. We use the auth context inside
- *      protected route handlers — the middleware itself doesn't gate any
- *      routes here because all gating is done per-route (in
- *      `lib/auth/server.ts`) to keep behavior explicit and easy to test.
- *   2. Run the next-intl middleware — 308-redirects unprefixed URLs
+ *   1. Run the next-intl middleware — 308-redirects unprefixed URLs
  *      (`/blog/...`) to the resolved locale prefix (`/en/blog/...`) and
  *      validates the locale segment on prefixed URLs.
  *   3. After the next-intl pass, persist the resolved locale as the
@@ -32,11 +26,18 @@
  *   - We want Clerk to see the resolved locale before auth() runs so
  *     locale-aware routes can resolve the right Clerk session.
  *
- * Combining Clerk + next-intl: per Clerk's middleware docs, wrap
- * `clerkMiddleware` around a callback that returns the next-intl
- * response. The callback receives the `auth` context but we don't
- * need it here — auth is checked per-route in server components and
- * API handlers, not globally in middleware.
+ * Why NO clerkMiddleware here: when @clerk/nextjs/server is imported,
+ * its module-init code calls `require('node:crypto').webcrypto` and
+ * reads several CLERK_* env vars. In the Cloudflare Workers runtime
+ * (workerd), the node:crypto import path or one of the env var reads
+ * throws, which kills every request with a 500 — regardless of any
+ * runtime conditional that wraps the actual call.
+ *
+ * Workaround: keep Clerk out of the middleware bundle. Auth gating
+ * happens per-route in `lib/auth/server.ts`, which calls Clerk's
+ * `auth()` lazily inside try/catch. Once Clerk is fully configured
+ * (real publishable + secret keys on the worker), revisit this — the
+ * import side effects will work in a properly-configured environment.
  */
 import { NextRequest } from "next/server";
 import createIntlMiddleware from "next-intl/middleware";
