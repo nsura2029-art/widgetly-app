@@ -9,7 +9,9 @@
       "leaderboard": "Clasificación"
     },
     "actions": {
-      "suggestTool": "Sugerir una herramienta"
+      "suggestTool": "Sugerir una herramienta",
+      "signIn": "Iniciar sesión",
+      "signUp": "Registrarse"
     },
     "aria": {
       "mainNav": "Navegación principal",

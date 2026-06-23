@@ -9,7 +9,9 @@
       "leaderboard": "Classement"
     },
     "actions": {
-      "suggestTool": "Suggérer un outil"
+      "suggestTool": "Suggérer un outil",
+      "signIn": "Se connecter",
+      "signUp": "S'inscrire"
     },
     "aria": {
       "mainNav": "Navigation principale",
