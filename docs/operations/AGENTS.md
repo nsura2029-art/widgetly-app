@@ -412,6 +412,102 @@ gather a Cloudflare support escalation packet — see
   `curl -sI https://widgetly.tech/en | grep -i cf-cache-status`
   → 1st: `MISS`, 2nd: `HIT`.
 
+---
+
+## Site-wide layout: max-width 1600px
+
+The site's content rail is capped at **1600px** on wide viewports. Updated 2026-06 from 1440px. The new breakpoint in `src/app/globals.css` is `1760px` (the responsive `min-width: 1760px` media query applies `max-width: 1600px` to the `.container` utility).
+
+- **Why 1600px**: the tool-category grids (3-col on desktop) and the leaderboard / suggest boards are wider than the previous 1440 cap could comfortably accommodate at 1920px viewports. 1600px leaves a balanced gutter (~160px per side at 1920px, ~480px at 2560px) while keeping line lengths readable.
+- **What changed**: `.container` `@utility` definition in `src/app/globals.css`, the `--container-2xl: 1600px` token, the `max-w-[1600px]` cap in the `ToolsBanner` mega panel, and the `// Tailwind's .container, 1600px max` comment in `PageShell`.
+- **What didn't change**: per-route `max-w-3xl` / `max-w-2xl` content caps (the inner content cards stay narrow — only the outer rail widened). The mobile-first breakpoints (640/768/1024/1280px) are unchanged.
+- **Verification**: `curl -s https://stage.widgetly.tech/en | grep 'mx-auto'` and confirm the inner container still has `max-width: 1600px` style. Visual check on a 1920x1080 display: the hero, content cards, and footer should all share the same horizontal edges with ~160px gutters on either side.
+
+---
+
+## Sticky chrome layering
+
+The site has three sticky bands, layered top-to-bottom with explicit `z-index` values to prevent z-fighting:
+
+| Layer        | z-index | Top offset                         | Component                      |
+| ------------ | ------- | ---------------------------------- | ------------------------------ |
+| Brand header | `z-50`  | `top-0`                            | `ClientHeader` (logo + nav)    |
+| Tools banner | `z-40`  | `top-16` (under header, h-16)      | `ToolsBanner` (category chips) |
+| Breadcrumb   | `z-30`  | `top-24` mobile / `top-28` desktop | `Breadcrumb` (page trail)      |
+
+Updated 2026-06 — both the tools banner and the breadcrumb are now **sticky** (previously non-sticky by design). Rationale: users navigating long tool / suggest lists reported losing their orientation when the category chips and the breadcrumb scrolled away. Pinning them keeps a context anchor always visible.
+
+- `top-16` = 4rem (header height) — the banner sits directly under the header.
+- `top-24` / `top-28` = 6rem / 7rem (header + banner stack) — the breadcrumb sits under the banner, with a small visual gap so the chrome doesn't blur into one band.
+- `scroll-margin-top` in `globals.css` is set to `calc(var(--wly-header-height) + 1.5rem)` so anchored headings (e.g. `/#features`) still clear the brand header. The sticky banner and breadcrumb naturally sit above the heading when you scroll.
+- The mega-menu panel (when open) renders at `z-40` and is anchored `absolute top-full` to the banner — same layer as the banner, so it opens flush with the band's bottom edge.
+
+---
+
+## /suggest status semantics
+
+The `/suggest` board and the `/leaderboard` page both treat `in_review` as the public-facing **"Suggested"** state:
+
+- **DB value**: `in_review` (no migration; the value is internal).
+- **Public UI label**: `Suggested` everywhere a user sees the status (board cards, detail page, leaderboard card, filter dropdown).
+- **Why split**: the user mental model for a fresh submission is "I just suggested a tool", not "Widgetly is reviewing my tool". Showing "In review" implied internal action that may not have happened yet, and made the suggest button feel disconnected from the public board. Splitting the value from the label keeps the rest of the pipeline (`setSuggestionStatus` admin updates, email templates, internal reports) using the precise `in_review` value while showing visitors a more natural "Suggested" tag.
+
+The `suggestionStatusLabel()` helper in `src/lib/d1/suggestions.ts` is the single source of truth for the public label. The i18n bundle keys (`en/es/fr` under `suggest.filters.statusSuggested`) override it in the filter dropdown so the locale-appropriate translation flows through.
+
+---
+
+## Suggestion form: category is mandatory
+
+Updated 2026-06 — the `category` field on `/suggest/new` is now required. The form starts with `category = ""` (empty string) and the Zod schema in `src/lib/suggestions/validation.ts` rejects empty values with "Please choose a category."
+
+- A "Select a category…" placeholder option (`<option value="" disabled>`) is the first option in the dropdown so the empty value is visible to the user instead of silently picking a default.
+- The dropdown now includes an **"Other"** option as the catch-all bucket for tools that don't fit any of the 11 defined categories (PDF, Image, SEO, Dev, AI, Video, Calculators, Converters, Writing, Business, Education).
+- `normalizeCategory()` in `src/lib/d1/suggestions.ts` now maps unknown / empty values to `"Other"` instead of the previous silent default of `"AI"`. This was a real bug: any suggestion that didn't fuzzy-match a known category got re-bucketed into AI.
+- The form's submit button stays disabled until `validateSuggestionForm(form)` returns `success` — the disabled state is bound to the validation result, so an empty / invalid category prevents submission.
+
+---
+
+## /suggest?status=live — union of suggestions and admin catalog
+
+Updated 2026-06 — `/suggest?status=live` now shows the **union** of:
+
+1. `suggestions` rows where `status='live'` (community ideas that have been promoted to shipped).
+2. `admin_tools` rows where `status='live'` (curated catalog of live tools, regardless of whether they originated from a user suggestion).
+
+The two queries run in parallel; results are merged and de-duplicated by `slug` so a tool that exists in both the suggestions board and the admin catalog only shows up once.
+
+- The new `listLiveToolsFromAdminCatalog()` helper in `src/lib/d1/suggestions.ts` reads from `admin_tools` and shapes the result as `SuggestionRecord` so the page doesn't need any view-specific code.
+- The merge is conditional: only when `?status=live` is set. Other status filters (`in_review`, `building`, `rejected`) still read exclusively from `suggestions`.
+- Negative IDs (`-row.id`) are used for admin-catalog rows so any downstream join / dedup can tell them apart from user-submitted suggestions. Public-facing UIs never surface the ID.
+
+---
+
+## /leaderboard — "Top suggestions" section
+
+Updated 2026-06 — the leaderboard page now has a "Top suggestions" section between the featured creator and the contributor tab bar. It shows the top 6 user-submitted suggestions ranked by upvotes (excluding rejected rows).
+
+- The new `listTopSuggestions(limit)` helper in `src/lib/d1/suggestions.ts` reads the top N suggestions directly from D1.
+- The new `TopSuggestionCard` component in `src/app/[locale]/leaderboard/page.tsx` renders each row with vote count, name, category, status pill, and a link to the detail page.
+- This is **independent of the contributor leaderboard** below it — the contributor tab bar still ranks `users` by `contributions` table entries. The two surfaces don't share data; they share a page.
+
+---
+
+## Hero CTA: "Join waitlist" removed
+
+Updated 2026-06 — the hero CTA row on the landing page used to be:
+
+```
+[Suggest a tool]  [Join waitlist →]
+```
+
+It now is:
+
+```
+[Suggest a tool]  [Browse tools →]
+```
+
+The "Join waitlist" button has been removed and the `Waitlist` section is no longer rendered. The `/api/waitlist` endpoint and the `waitlist` D1 table remain in place — we may re-enable the section for a future beta program. The endpoint is still wired in case other surfaces (footer, blog) want to add a waitlist capture later.
+
 ## Child DOX Index
 
 | Subtree                                          | Owns                                                                                                                                                                                                                                                        | AGENTS.md                                                                            |
