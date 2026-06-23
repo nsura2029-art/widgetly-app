@@ -1,0 +1,17 @@
+name: Test dispatch
+
+on:
+  workflow_dispatch:
+    inputs:
+      password:
+        description: "Password input"
+        required: true
+        type: string
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Echo
+        run: |
+          echo "Hello from dispatch"
