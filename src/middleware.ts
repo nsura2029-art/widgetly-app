@@ -67,7 +67,7 @@ export const config = {
   // cookie is read on every request), so we let it run on the same
   // matcher. The /api/_diag/* and /api/z-diag/* paths are
   // infrastructure-only and should still see locale routing.
-  matcher: ["/((?!_next|.*\\..*).*)"],
+  matcher: ["/((?!api|_next|admin|.*\..*).*)"],
 };
 
 function resolveLocaleFromRequest(req: NextRequest): LocaleCode {
