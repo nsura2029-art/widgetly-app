@@ -1,6 +1,6 @@
 {
   "site": {
-    "name": "Widgetly",
+    "name": "[fr] Widgetly",
     "tagline": "Tout ce dont vous avez besoin. Rien de superflu.",
     "description": "Widgetly est la plateforme tout-en-un d'outils IA : plus de 500 outils en ligne gratuits, calculateurs, convertisseurs, générateurs, éditeurs de PDF et assistants IA — le tout sur une plateforme rapide, sécurisée et optimisée pour les appareils mobiles."
   },
@@ -9,14 +9,18 @@
       "leaderboard": "Classement"
     },
     "actions": {
-      "suggestTool": "Suggérer un outil"
+      "suggestTool": "Suggérer un outil",
+      "signIn": "Se connecter",
+      "signUp": "Créer un compte"
     },
     "aria": {
       "mainNav": "Navigation principale",
       "openMenu": "Ouvrir le menu",
       "closeMenu": "Fermer le menu",
       "homeLink": "Accueil de {siteName}",
-      "suggestTool": "Suggérer un outil"
+      "suggestTool": "Suggérer un outil",
+      "signIn": "Se connecter à votre compte",
+      "signUp": "Créer un nouveau compte"
     },
     "localePicker": {
       "label": "Sélectionner la langue",
@@ -38,20 +42,20 @@
       "developerTools": "Outils pour développeurs",
       "suggest": "Suggérer un outil",
       "joinWaitlist": "S'inscrire sur la liste d'attente",
-      "blog": "Blog",
+      "blog": "[fr] Blog",
       "help": "Centre d'aide",
       "changelog": "Journal des modifications",
       "status": "Statut",
       "about": "À propos",
-      "contact": "Contact",
+      "contact": "[fr] Contact",
       "privacy": "Politique de confidentialité",
       "terms": "Conditions de Service",
       "cookies": "Politique de Cookies",
       "security": "Sécurité",
       "dpa": "Accord de Traitement des Données",
-      "github": "GitHub",
-      "twitter": "Twitter",
-      "discord": "Discord",
+      "github": "[fr] GitHub",
+      "twitter": "[fr] Twitter",
+      "discord": "[fr] Discord",
       "imageEditor": "Éditeur d'Images",
       "seoSuite": "Suite SEO",
       "developer": "Développement",
@@ -145,7 +149,7 @@
       "browse": "Parcourir {name} →"
     },
     "faq": {
-      "pill": "FAQ",
+      "pill": "[fr] FAQ",
       "title": "Foire aux questions",
       "subtitle": "Tout ce que vous devez savoir sur Widgetly, la plateforme et son lancement."
     },
@@ -198,13 +202,13 @@
         "name": "Outils PDF",
         "shortDesc": "Fusionner, diviser, compresser, convertir",
         "longDesc": "Outils PDF en ligne gratuits : fusionner, diviser, compresser, convertir en Word/Excel/JPG, modifier, signer, protéger. Aucune limite de téléchargement, aucun filigrane, fonctionne dans votre navigateur.",
-        "shortName": "PDF"
+        "shortName": "[fr] PDF"
       },
       "image": {
         "name": "Outils d'image",
         "shortDesc": "Redimensionner, recadrer, convertir, optimiser",
         "longDesc": "Éditeur d'images en ligne : redimensionner, recadrer, compresser, convertir entre JPG, PNG, WebP, SVG, AVIF. Suppression d'arrière-plan, filigranes, filtres et traitement par lots.",
-        "shortName": "Image"
+        "shortName": "[fr] Image"
       },
       "video": {
         "name": "Outils vidéo",
@@ -222,7 +226,7 @@
         "name": "Calculatrices",
         "shortDesc": "Finance, mathématiques, santé, et plus encore",
         "longDesc": "Des centaines de calculatrices en ligne gratuites : hypothèque, prêt, IMC, calories, pourboire, pourcentage, âge, moyenne générale, notes, calculatrices scientifiques, financières, de santé et mathématiques.",
-        "shortName": "Calc"
+        "shortName": "[fr] Calc"
       },
       "converters": {
         "name": "Convertisseurs",
@@ -234,7 +238,7 @@
         "name": "Outils SEO",
         "shortDesc": "Mots-clés, balises méta, audit",
         "longDesc": "Outils SEO gratuits : générateur de balises méta, vérificateur de densité de mots-clés, générateur de plan du site, testeur de robots.txt, aperçu SERP, vérificateur de backlinks, analyse de la vitesse des pages.",
-        "shortName": "SEO"
+        "shortName": "[fr] SEO"
       },
       "education": {
         "name": "Outils pédagogiques",
@@ -246,7 +250,7 @@
         "name": "Outils pour développeurs",
         "shortDesc": "JSON, expressions régulières, encodeurs",
         "longDesc": "Utilitaires gratuits pour développeurs : formateur et validateur JSON, testeur d'expressions régulières, encodeur Base64, encodeur d'URL, décodeur JWT, minificateur CSS, vérificateur de différences, générateur de hachage.",
-        "shortName": "Dev"
+        "shortName": "[fr] Dev"
       },
       "business": {
         "name": "Outils professionnels",
@@ -269,7 +273,7 @@
     "statsTitle": "En chiffres",
     "stats": {
       "tools": {
-        "value": "500+",
+        "value": "[fr] 500+",
         "label": "Outils disponibles, gratuits"
       },
       "browserFirst": {
@@ -335,21 +339,21 @@
     },
     "contactTitle": "Nous contacter",
     "contactBody": "Questions, idées de partenariat, ou un outil que vous aimeriez voir — nous lisons tout.",
-    "contactEmail": "hello@widgetly.app",
+    "contactEmail": "[fr] hello@widgetly.app",
     "contactEmailLabel": "Nous écrire",
     "footerNote": "Construit par une petite équipe. Hébergé sur Cloudflare Workers. Ouverts sur le fonctionnement."
   },
   "contact": {
-    "title": "Contact",
+    "title": "[fr] Contact",
     "subtitle": "Vous avez une question, une idée de partenariat ou une demande de presse ? Envoyez-nous un message.",
     "form": {
       "nameLabel": "Votre nom",
-      "namePlaceholder": "Ava Martinez",
+      "namePlaceholder": "[fr] Ava Martinez",
       "emailLabel": "E-mail",
-      "emailPlaceholder": "you@example.com",
+      "emailPlaceholder": "[fr] you@example.com",
       "subjectLabel": "Objet",
       "subjectPlaceholder": "De quoi s'agit-il ?",
-      "messageLabel": "Message",
+      "messageLabel": "[fr] Message",
       "messagePlaceholder": "Dites-nous-en un peu plus…",
       "submit": "Envoyer le message",
       "submitting": "Envoi en cours…",
@@ -360,7 +364,7 @@
     },
     "altTitle": "Autres moyens de nous contacter",
     "emailLabel": "E-mail",
-    "githubLabel": "GitHub",
+    "githubLabel": "[fr] GitHub",
     "githubBody": "Signalez un problème, envoyez une pull request ou ajoutez le dépôt à vos favoris.",
     "socialLabel": "Réseaux sociaux"
   },
@@ -373,7 +377,7 @@
       "descriptionLabel": "Que devrait-il faire ?",
       "descriptionPlaceholder": "Générer des fiches à partir de n'importe quel texte ou PDF, répétition espacée, exportation vers Anki…",
       "emailLabel": "E-mail (facultatif, pour les mises à jour)",
-      "emailPlaceholder": "you@example.com",
+      "emailPlaceholder": "[fr] you@example.com",
       "submit": "Soumettre une suggestion",
       "submitting": "Envoi en cours…",
       "success": "Merci ! Votre idée est en attente. Nous vous enverrons un e-mail si elle est retenue.",
@@ -401,7 +405,7 @@
     "formNew": {
       "toolNameLabel": "Nom de l'outil",
       "toolNamePlaceholder": "Résumé PDF",
-      "descriptionLabel": "Description",
+      "descriptionLabel": "[fr] Description",
       "descriptionPlaceholder": "Décrivez ce que l'outil devrait faire et pourquoi les gens l'utiliseraient.",
       "useCaseLabel": "Cas d'utilisation",
       "useCasePlaceholder": "Qui en a besoin et quelle tâche essaie-t-il d'accomplir ?",
@@ -422,9 +426,9 @@
       "copyLink": "Copier le lien",
       "copied": "Copié",
       "viewSuggestion": "Voir la suggestion",
-      "shareOnX": "X",
-      "shareOnLinkedIn": "LinkedIn",
-      "shareOnReddit": "Reddit",
+      "shareOnX": "[fr] X",
+      "shareOnLinkedIn": "[fr] LinkedIn",
+      "shareOnReddit": "[fr] Reddit",
       "serverErrorFallback": "Impossible d'envoyer cette suggestion.",
       "networkError": "Nous n'avons pas pu joindre le serveur. Veuillez réessayer.",
       "errors": {
@@ -438,7 +442,12 @@
         "emailRequired": "L'e-mail est obligatoire.",
         "emailMax": "L'e-mail doit comporter 254 caractères ou moins.",
         "emailInvalid": "Veuillez saisir une adresse e-mail valide."
-      }
+      },
+      "emailFromAccount": "[fr] Using your account's primary email. Edit it in your account settings.",
+      "signInTitle": "[fr] Sign in to submit a suggestion",
+      "signInBody": "[fr] We ask you to sign in so we can show you the status of your suggestions, credit you for accepted ideas, and prevent spam. One click, no password to remember.",
+      "signInAction": "[fr] Sign in",
+      "signUpAction": "[fr] Create account"
     }
   },
   "blog": {
@@ -518,80 +527,130 @@
     "liveSectionTitle": "En ligne maintenant",
     "liveSectionHint": "Outils récemment ajoutés au catalogue. Mis à jour à chaque nouvelle mise en ligne.",
     "liveLoading": "Chargement des outils en ligne…",
-    "liveFailed": "Impossible de charger les outils en ligne — affichage du catalogue statique."
+    "liveFailed": "Impossible de charger les outils en ligne — affichage du catalogue statique.",
+    "emptyHint": "[fr] No {category} tools are live yet — check back soon."
   },
   "toolPage": {
-    "comingSoonBadge": "Coming soon",
-    "headline": "{toolName} — coming soon to Widgetly",
-    "intro": "We're building {toolName} and it'll be ready soon. Run it in your browser, no upload, no signup — just like every other Widgetly tool.",
-    "getNotifiedCta": "Get notified when {toolName} launches",
-    "getNotifiedSubtitle": "Drop your email and we'll send a one-line ping the day it ships. No marketing, no spam.",
-    "whatItWillDoTitle": "What this tool will do",
-    "featuresIntro": "{toolName} will handle the everyday {categoryName} jobs you used to fire up a desktop app for.",
-    "featureFree": "Free, with no usage caps during launch",
-    "featurePrivate": "Files stay in your browser — no upload to our servers",
-    "featureFast": "Runs at the edge on Cloudflare's network",
-    "featureMobile": "Works on phone, tablet, and desktop",
-    "featureNoSignup": "No account required to use it",
-    "relatedToolsTitle": "Other {categoryName}",
-    "exploreOtherCategoriesTitle": "Explore other categories",
-    "schemaBreadcrumbCategory": "{categoryName}",
-    "schemaBreadcrumbTool": "{toolName}"
+    "comingSoonBadge": "[fr] Coming soon",
+    "headline": "[fr] {toolName} — coming soon to Widgetly",
+    "intro": "[fr] We're building {toolName} and it'll be ready soon. Run it in your browser, no upload, no signup — just like every other Widgetly tool.",
+    "getNotifiedCta": "[fr] Get notified when {toolName} launches",
+    "getNotifiedSubtitle": "[fr] Drop your email and we'll send a one-line ping the day it ships. No marketing, no spam.",
+    "whatItWillDoTitle": "[fr] What this tool will do",
+    "featuresIntro": "[fr] {toolName} will handle the everyday {categoryName} jobs you used to fire up a desktop app for.",
+    "featureFree": "[fr] Free, with no usage caps during launch",
+    "featurePrivate": "[fr] Files stay in your browser — no upload to our servers",
+    "featureFast": "[fr] Runs at the edge on Cloudflare's network",
+    "featureMobile": "[fr] Works on phone, tablet, and desktop",
+    "featureNoSignup": "[fr] No account required to use it",
+    "relatedToolsTitle": "[fr] Other {categoryName}",
+    "exploreOtherCategoriesTitle": "[fr] Explore other categories",
+    "schemaBreadcrumbCategory": "[fr] {categoryName}",
+    "schemaBreadcrumbTool": "[fr] {toolName}"
   },
   "leaderboard": {
     "title": "Classement",
     "subtitle": "Les personnes qui construisent des outils sur Widgetly. Classées par contributions, avec des badges pour les étapes clés.",
     "featuredHeading": "À la une cette semaine",
     "featuredSubtitle": "Créateur le plus récent du classement.",
-    "tabsLabel": "Time window",
+    "tabsLabel": "[fr] Time window",
     "allTime": "Tout temps",
     "thisMonth": "Ce mois-ci",
     "thisWeek": "Cette semaine",
     "today": "Aujourd'hui",
-    "contributions_one": "{count} contribution",
-    "contributions_other": "{count} contributions",
-    "tools_one": "{count} tool",
-    "tools_other": "{count} tools",
-    "rank": "Rank",
-    "creator": "Creator",
-    "badges": "Badges",
-    "noCreatorsTitle": "No contributors yet",
-    "noCreatorsBody": "Be the first to ship a tool to the Widgetly library. Your name will land at the top.",
+    "contributions_one": "[fr] {count} contribution",
+    "contributions_other": "[fr] {count} contributions",
+    "tools_one": "[fr] {count} tool",
+    "tools_other": "[fr] {count} tools",
+    "rank": "[fr] Rank",
+    "creator": "[fr] Creator",
+    "badges": "[fr] Badges",
+    "noCreatorsTitle": "[fr] No contributors yet",
+    "noCreatorsBody": "[fr] Be the first to ship a tool to the Widgetly library. Your name will land at the top.",
     "contributeCta": "Suggérer un outil",
-    "empty": "No creators ranked in this window yet.",
+    "empty": "[fr] No creators ranked in this window yet.",
     "badge": {
       "first-tool": {
-        "name": "First Tool",
-        "description": "Shipped their first tool to the platform."
+        "name": "[fr] First Tool",
+        "description": "[fr] Shipped their first tool to the platform."
       },
       "pioneer": {
-        "name": "Pioneer",
-        "description": "Early contributor to the Widgetly library."
+        "name": "[fr] Pioneer",
+        "description": "[fr] Early contributor to the Widgetly library."
       },
       "top-week": {
-        "name": "Top This Week",
-        "description": "Ranked #1 in the last 7 days."
+        "name": "[fr] Top This Week",
+        "description": "[fr] Ranked #1 in the last 7 days."
       },
       "top-month": {
-        "name": "Top This Month",
-        "description": "Ranked #1 in the last 30 days."
+        "name": "[fr] Top This Month",
+        "description": "[fr] Ranked #1 in the last 30 days."
       },
       "top-all": {
-        "name": "All-Time #1",
-        "description": "Top of the all-time leaderboard."
+        "name": "[fr] All-Time #1",
+        "description": "[fr] Top of the all-time leaderboard."
       },
       "polyglot": {
-        "name": "Polyglot",
-        "description": "Contributed tools across 4+ categories."
+        "name": "[fr] Polyglot",
+        "description": "[fr] Contributed tools across 4+ categories."
       },
       "streak-7": {
-        "name": "7-Day Streak",
-        "description": "Contributed on 7+ distinct days in a month."
+        "name": "[fr] 7-Day Streak",
+        "description": "[fr] Contributed on 7+ distinct days in a month."
       },
       "streak-30": {
-        "name": "30-Day Streak",
-        "description": "Contributed on 20+ distinct days in a quarter."
+        "name": "[fr] 30-Day Streak",
+        "description": "[fr] Contributed on 20+ distinct days in a quarter."
       }
     }
+  },
+  "conversionCta": {
+    "readyTitle": "[fr] You have {remaining} of {limit} pages left today",
+    "readyBody": "[fr] You've used {used} of {limit} pages in the last 24 hours. Each tool run costs 1 page.",
+    "useOne": "[fr] Use 1 of {remaining}",
+    "reserving": "[fr] Reserving…",
+    "limitTitle": "[fr] Daily limit reached",
+    "limitBody": "[fr] You've used all {limit} pages for today (resets at {resetAt}). Sign in to get more pages per day, or wait for the reset.",
+    "signInForMore": "[fr] Sign in for more pages",
+    "comeBackAt": "[fr] Come back at {resetAt} for more pages.",
+    "browseAll": "[fr] Browse all tools",
+    "error": "[fr] Something went wrong. Please try again.",
+    "networkError": "[fr] Couldn't reach the server. Check your connection."
+  },
+  "pricing": {
+    "title": "[fr] Simple, free pricing",
+    "subtitle": "[fr] Two ways to use Widgetly. No credit card, no trial period, no surprise upgrades.",
+    "anonymous": {
+      "name": "[fr] Anonymous",
+      "price": "[fr] Free",
+      "tagline": "[fr] Browse and try 1 tool every day, no account needed.",
+      "featureDailyPages": "[fr] 1 page per day",
+      "featureNoAccount": "[fr] No account required",
+      "featureBrowse": "[fr] Browse all tools",
+      "featureSuggest": "[fr] Suggest tools (with sign-in)",
+      "cta": "[fr] Continue as guest"
+    },
+    "registered": {
+      "name": "[fr] Registered",
+      "price": "[fr] Free",
+      "tagline": "[fr] 5 pages every day, plus saved suggestions and early access to new tools.",
+      "featureDailyPages": "[fr] 5 pages per day",
+      "featureAccount": "[fr] Saved suggestions",
+      "featureEarlyAccess": "[fr] Early access to new tools",
+      "featureNoAds": "[fr] No ads, ever",
+      "cta": "[fr] Create free account"
+    },
+    "moreComing": "[fr] More tiers coming as we add paid features."
+  },
+  "adminQuotas": {
+    "title": "[fr] Quota settings",
+    "subtitle": "[fr] Daily page limits per actor type. Changes apply immediately to the public site.",
+    "anonymous": "[fr] Anonymous visitors",
+    "registered": "[fr] Signed-in users",
+    "pagesPer24h": "[fr] Pages per 24 hours",
+    "save": "[fr] Save changes",
+    "saved": "[fr] Saved.",
+    "currentUsage": "[fr] Current usage (last 7 days): {used}",
+    "error": "[fr] Couldn't save. Check the form and try again."
   }
 }
