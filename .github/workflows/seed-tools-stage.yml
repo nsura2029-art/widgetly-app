@@ -43,10 +43,6 @@ on:
         required: true
         type: string
 
-concurrency:
-  group: seed-tools-stage
-  cancel-in-progress: false
-
 jobs:
   seed:
     name: Insert admin_tools rows into stage D1
