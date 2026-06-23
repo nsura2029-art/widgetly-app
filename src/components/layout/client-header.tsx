@@ -3,13 +3,17 @@
 import * as React from "react";
 import { motion } from "framer-motion";
 import { Lightbulb, Menu, X } from "lucide-react";
-import { SignInButton, SignUpButton, UserButton } from "@clerk/nextjs";
 import { useSafeUser } from "@/lib/auth/use-safe-user";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/shared/logo";
-import { Link, usePathname } from "@/i18n/navigation";
+import { Link } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
+import {
+  ClerkSignInButton,
+  ClerkSignUpButton,
+  ClerkUserButton,
+} from "@/components/auth/clerk-auth-buttons";
 
 /**
  * Sticky site header. Intentionally minimal — the bulk of the site
@@ -27,15 +31,16 @@ import { cn } from "@/lib/utils";
  * Auth UI:
  *   - Signed-out: render the "Sign in" + "Sign up" text buttons.
  *   - Signed-in: render Clerk's <UserButton /> (avatar + dropdown).
- *   - We use Clerk v7's `useUser()` instead of the v6 `<SignedIn>` /
- *     `<SignedOut>` helpers (which were removed in v7). The header
- *     re-renders on auth-state change because `useUser()` is
- *     reactive.
+ *   - `useSafeUser()` is a Clerk-v7-safe wrapper around useUser()
+ *     that returns a stub when the publishable key env var is
+ *     missing. The Clerk*Button helpers in components/auth/ each
+ *     lazy-load Clerk and fall back to plain links to /admin/sign-in
+ *     when not configured. Net effect: the page renders fine even
+ *     without Clerk secrets.
  */
 export default function ClientHeader() {
   const { isLoaded, isSignedIn } = useSafeUser();
   const [open, setOpen] = React.useState(false);
-  const pathname = usePathname();
   const t = useTranslations();
 
   // Close sheet on resize-up past the breakpoint.
@@ -54,16 +59,6 @@ export default function ClientHeader() {
       document.body.style.overflow = "";
     };
   }, [open]);
-
-  // Close mobile sheet on route change
-  React.useEffect(() => {
-    // Intentional: this is a one-shot side effect on navigation, not a
-    // state-sync-with-external-system pattern. The lint rule is right
-    // to flag it in general, but here it's the cleanest way to close
-    // the sheet exactly once when the pathname changes.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setOpen(false);
-  }, [pathname]);
 
   const navLinks = [{ href: "/leaderboard", label: t("header.nav.leaderboard") }];
 
@@ -103,10 +98,7 @@ export default function ClientHeader() {
 
         <div className="hidden items-center gap-2 md:flex">
           {/*
-            Suggest-a-tool is the header's primary action — the only
-            CTA we surface at the top of every page. Promote it to the
-            gradient "default" variant so it pops on the white header
-            and reads as a real CTA, not a utility link.
+            Suggest-a-tool is the header's primary action.
           */}
           <Button asChild variant="default" size="sm" className="h-9 gap-2 rounded-lg px-4">
             <Link href="/suggest" aria-label={t("header.aria.suggestTool")}>
@@ -115,56 +107,21 @@ export default function ClientHeader() {
             </Link>
           </Button>
 
-          {/*
-            Auth UI. Signed-out visitors see "Sign in" + "Sign up" as
-            text buttons (no modal — Clerk's SignInButton opens its
-            hosted sign-in flow at /sign-in, which is locale-aware via
-            Clerk's appearance config). Signed-in visitors get the
-            <UserButton /> which shows the avatar + a dropdown with
-            account / sign-out.
-          */}
           {!isLoaded ? (
-            // Loading skeleton while Clerk resolves the session.
-            // The button group below is hidden until we know the
-            // auth state — avoids a flash where signed-out buttons
-            // appear briefly before swapping to UserButton.
+            // Skeleton while Clerk resolves. The ClerkSignInButton
+            // helpers lazy-load, so once loaded the buttons appear.
             <div className="bg-muted/30 h-9 w-32 animate-pulse rounded-lg" />
           ) : !isSignedIn ? (
             <>
-              <SignInButton mode="modal">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-muted hover:text-foreground h-9 rounded-lg px-3 text-sm font-medium"
-                  aria-label={t("header.aria.signIn")}
-                >
-                  {t("header.actions.signIn")}
-                </Button>
-              </SignInButton>
-              <SignUpButton mode="modal">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-9 rounded-lg px-3 text-sm font-medium"
-                  aria-label={t("header.aria.signUp")}
-                >
-                  {t("header.actions.signUp")}
-                </Button>
-              </SignUpButton>
+              <ClerkSignInButton label={t("header.actions.signIn")} variant="ghost" size="sm" />
+              <ClerkSignUpButton label={t("header.actions.signUp")} variant="outline" size="sm" />
             </>
           ) : (
-            <UserButton
-              appearance={{
-                elements: {
-                  avatarBox: "h-9 w-9",
-                },
-              }}
-            />
+            <ClerkUserButton />
           )}
         </div>
 
-        {/* Mobile: menu trigger only — language picker lives in the
-            footer bottom row on both mobile and desktop. */}
+        {/* Mobile trigger */}
         <div className="flex items-center gap-2 md:hidden">
           <button
             type="button"
@@ -210,35 +167,24 @@ export default function ClientHeader() {
               <Lightbulb className="h-4 w-4" aria-hidden="true" />
               {t("header.actions.suggestTool")}
             </Link>
-            {/* Mobile auth: text buttons for signed-out, full-width
-                UserButton for signed-in. Same Clerk components as
-                desktop, just stacked vertically to fit the sheet.
-                We pull the auth state from useUser() in the parent
-                (ClientHeader) — see the desktop comment. */}
             {!isLoaded ? (
               <div className="bg-muted/30 h-11 w-full animate-pulse rounded-xl" />
             ) : !isSignedIn ? (
               <>
-                <SignInButton mode="modal">
-                  <button
-                    type="button"
-                    className="border-border text-foreground hover:bg-muted/5 inline-flex h-11 w-full items-center justify-center rounded-xl border px-5 text-sm font-medium transition-colors"
-                  >
-                    {t("header.actions.signIn")}
-                  </button>
-                </SignInButton>
-                <SignUpButton mode="modal">
-                  <button
-                    type="button"
-                    className="bg-foreground text-background hover:bg-foreground/90 inline-flex h-11 w-full items-center justify-center rounded-xl px-5 text-sm font-medium transition-colors"
-                  >
-                    {t("header.actions.signUp")}
-                  </button>
-                </SignUpButton>
+                <ClerkSignInButton
+                  label={t("header.actions.signIn")}
+                  variant="outline"
+                  size="default"
+                />
+                <ClerkSignUpButton
+                  label={t("header.actions.signUp")}
+                  variant="default"
+                  size="default"
+                />
               </>
             ) : (
               <div className="flex justify-center pt-2">
-                <UserButton appearance={{ elements: { avatarBox: "h-11 w-11" } }} />
+                <ClerkUserButton />
               </div>
             )}
           </div>

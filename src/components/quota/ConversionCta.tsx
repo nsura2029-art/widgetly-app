@@ -25,8 +25,9 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { useSafeUser } from "@/lib/auth/use-safe-user";
+import { ClerkSignInButton } from "@/components/auth/clerk-auth-buttons";
 import { useTranslations } from "next-intl";
-import { Sparkles, Lock, LogIn } from "lucide-react";
+import { Sparkles, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Link } from "@/i18n/navigation";
@@ -202,27 +203,7 @@ export function ConversionCta({ toolSlug, className }: { toolSlug: string; class
  * link if Clerk's modal isn't available (e.g. during static export).
  */
 function SignInInline({ label }: { label: string }) {
-  // We import lazily so the component tree doesn't pull Clerk into
-  // the tool-detail bundle when the user is already signed in.
-  const [Clerk, setClerk] = React.useState<typeof import("@clerk/nextjs") | null>(null);
-  React.useEffect(() => {
-    void import("@clerk/nextjs").then(setClerk);
-  }, []);
-  const target = typeof window !== "undefined" ? window.location.href : "/";
-  if (Clerk) {
-    return (
-      <Clerk.SignInButton mode="modal" forceRedirectUrl={target}>
-        <Button>
-          <LogIn className="h-4 w-4" />
-          {label}
-        </Button>
-      </Clerk.SignInButton>
-    );
-  }
-  return (
-    <Button disabled>
-      <LogIn className="h-4 w-4" />
-      {label}
-    </Button>
-  );
+  // Use the shared ClerkSignInButton wrapper which lazy-loads Clerk
+  // and falls back to a plain admin sign-in link when not configured.
+  return <ClerkSignInButton label={label} variant="default" size="default" />;
 }
