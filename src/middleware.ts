@@ -38,6 +38,7 @@
  * need it here — auth is checked per-route in server components and
  * API handlers, not globally in middleware.
  */
+// import { clerkMiddleware } from "@clerk/nextjs/server"; // re-enable when Clerk secrets are configured
 import { NextRequest } from "next/server";
 import createIntlMiddleware from "next-intl/middleware";
 import { routing } from "../next-intl.config";
