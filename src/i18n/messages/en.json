@@ -518,7 +518,8 @@
     "liveSectionTitle": "Live now",
     "liveSectionHint": "Tools recently shipped to the catalog. Updated as new ones go live.",
     "liveLoading": "Loading live tools…",
-    "liveFailed": "Couldn't load live tools — showing the static catalog."
+    "liveFailed": "Couldn't load live tools — showing the static catalog.",
+    "emptyHint": "No {category} tools are live yet — check back soon."
   },
   "toolPage": {
     "comingSoonBadge": "Coming soon",

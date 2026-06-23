@@ -49,16 +49,21 @@ export async function GET(req: NextRequest) {
 
     // No category filter.
     if (format === "grouped") {
-      // Lightweight grouped list for the header mega-menu. Only slug
-      // + name per tool — keeps the payload small and the merge
-      // step on the client fast.
+      // Two-level grouping for the header mega-menu. Each category
+      // is a map of subcategory → LiveToolSummary[], so the menu
+      // can render Category → Subcategory → Tool directly without
+      // a client-side flatten.
       //
       // 10s s-maxage matches the per-route cache policy on
       // /tools/[category] so admin status changes propagate on the
       // same ~10s window everywhere.
-      const groups = await listLiveToolsGroupedByCategory();
+      const categories = await listLiveToolsGroupedByCategory();
+      let total = 0;
+      for (const subs of Object.values(categories)) {
+        for (const tools of Object.values(subs)) total += tools.length;
+      }
       return NextResponse.json(
-        { categories: groups, total: Object.values(groups).reduce((n, xs) => n + xs.length, 0) },
+        { categories, total },
         { headers: { "cache-control": "public, s-maxage=10, stale-while-revalidate=86400" } }
       );
     }

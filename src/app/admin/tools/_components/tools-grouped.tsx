@@ -379,6 +379,14 @@ export function ToolsGroupedByCategory({
                               <div className="text-muted-foreground truncate font-mono text-[10px]">
                                 {t.slug}
                               </div>
+                              {"subcategory" in t && t.subcategory ? (
+                                <div
+                                  className="text-muted-foreground/80 mt-0.5 truncate text-[9px] tracking-wider uppercase"
+                                  title={`Sub-menu column: ${t.subcategory}`}
+                                >
+                                  {t.subcategory}
+                                </div>
+                              ) : null}
                             </div>
                           </div>
                           <span

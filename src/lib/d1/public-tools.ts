@@ -29,6 +29,8 @@ interface D1Database {
 export type PublicTool = {
   slug: string;
   category: string;
+  /** Sub-menu group within the category. Display label only. */
+  subcategory: string;
   name: string;
   description: string;
   long_description: string;
@@ -60,12 +62,12 @@ export async function getLiveToolsForCategoryPublic(category: string): Promise<P
     () =>
       db
         .prepare(
-          `SELECT slug, category, name, description, long_description,
+          `SELECT slug, category, subcategory, name, description, long_description,
                   api_endpoint, pricing_tier, icon_url, accent_color,
                   sort_order, live_at
            FROM admin_tools
            WHERE category = ?1 AND status = 'live'
-           ORDER BY sort_order ASC, name ASC`
+           ORDER BY subcategory ASC, sort_order ASC, name ASC`
         )
         .bind(category)
         .all<PublicTool>()
@@ -109,20 +111,35 @@ export async function getLiveToolCountsByCategory(): Promise<Record<string, numb
 }
 
 /**
- * Lightweight summary used by the header mega-menu's "Live now" section.
- * Returns the slug + display name for every live tool grouped by
- * category. We deliberately project only the two columns we need —
- * keeps the response small (one tiny JSON for all 12 categories
- * combined) and lets the menu merge this with the static catalog
- * without paying for the full tool payload.
+ * Lightweight summary used by the header mega-menu. Returns the
+ * fields the menu needs to render Category → Subcategory → Tool,
+ * grouped by both levels. Deliberately projects only the columns
+ * we need so the response stays small (one tiny JSON for all 12
+ * categories combined) and the menu can render without a second
+ * round trip.
  *
- * Slug is included so the client can dedupe against the static
- * sub-groups (which are keyed by display name) and decide which
- * "Live now" entries to surface.
+ * Response shape:
+ *   Record<category, Record<subcategory, LiveToolSummary[]>>
+ * where LiveToolSummary carries slug, name, accent, sort_order.
+ *
+ * Slug is included so the client can dedupe against itself when
+ * the same tool appears in multiple subcategories (shouldn't
+ * happen given the UNIQUE(slug, category) constraint, but cheap
+ * insurance).
  */
-export type LiveToolSummary = { slug: string; name: string };
+export type LiveToolSummary = {
+  slug: string;
+  name: string;
+  /** Per-tool accent (matches the menu icon-tile color). Falls back
+   *  to the category's default in the UI. */
+  accent_color: "primary" | "secondary" | "accent";
+  /** Numeric sort order within the subcategory column. */
+  sort_order: number;
+};
 
-export async function listLiveToolsGroupedByCategory(): Promise<Record<string, LiveToolSummary[]>> {
+export type LiveToolsByCategory = Record<string, Record<string, LiveToolSummary[]>>;
+
+export async function listLiveToolsGroupedByCategory(): Promise<LiveToolsByCategory> {
   let db: D1Database;
   try {
     const { env } = getCloudflareContext();
@@ -136,16 +153,32 @@ export async function listLiveToolsGroupedByCategory(): Promise<Record<string, L
     () =>
       db
         .prepare(
-          `SELECT category, slug, name FROM admin_tools
+          `SELECT category, subcategory, slug, name, accent_color, sort_order
+           FROM admin_tools
            WHERE status = 'live'
-           ORDER BY category ASC, sort_order ASC, name ASC`
+           ORDER BY category ASC, subcategory ASC, sort_order ASC, name COLLATE NOCASE ASC`
         )
-        .all<{ category: string; slug: string; name: string }>()
+        .all<{
+          category: string;
+          subcategory: string;
+          slug: string;
+          name: string;
+          accent_color: "primary" | "secondary" | "accent";
+          sort_order: number;
+        }>()
         .then((r) => {
-          const out: Record<string, LiveToolSummary[]> = {};
+          const out: LiveToolsByCategory = {};
           for (const row of r.results ?? []) {
-            if (!out[row.category]) out[row.category] = [];
-            out[row.category]!.push({ slug: row.slug, name: row.name });
+            const cat = row.category;
+            const sub = row.subcategory || "Other";
+            if (!out[cat]) out[cat] = {};
+            if (!out[cat][sub]) out[cat][sub] = [];
+            out[cat][sub]!.push({
+              slug: row.slug,
+              name: row.name,
+              accent_color: row.accent_color,
+              sort_order: row.sort_order,
+            });
           }
           return out;
         }),
