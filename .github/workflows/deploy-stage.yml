@@ -14,6 +14,7 @@ jobs:
     name: Build & Deploy to beta.widgetly.tech
     runs-on: ubuntu-latest
     timeout-minutes: 25
+    environment: stage
     permissions:
       contents: read
       deployments: write

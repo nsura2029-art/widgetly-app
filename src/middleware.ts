@@ -25,20 +25,13 @@
  *   - We want to set the `wly_anon` cookie in the same pass.
  *   - We want Clerk to see the resolved locale before auth() runs so
  *     locale-aware routes can resolve the right Clerk session.
- *
- * Why NO clerkMiddleware here: when @clerk/nextjs/server is imported,
- * its module-init code calls `require('node:crypto').webcrypto` and
- * reads several CLERK_* env vars. In the Cloudflare Workers runtime
- * (workerd), the node:crypto import path or one of the env var reads
- * throws, which kills every request with a 500 — regardless of any
- * runtime conditional that wraps the actual call.
- *
- * Workaround: keep Clerk out of the middleware bundle. Auth gating
- * happens per-route in `lib/auth/server.ts`, which calls Clerk's
- * `auth()` lazily inside try/catch. Once Clerk is fully configured
- * (real publishable + secret keys on the worker), revisit this — the
- * import side effects will work in a properly-configured environment.
  */
+// Clerk is enabled when both keys are present. The middleware wraps
+// the intl handler with clerkMiddleware() so the Clerk auth context
+// is populated for every request. Routes that don't need Clerk (the
+// admin dashboard, which has its own session-based auth) are excluded
+// by the matcher below.
+import { clerkMiddleware } from "@clerk/nextjs/server";
 import { NextRequest } from "next/server";
 import createIntlMiddleware from "next-intl/middleware";
 import { routing } from "../next-intl.config";
@@ -112,7 +105,7 @@ function resolveLocaleFromRequest(req: NextRequest): LocaleCode {
  *     should be public.
  *   - It's easier to test (no global middleware state to mock).
  */
-const intlHandler = async (req: NextRequest) => {
+const intlHandler = async (_auth: unknown, req: NextRequest) => {
   // Run the next-intl middleware first. It may issue a 308 redirect
   // (we capture and return that as-is) or a pass-through NextResponse
   // for already-prefixed URLs.
@@ -195,4 +188,10 @@ const intlHandler = async (req: NextRequest) => {
   return response;
 };
 
-export default intlHandler;
+// clerkMiddleware needs a publishable key at runtime. When the env
+// var is missing, fall back to the plain intl handler so the worker
+// still serves public pages.
+const clerkEnabled = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
+const handler = clerkEnabled ? clerkMiddleware(intlHandler) : intlHandler;
+
+export default handler;
