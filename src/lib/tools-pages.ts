@@ -154,6 +154,65 @@ export function getToolPage(categorySlug: string, toolSlugParam: string): ToolPa
   return getAllToolPages().find((p) => p.categorySlug === categorySlug && p.slug === toolSlugParam);
 }
 
+/**
+ * Lookup variant that falls back to a synthetic placeholder when
+ * the (category, tool) pair isn't in the static catalog — so DB-live
+ * tools that the admin has added since the last build still get a
+ * working `/tools/[category]/[tool]` page instead of a 404.
+ *
+ * Resolution order:
+ *   1. Static catalog hit → return the rich ToolPage (icon, accent,
+ *      category, slug).
+ *   2. Valid category, unknown tool → synthesize a placeholder so
+ *      the route renders the "Coming Soon" page. The placeholder
+ *      inherits the category's icon/accent as a sensible default
+ *      and uses the raw slug as the display name (with hyphens
+ *      replaced by spaces for readability). Title-cased.
+ *   3. Unknown category → return undefined (caller 404s).
+ *
+ * The placeholder is intentionally minimal — it's just enough for
+ * the [tool] page to render with sensible defaults. As soon as the
+ * admin adds a real `TOOLS_SUBGROUPS` entry for the tool, the
+ * static catalog wins and the placeholder is no longer used.
+ */
+export function getToolPageOrPlaceholder(
+  categorySlug: string,
+  toolSlugParam: string
+): ToolPage | undefined {
+  const found = getToolPage(categorySlug, toolSlugParam);
+  if (found) return found;
+
+  const cat = TOOLS_CATEGORIES.find((c) => c.slug === categorySlug);
+  if (!cat) return undefined;
+
+  // Human-readable display name: "merge-pdf" → "Merge Pdf". Good
+  // enough for a "Coming Soon" placeholder; admins can override by
+  // adding a TOOLS_SUBGROUPS entry.
+  const displayName = toolSlugParam
+    .split("-")
+    .filter(Boolean)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
+
+  return {
+    categorySlug: cat.slug,
+    slug: toolSlugParam,
+    name: displayName || toolSlugParam,
+    icon: cat.icon ?? "Sparkles",
+    Icon: getIcon(cat.icon ?? "Sparkles"),
+    accent: FALLBACK_ACCENT_DEFAULT,
+  };
+}
+
+/** True when the slug pattern would survive a round-trip through
+ *  `toolSlug()` and reach the page handler. Used as a sanity check
+ *  before synthesizing a placeholder — guards against obvious typos
+ *  like `/tools/pdf/Merge%20PDF` (which would decode to `Merge PDF`
+ *  and fail the slug check). */
+export function isLikelyValidToolSlug(slug: string): boolean {
+  return /^[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(slug);
+}
+
 /** All tools in a category, for related-tools rails. */
 export function getToolPagesInCategory(categorySlug: string): readonly ToolPage[] {
   return getAllToolPages().filter((p) => p.categorySlug === categorySlug);
