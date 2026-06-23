@@ -55,6 +55,11 @@ export async function POST(request: NextRequest) {
         "Some fields didn't pass validation.",
         parsed.error.issues.map((issue) => ({
           path: issue.path.join(".") || "(root)",
+          // The Zod `message` is now a stable code from
+          // SUGGESTION_ERROR_CODES (e.g. "toolNameMin") rather than
+          // a human-readable string. Clients translate it via
+          // `useTranslations("suggest.formNew.errors")`. See
+          // src/lib/suggestions/validation.ts.
           message: issue.message,
         }))
       );
