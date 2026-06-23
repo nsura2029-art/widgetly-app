@@ -12,6 +12,8 @@ import {
   getAllToolStaticParams,
   getToolPage,
   getToolPagesInCategory,
+  getToolPageOrPlaceholder,
+  isLikelyValidToolSlug,
   toolDescription,
   toolKeywords,
 } from "@/lib/tools-pages";
@@ -48,21 +50,26 @@ const CATEGORY_ICONS: Record<string, ReturnType<typeof getIcon>> = Object.fromEn
 type Params = { category: string; tool: string };
 
 /**
- * Static generation for every (category, tool) combo. Backed by
- * `tools-pages.ts`, which iterates both the detailed mega-menu
- * subgroups and the per-category `examples` fallback so every
- * sub-tool gets its own indexable URL.
+ * Static generation for every (category, tool) combo from the
+ * static catalog (see `tools-pages.ts`). Pre-rendered at build
+ * time so they ship as zero-cold-start HTML via Cloudflare Workers.
  *
- * For 12 categories × 5-30 sub-tools each, this generates ~150-
- * 200 static pages. Pre-rendered at build time so they ship as
- * zero-cold-start HTML via Cloudflare Workers.
+ * `dynamicParams = true` (default) lets the route also serve
+ * on-demand for any (category, tool) pair NOT in the static
+ * catalog — that's how admin-added tools (added via the admin
+ * panel after build) still get a working per-tool page instead
+ * of a 404. The page handler renders a "Coming Soon" placeholder
+ * for those unknown-but-plausible combos (see
+ * `getToolPageOrPlaceholder`).
  *
- * `dynamic = "force-static"` is required: without it Next.js
- * falls back to dynamic SSR for this segment because the page
- * uses async server-component features. Same pattern as
- * /blog/[slug] (which is also force-static).
+ * Why not `force-static`? `force-static` + `dynamicParams = true`
+ * is allowed, but a route that uses async server-component
+ * features (like `await params`) is more reliable as
+ * `force-dynamic` with `dynamicParams = true`. Since the page is
+ * a marketing placeholder (not a real tool UI), the per-request
+ * render cost is negligible.
  */
-export const dynamic = "force-static";
+export const dynamic = "force-dynamic";
 
 export function generateStaticParams(): Params[] {
   return getAllToolStaticParams();
@@ -70,11 +77,22 @@ export function generateStaticParams(): Params[] {
 
 export async function generateMetadata({ params }: { params: Promise<Params> }): Promise<Metadata> {
   const { category, tool } = await params;
-  const toolPage = getToolPage(category, tool);
+  const toolPage = getToolPageOrPlaceholder(category, tool);
   if (!toolPage) {
     return buildMetadata({
       title: "Tool not found",
       path: `/tools/${category}/${tool}`,
+      noIndex: true,
+    });
+  }
+  // Suppress indexing for placeholder pages — they're not real
+  // tools yet, just DB rows the admin has marked live but haven't
+  // landed in the static catalog. Indexing them would dilute SEO.
+  if (!getToolPage(category, tool)) {
+    return buildMetadata({
+      title: `${toolPage.name} — Coming Soon to Widgetly`,
+      description: `${toolPage.name} is on the Widgetly roadmap. Get notified when it ships.`,
+      path: `/tools/${toolPage.categorySlug}/${toolPage.slug}`,
       noIndex: true,
     });
   }
@@ -89,11 +107,18 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
 export default async function ToolDetailPage({ params }: { params: Promise<Params> }) {
   const { category, tool } = await params;
 
-  const toolPage = getToolPage(category, tool);
+  // Guard against garbage URLs (`/tools/pdf/Merge%20PDF`,
+  // `/tools/pdf/anything..`) — only synthesize placeholders for
+  // slugs that match the static slug pattern. Anything else 404s.
+  if (!isLikelyValidToolSlug(tool)) notFound();
+
+  const toolPage = getToolPageOrPlaceholder(category, tool);
   if (!toolPage) notFound();
 
   const cat = TOOLS_CATEGORIES.find((c) => c.slug === toolPage.categorySlug);
   if (!cat) notFound();
+
+  const isPlaceholder = !getToolPage(category, tool);
 
   const t = await getTranslations("toolPage");
   // Icon is pre-resolved in tools-pages.ts so the lint rule about
@@ -111,68 +136,75 @@ export default async function ToolDetailPage({ params }: { params: Promise<Param
     6
   );
 
-  // Per-tool page schema: WebApplication + BreadcrumbList.
-  // WebApplication is the right schema.org type for online tools —
-  // it powers rich results like "Try {tool name}" buttons.
-  const jsonLd = [
-    {
-      "@context": "https://schema.org",
-      "@type": "WebApplication",
-      name: toolPage.name,
-      description: toolDescription(toolPage),
-      url: `${SITE_CONFIG.url}/tools/${toolPage.categorySlug}/${toolPage.slug}`,
-      applicationCategory: "UtilitiesApplication",
-      applicationSubCategory: cat.name,
-      operatingSystem: "Any (Web Browser)",
-      browserRequirements: "Requires JavaScript",
-      offers: {
-        "@type": "Offer",
-        price: "0",
-        priceCurrency: "USD",
-        availability: "https://schema.org/PreOrder",
+  // Per-tool page schema. Two shapes depending on whether this is a
+  // real (static-catalog) tool or a DB-only placeholder.
+  //   - Real tool: WebApplication + BreadcrumbList. WebApplication is
+  //     the right schema.org type for online tools — it powers rich
+  //     results like "Try {tool name}" buttons.
+  //   - Placeholder (DB-live but not in the static catalog): we skip
+  //     the WebApplication schema entirely — the tool doesn't exist
+  //     yet, so claiming it's a WebApplication would mislead
+  //     crawlers. We still emit the BreadcrumbList so the trail is
+  //     indexed, and metadata is noIndex so the page itself isn't
+  //     surfaced in search results.
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: SITE_CONFIG.url,
       },
-      isPartOf: {
-        "@type": "WebSite",
-        name: SITE_CONFIG.name,
-        url: SITE_CONFIG.url,
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Tools",
+        item: `${SITE_CONFIG.url}/tools`,
       },
-      provider: {
-        "@type": "Organization",
-        name: SITE_CONFIG.name,
-        url: SITE_CONFIG.url,
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: t("schemaBreadcrumbCategory", { categoryName: cat.name }),
+        item: `${SITE_CONFIG.url}/tools/${cat.slug}`,
       },
+      {
+        "@type": "ListItem",
+        position: 4,
+        name: t("schemaBreadcrumbTool", { toolName: toolPage.name }),
+        item: `${SITE_CONFIG.url}/tools/${cat.slug}/${toolPage.slug}`,
+      },
+    ],
+  };
+  const webAppJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    name: toolPage.name,
+    description: toolDescription(toolPage),
+    url: `${SITE_CONFIG.url}/tools/${toolPage.categorySlug}/${toolPage.slug}`,
+    applicationCategory: "UtilitiesApplication",
+    applicationSubCategory: cat.name,
+    operatingSystem: "Any (Web Browser)",
+    browserRequirements: "Requires JavaScript",
+    offers: {
+      "@type": "Offer",
+      price: "0",
+      priceCurrency: "USD",
+      availability: "https://schema.org/PreOrder",
     },
-    {
-      "@context": "https://schema.org",
-      "@type": "BreadcrumbList",
-      itemListElement: [
-        {
-          "@type": "ListItem",
-          position: 1,
-          name: "Home",
-          item: SITE_CONFIG.url,
-        },
-        {
-          "@type": "ListItem",
-          position: 2,
-          name: "Tools",
-          item: `${SITE_CONFIG.url}/tools`,
-        },
-        {
-          "@type": "ListItem",
-          position: 3,
-          name: t("schemaBreadcrumbCategory", { categoryName: cat.name }),
-          item: `${SITE_CONFIG.url}/tools/${cat.slug}`,
-        },
-        {
-          "@type": "ListItem",
-          position: 4,
-          name: t("schemaBreadcrumbTool", { toolName: toolPage.name }),
-          item: `${SITE_CONFIG.url}/tools/${cat.slug}/${toolPage.slug}`,
-        },
-      ],
+    isPartOf: {
+      "@type": "WebSite",
+      name: SITE_CONFIG.name,
+      url: SITE_CONFIG.url,
     },
-  ];
+    provider: {
+      "@type": "Organization",
+      name: SITE_CONFIG.name,
+      url: SITE_CONFIG.url,
+    },
+  };
+  const jsonLd = isPlaceholder ? [breadcrumbJsonLd] : [webAppJsonLd, breadcrumbJsonLd];
 
   return (
     <PageShell width="wide" asArticle>
