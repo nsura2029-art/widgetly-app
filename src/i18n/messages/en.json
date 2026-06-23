@@ -514,7 +514,11 @@
     "label": "Tools",
     "browseAll": "Browse all {count} tools →",
     "ariaLabel": "Featured tools",
-    "toolsCount": "{count} tools"
+    "toolsCount": "{count} tools",
+    "liveSectionTitle": "Live now",
+    "liveSectionHint": "Tools recently shipped to the catalog. Updated as new ones go live.",
+    "liveLoading": "Loading live tools…",
+    "liveFailed": "Couldn't load live tools — showing the static catalog."
   },
   "toolPage": {
     "comingSoonBadge": "Coming soon",

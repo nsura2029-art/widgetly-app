@@ -511,10 +511,14 @@
     "emptyHidden": "Aún no has visitado ninguna categoría de herramientas."
   },
   "toolsBanner": {
-    "label": "Tools",
-    "browseAll": "Browse all {count} tools →",
-    "ariaLabel": "Featured tools",
-    "toolsCount": "{count} tools"
+    "label": "Herramientas",
+    "browseAll": "Ver todas las {count} herramientas →",
+    "ariaLabel": "Herramientas destacadas",
+    "toolsCount": "{count} herramientas",
+    "liveSectionTitle": "En vivo ahora",
+    "liveSectionHint": "Herramientas recién publicadas en el catálogo. Se actualiza a medida que se publican nuevas.",
+    "liveLoading": "Cargando herramientas en vivo…",
+    "liveFailed": "No se pudieron cargar las herramientas en vivo; mostrando el catálogo estático."
   },
   "toolPage": {
     "comingSoonBadge": "Coming soon",
