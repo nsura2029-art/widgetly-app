@@ -139,9 +139,22 @@ function resolveLocaleFromRequest(req: NextRequest): LocaleCode {
  *     should be public.
  *   - It's easier to test (no global middleware state to mock).
  */
-const intlHandler = async (authOrReq: unknown, maybeReq?: NextRequest) => {
+// OpenNext's createGenericHandler invokes the middleware with
+// (request, env, ctx). The Vercel Cloudflare adapter uses (request).
+// clerkMiddleware uses (auth, request) or (auth, request, event).
+// We accept any number of args and pick the request-shaped one.
+
+function pickRequest(...args: unknown[]): NextRequest {
+  for (const a of args) {
+    if (!a || typeof a !== "object") continue;
+    if ("url" in a && "headers" in a) return asRequest(a);
+  }
+  return asRequest(undefined);
+}
+
+const intlHandler = async (...args: unknown[]) => {
   try {
-    return await intlHandlerInner(authOrReq, maybeReq);
+    return await intlHandlerInner(...args);
   } catch (err) {
     const e = err as Error;
     const msg = e?.message ?? String(err);
@@ -150,8 +163,8 @@ const intlHandler = async (authOrReq: unknown, maybeReq?: NextRequest) => {
   }
 };
 
-const intlHandlerInner = async (authOrReq: unknown, maybeReq?: NextRequest) => {
-  const req = maybeReq ? asRequest(maybeReq) : asRequest(authOrReq);
+const intlHandlerInner = async (...args: unknown[]) => {
+  const req = pickRequest(...args);
   // Run the next-intl middleware first. It may issue a 308 redirect
   // (we capture and return that as-is) or a pass-through NextResponse
   // for already-prefixed URLs.
