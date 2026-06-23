@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { Check, Clipboard, Linkedin, Send, Share2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,7 +12,11 @@ import {
   type SuggestionCategory,
   type SuggestionUrgency,
 } from "@/lib/d1/suggestions";
-import { validateSuggestionForm, type SuggestionFormInput } from "@/lib/suggestions/validation";
+import {
+  SUGGESTION_ERROR_CODES,
+  validateSuggestionForm,
+  type SuggestionFormInput,
+} from "@/lib/suggestions/validation";
 import { cn } from "@/lib/utils";
 
 type FieldErrors = Partial<Record<keyof SuggestionFormInput, string>>;
@@ -28,7 +33,7 @@ const initialForm: SuggestionFormInput = {
   useCase: "",
   // Empty string forces the user to make a real choice in the
   // category dropdown. The Zod schema rejects empty values with
-  // "Please choose a category." The placeholder option below
+  // the `categoryRequired` error code. The placeholder option below
   // makes the empty value visible to the user instead of silently
   // picking a default (which used to be "AI", a category that
   // doesn't fit most suggestions).
@@ -41,7 +46,27 @@ function counter(value: string, max: number) {
   return `${value.length}/${max}`;
 }
 
+/**
+ * Map a Zod error code (a stable, locale-independent identifier) to a
+ * localized message key under `suggest.formNew.errors`. The form's
+ * `useTranslations("suggest.formNew.errors")` call then resolves the
+ * human-readable string for the active locale.
+ *
+ * If the validation layer ever returns an unknown code we fall back to
+ * the raw code so debugging stays tractable (better than swallowing
+ * the error).
+ */
+function translateError(code: string, tErrors: (key: string) => string) {
+  const known = Object.values(SUGGESTION_ERROR_CODES) as string[];
+  if (known.includes(code)) {
+    return tErrors(code);
+  }
+  return code;
+}
+
 export function SuggestionForm() {
+  const t = useTranslations("suggest.formNew");
+  const tErrors = useTranslations("suggest.formNew.errors");
   const [form, setForm] = useState<SuggestionFormInput>(initialForm);
   const [errors, setErrors] = useState<FieldErrors>({});
   const [submitting, setSubmitting] = useState(false);
@@ -62,7 +87,7 @@ export function SuggestionForm() {
     const fieldErrors: FieldErrors = {};
     for (const issue of parsed.error.issues) {
       const field = issue.path[0] as keyof SuggestionFormInput | undefined;
-      if (field && !fieldErrors[field]) fieldErrors[field] = issue.message;
+      if (field && !fieldErrors[field]) fieldErrors[field] = translateError(issue.message, tErrors);
     }
     setErrors(fieldErrors);
   }
@@ -74,7 +99,8 @@ export function SuggestionForm() {
       const fieldErrors: FieldErrors = {};
       for (const issue of parsed.error.issues) {
         const field = issue.path[0] as keyof SuggestionFormInput | undefined;
-        if (field && !fieldErrors[field]) fieldErrors[field] = issue.message;
+        if (field && !fieldErrors[field])
+          fieldErrors[field] = translateError(issue.message, tErrors);
       }
       setErrors(fieldErrors);
       return;
@@ -90,13 +116,13 @@ export function SuggestionForm() {
       });
       const body = await response.json();
       if (!response.ok || !body.ok) {
-        setServerError(body?.error?.message ?? "Could not submit this suggestion.");
+        setServerError(body?.error?.message ?? t("serverErrorFallback"));
         return;
       }
       const slug = body.suggestion.slug as string;
       setShareUrl(`${window.location.origin}/suggest/${slug}`);
     } catch {
-      setServerError("We could not reach the server. Please try again.");
+      setServerError(t("networkError"));
     } finally {
       setSubmitting(false);
     }
@@ -111,25 +137,21 @@ export function SuggestionForm() {
 
   if (shareUrl) {
     const encodedUrl = encodeURIComponent(shareUrl);
-    const encodedText = encodeURIComponent(
-      `Vote for my Widgetly tool suggestion: ${form.toolName}`
-    );
+    const encodedText = encodeURIComponent(t("shareTweetText", { toolName: form.toolName }));
     return (
       <div className="border-border/60 shadow-soft mt-8 rounded-2xl border bg-white/80 p-6 text-center backdrop-blur sm:p-8">
         <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600">
           <Check className="h-6 w-6" aria-hidden="true" />
         </div>
-        <h2 className="text-foreground mt-4 text-2xl font-semibold">Suggestion received</h2>
-        <p className="text-muted mt-2 text-sm leading-relaxed">
-          Your idea is on the board. Share the link so others can upvote it.
-        </p>
+        <h2 className="text-foreground mt-4 text-2xl font-semibold">{t("successTitle")}</h2>
+        <p className="text-muted mt-2 text-sm leading-relaxed">{t("successBody")}</p>
         <div className="border-border bg-muted/5 mt-5 overflow-hidden rounded-xl border p-3 text-left text-sm break-all">
           {shareUrl}
         </div>
         <div className="mt-5 flex flex-wrap justify-center gap-3">
           <Button type="button" onClick={copy}>
             <Clipboard className="h-4 w-4" />
-            {copied ? "Copied" : "Copy link"}
+            {copied ? t("copied") : t("copyLink")}
           </Button>
           <Button asChild variant="outline">
             <a
@@ -137,7 +159,8 @@ export function SuggestionForm() {
               target="_blank"
               rel="noreferrer"
             >
-              <Share2 className="h-4 w-4" />X
+              <Share2 className="h-4 w-4" />
+              {t("shareOnX")}
             </a>
           </Button>
           <Button asChild variant="outline">
@@ -147,7 +170,7 @@ export function SuggestionForm() {
               rel="noreferrer"
             >
               <Linkedin className="h-4 w-4" />
-              LinkedIn
+              {t("shareOnLinkedIn")}
             </a>
           </Button>
           <Button asChild variant="outline">
@@ -156,11 +179,11 @@ export function SuggestionForm() {
               target="_blank"
               rel="noreferrer"
             >
-              Reddit
+              {t("shareOnReddit")}
             </a>
           </Button>
           <Button asChild variant="outline">
-            <Link href={`/suggest/${shareUrl.split("/").pop()}`}>View suggestion</Link>
+            <Link href={`/suggest/${shareUrl.split("/").pop()}`}>{t("viewSuggestion")}</Link>
           </Button>
         </div>
       </div>
@@ -173,21 +196,21 @@ export function SuggestionForm() {
       className="border-border/60 shadow-soft mt-8 space-y-5 rounded-2xl border bg-white/80 p-5 backdrop-blur sm:p-7"
     >
       <Field
-        label="Tool Name"
+        label={t("toolNameLabel")}
         error={errors.toolName}
         counter={counter(form.toolName, limits.toolName.max)}
       >
         <Input
           value={form.toolName}
           onChange={(event) => update("toolName", event.target.value.slice(0, limits.toolName.max))}
-          placeholder="PDF Summarizer"
+          placeholder={t("toolNamePlaceholder")}
           invalid={Boolean(errors.toolName)}
           required
         />
       </Field>
 
       <Field
-        label="Description"
+        label={t("descriptionLabel")}
         error={errors.description}
         counter={counter(form.description, limits.description.max)}
       >
@@ -197,14 +220,14 @@ export function SuggestionForm() {
             update("description", event.target.value.slice(0, limits.description.max))
           }
           rows={5}
-          placeholder="Describe what the tool should do and why people would use it."
+          placeholder={t("descriptionPlaceholder")}
           className={textareaClass(Boolean(errors.description))}
           required
         />
       </Field>
 
       <Field
-        label="Use Case"
+        label={t("useCaseLabel")}
         error={errors.useCase}
         counter={counter(form.useCase, limits.useCase.max)}
       >
@@ -212,14 +235,14 @@ export function SuggestionForm() {
           value={form.useCase}
           onChange={(event) => update("useCase", event.target.value.slice(0, limits.useCase.max))}
           rows={4}
-          placeholder="Who needs this, and what job are they trying to finish?"
+          placeholder={t("useCasePlaceholder")}
           className={textareaClass(Boolean(errors.useCase))}
           required
         />
       </Field>
 
       <div className="grid gap-5 sm:grid-cols-2">
-        <Field label="Category" error={errors.category}>
+        <Field label={t("categoryLabel")} error={errors.category}>
           <select
             value={form.category}
             onChange={(event) => update("category", event.target.value as SuggestionCategory)}
@@ -227,7 +250,7 @@ export function SuggestionForm() {
             required
           >
             <option value="" disabled>
-              Select a category…
+              {t("categoryPlaceholder")}
             </option>
             {SUGGESTION_CATEGORIES.map((category) => (
               <option key={category} value={category}>
@@ -236,7 +259,7 @@ export function SuggestionForm() {
             ))}
           </select>
         </Field>
-        <Field label="Urgency" error={errors.urgency}>
+        <Field label={t("urgencyLabel")} error={errors.urgency}>
           <select
             value={form.urgency}
             onChange={(event) => update("urgency", event.target.value as SuggestionUrgency)}
@@ -244,19 +267,19 @@ export function SuggestionForm() {
           >
             {SUGGESTION_URGENCIES.map((urgency) => (
               <option key={urgency} value={urgency}>
-                {urgency}
+                {t(`urgency${urgency.charAt(0).toUpperCase()}${urgency.slice(1)}` as const)}
               </option>
             ))}
           </select>
         </Field>
       </div>
 
-      <Field label="Email" error={errors.email}>
+      <Field label={t("emailLabel")} error={errors.email}>
         <Input
           type="email"
           value={form.email}
           onChange={(event) => update("email", event.target.value)}
-          placeholder="you@example.com"
+          placeholder={t("emailPlaceholder")}
           invalid={Boolean(errors.email)}
           autoComplete="email"
           required
@@ -270,9 +293,9 @@ export function SuggestionForm() {
       )}
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-muted text-xs">Limit: 3 suggestions per email per day.</p>
+        <p className="text-muted text-xs">{t("rateLimit")}</p>
         <Button type="submit" size="lg" disabled={submitting || !validation.success}>
-          {submitting ? "Submitting..." : "Submit suggestion"}
+          {submitting ? t("submitting") : t("submit")}
           <Send className="h-4 w-4" />
         </Button>
       </div>

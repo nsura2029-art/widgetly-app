@@ -6,23 +6,47 @@ import {
   type SuggestionUrgency,
 } from "@/lib/d1/suggestions";
 
+/**
+ * Stable, locale-independent error codes. The form layer translates these
+ * via `useTranslations("suggest.formNew.errors")` so the same schema
+ * works server-side (API routes) and client-side (the suggestion form).
+ *
+ * Adding a new validation rule? Add a new code here and a matching key
+ * under `suggest.formNew.errors.<code>` in en.json / es.json / fr.json.
+ */
+export const SUGGESTION_ERROR_CODES = {
+  toolNameMin: "toolNameMin",
+  toolNameMax: "toolNameMax",
+  descriptionMin: "descriptionMin",
+  descriptionMax: "descriptionMax",
+  useCaseMin: "useCaseMin",
+  useCaseMax: "useCaseMax",
+  categoryRequired: "categoryRequired",
+  emailRequired: "emailRequired",
+  emailMax: "emailMax",
+  emailInvalid: "emailInvalid",
+} as const;
+
+export type SuggestionErrorCode =
+  (typeof SUGGESTION_ERROR_CODES)[keyof typeof SUGGESTION_ERROR_CODES];
+
 export const suggestionFormSchema = z
   .object({
     toolName: z
       .string()
       .trim()
-      .min(3, "Tool name must be at least 3 characters.")
-      .max(50, "Tool name must be 50 characters or fewer."),
+      .min(3, SUGGESTION_ERROR_CODES.toolNameMin)
+      .max(50, SUGGESTION_ERROR_CODES.toolNameMax),
     description: z
       .string()
       .trim()
-      .min(50, "Description must be at least 50 characters.")
-      .max(500, "Description must be 500 characters or fewer."),
+      .min(50, SUGGESTION_ERROR_CODES.descriptionMin)
+      .max(500, SUGGESTION_ERROR_CODES.descriptionMax),
     useCase: z
       .string()
       .trim()
-      .min(20, "Use case must be at least 20 characters.")
-      .max(300, "Use case must be 300 characters or fewer."),
+      .min(20, SUGGESTION_ERROR_CODES.useCaseMin)
+      .max(300, SUGGESTION_ERROR_CODES.useCaseMax),
     // Category is required: an empty string (the "Select a category"
     // placeholder value) is rejected. The "Other" option in the
     // select is a real, valid bucket for tools that don't fit the
@@ -30,16 +54,16 @@ export const suggestionFormSchema = z
     category: z
       .enum([...SUGGESTION_CATEGORIES] as [SuggestionCategory, ...SuggestionCategory[]])
       .refine((value) => value.length > 0, {
-        message: "Please choose a category.",
+        message: SUGGESTION_ERROR_CODES.categoryRequired,
       }),
     urgency: z.enum([...SUGGESTION_URGENCIES] as [SuggestionUrgency, ...SuggestionUrgency[]]),
     email: z
       .string()
       .trim()
       .toLowerCase()
-      .min(1, "Email is required.")
-      .max(254, "Email must be 254 characters or fewer.")
-      .email("Please enter a valid email address."),
+      .min(1, SUGGESTION_ERROR_CODES.emailRequired)
+      .max(254, SUGGESTION_ERROR_CODES.emailMax)
+      .email(SUGGESTION_ERROR_CODES.emailInvalid),
   })
   .strict();
 

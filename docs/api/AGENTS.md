@@ -188,10 +188,11 @@ List the public suggestion board.
 Create a public suggestion.
 
 - Body: `{ toolName: string, description: string, useCase: string, category: string, urgency: "low"|"medium"|"high", email: string }`.
-- Validation: tool name 3-50 chars, description 50-500 chars, use case 20-300 chars, valid email.
+- Validation: tool name 3-50 chars, description 50-500 chars, use case 20-300 chars, valid email, category must be a known slug (including `"Other"`).
 - Rate limit: 3 suggestions per email per UTC day, tracked in D1.
 - Response: `{ ok: true, suggestion }` with status `201`.
 - 429 on rate limit. 503 if D1 is not configured.
+- **Validation error shape**: 400 responses include `error.fields[]` where each item is `{ path, message }`. The `message` value is a **stable, locale-independent code** from `SUGGESTION_ERROR_CODES` in `src/lib/suggestions/validation.ts` (e.g. `"toolNameMin"`, `"emailInvalid"`), **not** a human-readable string. Clients translate codes via `useTranslations("suggest.formNew.errors")` from `next-intl`. This decouples the API contract from any specific locale.
 
 ### `GET /api/suggestions/[id]`
 
