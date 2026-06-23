@@ -148,13 +148,11 @@ const MEGA_PANEL_ID = "tools-mega-panel";
  *    so the band reads as a continuous global utility surface.
  *    The chip row inside is wrapped in a container so the chips
  *    themselves stay aligned with the rest of the page.
- *  - **Non-sticky by design.** The band sits in normal document
- *    flow directly under the sticky header and scrolls away with
- *    the page. Rationale: only the brand mark belongs at the top
- *    of every viewport; a sticky menu bar fights the user's eye
- *    for attention and pins real estate that would otherwise be
- *    content. With mega menus still openable on hover/click, the
- *    menu is always one tap away without taking viewport space.
+ *  - **Sticky.** The band (and its mega panel) pin at top-16,
+ *    directly under the brand header, so a category chip is one
+ *    tap away at any scroll position. The brand mark sits above
+ *    and the mega menu is the next visual layer — the two stack
+ *    without competing for the same attention.
  *  - bg-primary-50: the brand theme color, very light. Distinct
  *    from the white header above and the white page content
  *    below, so the band reads as its own layer.
@@ -281,21 +279,35 @@ export function ToolsBanner() {
   const openCat = openSlug ? FEATURED.find((c) => c.slug === openSlug) : undefined;
 
   return (
-    <>
+    // `relative` wrapper establishes a positioning context for the
+    // mega panel below. Without it the panel's `absolute top-full`
+    // resolves against the initial containing block (the viewport),
+    // which lands it at the bottom of the page instead of directly
+    // under the banner — the panel renders 1100px below the chips
+    // and the user never sees it on hover. See the bug history:
+    // the comment block below used to say "panel follows the
+    // banner in document flow" when the banner was non-sticky; now
+    // that the banner is sticky we need an explicit anchor.
+    //
+    // The wrapper itself is also sticky at the same offset as the
+    // banner so the mega panel follows the banner when the page
+    // scrolls. Without `sticky` on the wrapper, scrolling past the
+    // original banner position would leave the sticky banner
+    // floating alone at the top with no panel below it.
+    <div className="sticky top-16 z-40">
       <nav
         ref={navRef}
         aria-label={t("ariaLabel")}
         onMouseLeave={scheduleClose}
         className={cn(
-          // Sticky directly under the brand header (which is sticky top-0,
-          // h-16 = 4rem). Pinned at z-40 so the mega panel below can
-          // render at z-40 too without z-fighting.
-          // The user requested the tools menu stay visible on scroll so
-          // a category chip is always one tap away. Scroll-margin-top in
-          // globals.css is set to (header height + 1.5rem) so anchored
-          // section headings still clear both layers.
+          // Sits inside the sticky wrapper above (which pins both
+          // this banner and the mega panel at top-16). The banner's
+          // own background, border, and backdrop-blur stay on the
+          // inner <nav> so the panel below it doesn't accidentally
+          // inherit them when the panel scrolls under the brand
+          // header.
           "bg-primary-50/85 supports-[backdrop-filter]:bg-primary-50/70",
-          "border-primary-100/80 sticky top-16 z-40 border-b backdrop-blur"
+          "border-primary-100/80 border-b backdrop-blur"
         )}
       >
         <div className="container flex items-center gap-1 overflow-x-auto py-2">
@@ -337,9 +349,10 @@ export function ToolsBanner() {
       </nav>
 
       {/* Mega menu panel — anchored to the bottom of the banner.
-          Since the banner is non-sticky (scrolls with the page),
-          the panel follows the banner in document flow rather than
-          being pinned to the viewport. Mounted only while open. */}
+          Since the banner is sticky (`top-16`), the panel uses
+          `absolute top-full` against the `relative` wrapper above
+          so it stays directly below the chips when the page
+          scrolls. Mounted only while open. */}
       {openCat ? (
         <MegaPanel
           id={MEGA_PANEL_ID}
@@ -357,7 +370,7 @@ export function ToolsBanner() {
           onMouseLeave={scheduleClose}
         />
       ) : null}
-    </>
+    </div>
   );
 }
 
@@ -409,12 +422,13 @@ function MegaPanel({
 
   return (
     // Outer wrapper spans the full container width and handles centering
-    // + pointer-events passthrough. Since the banner is non-sticky, the
-    // panel is `absolute top-full` so it sits right under the banner and
-    // follows it in document flow. The actual visible panel (with
-    // background, border, shadow) is the inner div, which is sized
-    // to its content via `w-fit max-w-[1600px]`. So when a category
-    // has only 2-3 subgroups, the panel shrinks to fit those columns
+    // + pointer-events passthrough. The wrapper above is `sticky
+    // top-16` (same offset as the brand header bottom), so this
+    // `absolute top-full` lands directly under the sticky banner and
+    // scrolls with it. The actual visible panel (with background,
+    // border, shadow) is the inner div, which is sized to its
+    // content via `w-fit max-w-[1600px]`. So when a category has
+    // only 2-3 subgroups, the panel shrinks to fit those columns
     // instead of stretching across the whole viewport.
     <div className="pointer-events-none absolute inset-x-0 top-full z-40 flex justify-center">
       <div
