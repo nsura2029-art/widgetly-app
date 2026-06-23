@@ -11,6 +11,7 @@ import { suggestRequest, type SuggestResponse } from "@/lib/api/schemas";
 import { isD1Configured } from "@/lib/d1/server";
 import { recordSuggestion } from "@/lib/d1/suggestions";
 import { log } from "@/lib/log";
+import { requireUser } from "@/lib/auth/server";
 
 /**
  * POST /api/suggest
@@ -51,6 +52,19 @@ async function handle(request: NextRequest) {
     ua_present: Boolean(request.headers.get("user-agent")),
   });
 
+  // Auth gate: suggestion submissions require a Clerk sign-in. We
+  // use the Clerk primary email as the suggestion contact, so the
+  // client doesn't need to ask for an email field. The
+  // /api/suggestions endpoint has the same gate.
+  const user = await requireUser();
+  if (!user.email) {
+    return jsonError(
+      400,
+      "email_required",
+      "Your account needs a verified email to submit suggestions."
+    );
+  }
+
   let body;
   try {
     body = await parseJson(request, suggestRequest);
@@ -62,6 +76,8 @@ async function handle(request: NextRequest) {
     });
     throw e;
   }
+  // Override the client-supplied email with the Clerk-verified one.
+  body = { ...body, email: user.email };
 
   const slug = body.name
     .toLowerCase()

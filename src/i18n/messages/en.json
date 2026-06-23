@@ -9,14 +9,18 @@
       "leaderboard": "Leaderboard"
     },
     "actions": {
-      "suggestTool": "Suggest a Tool"
+      "suggestTool": "Suggest a Tool",
+      "signIn": "Sign in",
+      "signUp": "Sign up"
     },
     "aria": {
       "mainNav": "Main navigation",
       "openMenu": "Open menu",
       "closeMenu": "Close menu",
       "homeLink": "{siteName} home",
-      "suggestTool": "Suggest a tool"
+      "suggestTool": "Suggest a tool",
+      "signIn": "Sign in to your account",
+      "signUp": "Create a new account"
     },
     "localePicker": {
       "label": "Select language",
@@ -413,6 +417,11 @@
       "urgencyHigh": "high",
       "emailLabel": "Email",
       "emailPlaceholder": "you@example.com",
+      "emailFromAccount": "Using your account's primary email. Edit it in your account settings.",
+      "signInTitle": "Sign in to submit a suggestion",
+      "signInBody": "We ask you to sign in so we can show you the status of your suggestions, credit you for accepted ideas, and prevent spam. One click, no password to remember.",
+      "signInAction": "Sign in",
+      "signUpAction": "Create account",
       "rateLimit": "Limit: 3 suggestions per email per day.",
       "submit": "Submit suggestion",
       "submitting": "Submitting...",
