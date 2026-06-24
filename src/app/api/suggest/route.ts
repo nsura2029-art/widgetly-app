@@ -56,7 +56,10 @@ async function handle(request: NextRequest) {
   // use the Clerk primary email as the suggestion contact, so the
   // client doesn't need to ask for an email field. The
   // /api/suggestions endpoint has the same gate.
-  const user = await requireUser();
+  // Pass `request` so Clerk's getAuth() can read the session cookie
+  // directly. See src/lib/auth/server.ts for why we don't use the
+  // `auth()` shortcut.
+  const user = await requireUser(request);
   if (!user.email) {
     return jsonError(
       400,

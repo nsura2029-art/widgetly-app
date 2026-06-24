@@ -29,7 +29,10 @@ const ReserveBody = z.object({
 
 export async function POST(req: NextRequest) {
   return withErrorHandling(async () => {
-    const user = await getUser();
+    // Pass `req` so Clerk's getAuth() can read the session cookie
+    // directly. See src/lib/auth/server.ts for why we don't use the
+    // `auth()` shortcut.
+    const user = await getUser(req);
     const actor = await resolveQuotaActor({ userId: user?.userId ?? null });
     if (!actor) {
       return jsonError(503, "actor_unresolved", "Cannot determine the request actor.");

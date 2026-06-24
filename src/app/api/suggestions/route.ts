@@ -41,7 +41,11 @@ export async function POST(request: NextRequest) {
     // Clerk primary email as the suggestion's contact email,
     // overriding whatever the client sent. This prevents spam
     // and lets the per-email rate limit do its job.
-    const user = await requireUser();
+    // Pass `request` so Clerk's getAuth() can read the session cookie
+    // directly. See src/lib/auth/server.ts for why we don't use the
+    // `auth()` shortcut (we don't register clerkMiddleware because it
+    // breaks the workerd bundle).
+    const user = await requireUser(request);
     if (!user.email) {
       return jsonError(
         400,

@@ -1,19 +1,31 @@
 /**
- * Server-side auth helpers. Thin wrappers around Clerk's `auth()`
- * that give us a stable, project-specific shape and a single place
- * to handle the "not signed in" case.
+ * Server-side auth helpers. Thin wrappers around Clerk that give us a
+ * stable, project-specific shape and a single place to handle the
+ * "not signed in" case.
  *
  * Why a project-specific helper:
  *   - Components can `import { requireUser } from "@/lib/auth/server"`
  *     and get a typed result without knowing about Clerk's API.
- *   - Easier to mock in tests: replace the helper rather than
- *     every call site that imports Clerk.
- *   - Centralizes the email-extraction logic (Clerk primary email
- *     vs. fallback to `null`) so the suggest API doesn't have to
- *     duplicate the work.
+ *   - Easier to mock in tests: replace the helper rather than every
+ *     call site that imports Clerk.
+ *   - Centralizes the email-extraction logic (Clerk primary email vs.
+ *     fallback to `null`) so the suggest API doesn't have to duplicate
+ *     the work.
+ *
+ * IMPORTANT — Clerk middleware status in this app:
+ *   We deliberately do NOT register `clerkMiddleware` in src/middleware.ts
+ *   because importing it in the workerd bundle makes the worker fail to
+ *   boot (Clerk's SDK pulls `node:crypto.webcrypto` etc. at module-load
+ *   time). The trade-off is that Clerk's `auth()` shortcut — which reads
+ *   from AsyncLocalStorage populated by clerkMiddleware — does NOT work
+ *   here. Instead, every API route that needs the current user must
+ *   pass the `NextRequest` to `getUser(request)` / `requireUser(request)`
+ *   so we can call `getAuth(request)`, which reads the session cookie
+ *   directly and validates it against the Clerk API.
  */
-import { auth, currentUser } from "@clerk/nextjs/server";
+import { auth, currentUser, getAuth } from "@clerk/nextjs/server";
 import { HttpError } from "@/lib/api/responses";
+import type { NextRequest } from "next/server";
 
 export type AuthedUser = {
   /** Clerk user id, e.g. `user_2abc...`. */
@@ -27,20 +39,21 @@ export type AuthedUser = {
 };
 
 /**
- * Return the current user, or null if not signed in. Cheap — just
- * a JWT check, no DB hit. Use this in pages that should render
- * different content for signed-in vs signed-out visitors.
+ * Return the current user, or null if not signed in.
  *
- * IMPORTANT: Clerk's `auth()` can throw in some edge cases (missing
- * env vars, middleware issues, network blips reaching the Clerk API).
- * For our use case, any failure to determine the current user
- * should be treated as "not signed in" — never as a 500. Pages and
- * routes that need a signed-in user should call `requireUser()`
- * which throws a proper HttpError(401).
+ * Pass the `NextRequest` from the route handler if you have one
+ * (API routes always do). This uses Clerk's `getAuth(request)` which
+ * reads the session cookie directly — it works without clerkMiddleware,
+ * which is the situation in this app's worker bundle.
+ *
+ * Without a request, this falls back to Clerk's `auth()` shortcut. That
+ * path needs clerkMiddleware and will return null in our setup; it's
+ * kept as a best-effort fallback for places that don't have a request
+ * (e.g. server components called outside route handlers).
  */
-export async function getUser(): Promise<AuthedUser | null> {
+export async function getUser(request?: NextRequest): Promise<AuthedUser | null> {
   try {
-    const { userId } = await auth();
+    const { userId } = request ? getAuth(request) : await auth();
     if (!userId) return null;
     return await loadUser(userId);
   } catch (err) {
@@ -53,11 +66,11 @@ export async function getUser(): Promise<AuthedUser | null> {
 
 /**
  * Same as getUser but throws if not signed in. Use in API routes
- * that require auth (POST /api/suggest, etc.). The thrown error
+ * that require auth (POST /api/suggestions, etc.). The thrown error
  * is caught by withErrorHandling and returned as 401.
  */
-export async function requireUser(): Promise<AuthedUser> {
-  const u = await getUser();
+export async function requireUser(request?: NextRequest): Promise<AuthedUser> {
+  const u = await getUser(request);
   if (!u) {
     throw new HttpError(401, "unauthorized", "Sign in to submit a suggestion.");
   }
@@ -65,6 +78,8 @@ export async function requireUser(): Promise<AuthedUser> {
 }
 
 async function loadUser(userId: string): Promise<AuthedUser> {
+  // Prefer the explicit `getAuth` route so we don't accidentally
+  // re-trigger `auth()` and lose the request context.
   const user = await currentUser();
   if (!user) {
     // Defensive: auth() said userId is set but currentUser() came
