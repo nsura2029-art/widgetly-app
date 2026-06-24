@@ -90,9 +90,16 @@ export function HeaderMegaPanel({
       onMouseLeave={onMouseLeave}
       className={cn(
         "border-border/70 bg-popover text-popover-foreground",
-        // Anchored to the header. The header is `sticky top-0`, so this
-        // sits flush below it regardless of scroll position.
-        "absolute inset-x-0 top-full z-40 w-full border-b shadow-lg shadow-black/5",
+        // Anchored to the header at `top-16` (4rem = 64px = row 1's
+        // height). This puts the panel's top edge flush against row
+        // 1's bottom edge — the mouse only has to traverse ~16px
+        // from the trigger button to the panel, so the hover-
+        // tolerance close delay doesn't fire mid-traversal.
+        //
+        // `top-full` (the previous position) anchored below row 2
+        // instead, leaving an ~80px gap that 120ms couldn't reliably
+        // cross — users saw the panel flicker on/off.
+        "absolute inset-x-0 top-16 z-40 w-full border-b shadow-lg shadow-black/5",
         // Subtle enter animation — fades + slides down 4px.
         "animate-in fade-in-0 slide-in-from-top-1 duration-150"
       )}

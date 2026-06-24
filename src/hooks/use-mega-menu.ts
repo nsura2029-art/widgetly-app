@@ -16,9 +16,12 @@
  *     desktop chrome in favor of the mobile sheet)
  *   - route change ⇒ close
  *
- * The 120ms close delay is the "hover-tolerance" pattern: it gives
- * the cursor enough time to traverse the ~8px gap between the trigger
- * button and the panel without losing the panel mid-traversal.
+ * The 300ms close delay is the "hover-tolerance" pattern: it gives
+ * the cursor enough time to traverse the small gap between the
+ * trigger button and the panel (the panel is anchored right below
+ * row 1, so the gap is ~16px). 120ms is too tight for many users —
+ * they were losing the panel mid-traversal and getting a flicker.
+ * 300ms is the standard mega-menu value (Linear, Vercel, Stripe).
  *
  * ## Multi-slug design
  *
@@ -34,7 +37,7 @@
 
 import * as React from "react";
 
-const CLOSE_DELAY_MS = 120;
+const CLOSE_DELAY_MS = 300;
 
 export type UseMegaMenu = {
   /** The slug of the currently-open panel, or null. */

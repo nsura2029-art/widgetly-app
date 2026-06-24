@@ -278,7 +278,14 @@ export function ClientHeaderShell({ categories }: ClientHeaderShellProps) {
       <div
         className={cn(
           "hidden border-border/60 border-t bg-white/95 backdrop-blur-md md:block",
-          isMegaOpen && "invisible"
+          // Hide row 2 + disable pointer events while the mega panel is
+          // open. `invisible` (visibility:hidden) hides the pill strip
+          // visually but pointer-event handling is browser-inconsistent
+          // for invisible elements, so we also add `pointer-events-none`
+          // to guarantee the cursor passes straight through to the
+          // panel below. This removes any chance of a "dead zone"
+          // between the trigger and the panel.
+          isMegaOpen && "pointer-events-none invisible"
         )}
       >
         <div className="container">
