@@ -26,6 +26,7 @@ import {
   BarChart3,
   Boxes,
   KeyRound,
+  Lightbulb,
   LogOut,
   Menu,
   RefreshCw,
@@ -39,6 +40,7 @@ import { cn } from "@/lib/utils";
 const NAV = [
   { href: "/admin", label: "Dashboard", icon: BarChart3, exact: true },
   { href: "/admin/tools", label: "Tools", icon: Wrench },
+  { href: "/admin/suggestions", label: "Suggestions", icon: Lightbulb },
   { href: "/admin/quotas", label: "Quotas", icon: Settings2 },
 ];
 
