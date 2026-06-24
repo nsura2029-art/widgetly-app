@@ -379,17 +379,34 @@ export async function listLiveToolsFromAdminCatalog(
 }
 
 export async function getSuggestionByIdOrSlug(idOrSlug: string): Promise<SuggestionRecord | null> {
-  const isNumeric = /^\d+$/.test(idOrSlug);
-  const row = await getD1()
+  const db = getD1();
+  // Try slug first regardless of shape — users can create suggestions
+  // with all-numeric tool names, in which case the slug is "12345" but
+  // it's still a slug, not the auto-increment id. Only fall back to
+  // id lookup if no slug match exists.
+  const bySlug = await db
     .prepare(
       `SELECT id, slug, tool_name, description, use_case, category, urgency, email, status, upvotes, created_at, updated_at, built_at
        FROM suggestions
-       WHERE ${isNumeric ? "id" : "slug"} = ?
+       WHERE slug = ?
        LIMIT 1`
     )
-    .bind(isNumeric ? Number(idOrSlug) : idOrSlug)
+    .bind(idOrSlug)
     .first<SuggestionRow>();
-  return row ? mapRow(row) : null;
+  if (bySlug) return mapRow(bySlug);
+
+  const isNumeric = /^\d+$/.test(idOrSlug);
+  if (!isNumeric) return null;
+  return db
+    .prepare(
+      `SELECT id, slug, tool_name, description, use_case, category, urgency, email, status, upvotes, created_at, updated_at, built_at
+       FROM suggestions
+       WHERE id = ?
+       LIMIT 1`
+    )
+    .bind(Number(idOrSlug))
+    .first<SuggestionRow>()
+    .then((row) => (row ? mapRow(row) : null));
 }
 
 export async function enqueueSuggestionEmail(
