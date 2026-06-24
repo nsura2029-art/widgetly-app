@@ -114,8 +114,14 @@ export function HeaderMegaPanel({
         // padding (at the `border-b` line, y=64), so the bridge is
         // invisible but still part of the hit-testing area.
         "pt-4",
-        // Subtle enter animation — fades + slides down 4px.
-        "animate-in fade-in-0 slide-in-from-top-1 duration-150"
+        // Subtle enter animation. We use `animate-fade-in` (defined
+        // locally in globals.css) instead of `animate-in fade-in-0
+        // slide-in-from-top-1 duration-150` from the
+        // tailwindcss-animate plugin — that plugin is NOT installed
+        // in this project (Tailwind v4 + manual keyframes in
+        // globals.css). Using plugin classes would make the panel
+        // silently invisible because the classes are undefined.
+        "animate-fade-in"
       )}
     >
       <div className="container py-6">

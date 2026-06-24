@@ -138,11 +138,19 @@ export function ClientHeaderShell({ categories }: ClientHeaderShellProps) {
   // ------------------------------------------------------------------
   // Close both UIs on route change. The new page should always
   // start with the header chrome in its default state.
+  //
+  // The setState calls fire synchronously in the effect body, which
+  // trips React's "set-state-in-effect" lint rule. That's intentional
+  // here: when the route changes we MUST close the menu in the same
+  // tick, before the user sees the new page render with the old menu
+  // still open. A deferred setState would briefly render the menu
+  // open on top of the new route, which is a worse UX than the
+  // cascade React is warning about.
   // ------------------------------------------------------------------
   React.useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMobileOpen(false);
     mega.close();
-    // eslint-disable-next-line react-hooks/set-state-in-effect
   }, [pathname, mega]);
 
   // ------------------------------------------------------------------
@@ -178,18 +186,39 @@ export function ClientHeaderShell({ categories }: ClientHeaderShellProps) {
   // on the panel itself (e.g. on a category tile) is "inside" and
   // does NOT close — those tiles have their own onClick (the panel's
   // `onLinkClick` prop) that closes on link navigation.
+  //
+  // Why we read `mega` through a ref: the `useMegaMenu()` hook returns
+  // a fresh object on every render (it just bundles a `useState` value
+  // with `useCallback`s), so depending on `mega` directly would cause
+  // this effect to tear down + re-install its `mousedown` listener on
+  // every parent re-render. That churn is what was making the panel
+  // flicker: parent re-renders (e.g. from `pathname` changing in the
+  // route-change effect) re-ran this effect, the listener was removed
+  // and re-added in the same tick, and during the brief gap a stray
+  // event closed the panel. By reading `mega` through a ref, the
+  // effect only re-runs when `isMegaOpen` actually changes.
   // ------------------------------------------------------------------
+  const megaRef = React.useRef(mega);
+  // Sync the ref inside an effect so the React Compiler's
+  // "no ref access during render" rule is satisfied. The effect runs
+  // after every commit with no dependency array, so the ref always
+  // holds the latest mega reference by the time the click-outside
+  // handler next fires.
+  React.useEffect(() => {
+    megaRef.current = mega;
+  });
+
   React.useEffect(() => {
     if (!isMegaOpen) return;
     function onMouseDown(e: MouseEvent) {
       const target = e.target as Node | null;
       if (target && !headerRef.current?.contains(target)) {
-        mega.close();
+        megaRef.current.close();
       }
     }
     document.addEventListener("mousedown", onMouseDown);
     return () => document.removeEventListener("mousedown", onMouseDown);
-  }, [isMegaOpen, mega]);
+  }, [isMegaOpen]);
 
   const navLinks = [
     { href: "/leaderboard", label: t("header.nav.leaderboard") },
