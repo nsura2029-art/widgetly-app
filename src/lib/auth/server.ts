@@ -53,9 +53,22 @@ export type AuthedUser = {
  */
 export async function getUser(request?: NextRequest): Promise<AuthedUser | null> {
   try {
-    const { userId } = request ? getAuth(request) : await auth();
-    if (!userId) return null;
-    return await loadUser(userId);
+    const a = request ? getAuth(request) : await auth();
+    // TEMP DIAG — log in all envs so we can see what's happening on stage.
+    console.warn(
+      "[auth:diag] path=%s userId=%s sessionId=%s cookies=%s",
+      request ? "getAuth(request)" : "auth()",
+      a.userId ?? "null",
+      a.sessionId ?? "null",
+      request
+        ? request.cookies
+            .getAll()
+            .map((c) => c.name)
+            .join(",")
+        : "(no req)"
+    );
+    if (!a.userId) return null;
+    return await loadUser(a.userId);
   } catch (err) {
     if (process.env.NODE_ENV !== "production") {
       console.warn("[auth] getUser failed, treating as signed out:", err);
