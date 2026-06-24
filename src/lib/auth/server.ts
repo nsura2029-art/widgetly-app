@@ -13,6 +13,7 @@
  *     duplicate the work.
  */
 import { auth, currentUser } from "@clerk/nextjs/server";
+import { HttpError } from "@/lib/api/responses";
 
 export type AuthedUser = {
   /** Clerk user id, e.g. `user_2abc...`. */
@@ -44,9 +45,7 @@ export async function getUser(): Promise<AuthedUser | null> {
 export async function requireUser(): Promise<AuthedUser> {
   const u = await getUser();
   if (!u) {
-    const err = new Error("Sign in required");
-    (err as Error & { status?: number }).status = 401;
-    throw err;
+    throw new HttpError(401, "unauthorized", "Sign in to submit a suggestion.");
   }
   return u;
 }

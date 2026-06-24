@@ -2,53 +2,36 @@
 
 /**
  * ClerkAuthButtons — small wrappers that render Clerk's
- * SignInButton / SignUpButton / UserButton only when Clerk is
- * configured. When the publishable key is missing, render plain
- * <Link>s to the admin sign-in page so the UI doesn't crash.
+ * SignInButton / SignUpButton / UserButton.
  *
- * Why lazy: Clerk's component runtime checks throw at static-
- * generation time when the key is missing. Loading Clerk lazily
- * (only after mount, only when configured) avoids the throw.
+ * When Clerk isn't configured (no publishable key at build time),
+ * the buttons render `null` so the public header / pricing CTA /
+ * suggest gate don't show user-facing auth UI. Admin sign-in lives
+ * at /admin/sign-in and is reachable directly — it's never
+ * surfaced from the public site.
+ *
+ * Why static imports (not `require()`):
+ *   Clerk's SignInButton / SignUpButton / UserButton read from
+ *   the ClerkProvider React context. If the lazy `require()` path
+ *   resolves to a different module instance than the one used by
+ *   <ClerkProvider> in src/app/[locale]/layout.tsx, the contexts
+ *   don't match and Clerk throws "SignInButton can only be used
+ *   within the <ClerkProvider /> component" at render time. Static
+ *   imports guarantee the same module instance. The build-time
+ *   guard (CLERK_ENABLED) means we still don't call into Clerk at
+ *   render time when the keys are missing.
  */
 
 import * as React from "react";
 import { usePathname } from "next/navigation";
+import {
+  SignInButton as ClerkSignInBtn,
+  SignUpButton as ClerkSignUpBtn,
+  UserButton as ClerkUserBtn,
+} from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
 
-type ClerkMod = {
-  SignInButton: (props: {
-    mode?: "modal";
-    forceRedirectUrl?: string;
-    children?: React.ReactNode;
-  }) => React.JSX.Element;
-  SignUpButton: (props: {
-    mode?: "modal";
-    forceRedirectUrl?: string;
-    children?: React.ReactNode;
-  }) => React.JSX.Element;
-  UserButton: (props: { afterSignOutUrl?: string }) => React.JSX.Element;
-};
-
-let cachedMod: ClerkMod | null = null;
-
-function loadClerk(): ClerkMod | null {
-  if (!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY) return null;
-  if (!cachedMod) {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    cachedMod = require("@clerk/nextjs") as ClerkMod;
-  }
-  return cachedMod;
-}
-
-function useClerk(): ClerkMod | null {
-  const [clerk, setClerk] = React.useState<ClerkMod | null>(() => loadClerk());
-  // loadClerk synchronously returns the module (via require) when
-  // configured, so the initial useState already has it. No
-  // useEffect needed.
-  void clerk;
-  void setClerk;
-  return clerk;
-}
+const CLERK_ENABLED = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
 
 function useForceRedirectUrl(): string | undefined {
   const pathname = usePathname();
@@ -68,22 +51,14 @@ export function ClerkSignInButton({
   variant?: ButtonVariant;
   size?: ButtonSize;
 }) {
-  const clerk = useClerk();
   const redirect = useForceRedirectUrl();
-  if (!clerk) {
-    // Clerk not configured — the public site's Sign in button is
-    // user-facing Clerk auth, NOT the admin dashboard sign-in. When
-    // Clerk keys are missing, hide the button entirely. The admin
-    // sign-in lives at /admin/sign-in and is reachable directly.
-    return null;
-  }
-  const SignInButton = clerk.SignInButton;
+  if (!CLERK_ENABLED) return null;
   return (
-    <SignInButton mode="modal" forceRedirectUrl={redirect}>
+    <ClerkSignInBtn mode="modal" forceRedirectUrl={redirect}>
       <Button variant={variant} size={size}>
         {label}
       </Button>
-    </SignInButton>
+    </ClerkSignInBtn>
   );
 }
 
@@ -96,32 +71,22 @@ export function ClerkSignUpButton({
   variant?: ButtonVariant;
   size?: ButtonSize;
 }) {
-  const clerk = useClerk();
   const redirect = useForceRedirectUrl();
-  if (!clerk) {
-    // Clerk not configured — the public site's Sign in button is
-    // user-facing Clerk auth, NOT the admin dashboard sign-in. When
-    // Clerk keys are missing, hide the button entirely. The admin
-    // sign-in lives at /admin/sign-in and is reachable directly.
-    return null;
-  }
-  const SignUpButton = clerk.SignUpButton;
+  if (!CLERK_ENABLED) return null;
   return (
-    <SignUpButton mode="modal" forceRedirectUrl={redirect}>
+    <ClerkSignUpBtn mode="modal" forceRedirectUrl={redirect}>
       <Button variant={variant} size={size}>
         {label}
       </Button>
-    </SignUpButton>
+    </ClerkSignUpBtn>
   );
 }
 
 export function ClerkUserButton() {
-  const clerk = useClerk();
-  if (!clerk) return null;
-  const UserButton = clerk.UserButton;
+  if (!CLERK_ENABLED) return null;
   return (
     <div className="flex items-center">
-      <UserButton afterSignOutUrl="/" />
+      <ClerkUserBtn />
     </div>
   );
 }
