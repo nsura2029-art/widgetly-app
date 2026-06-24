@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { Check, Clipboard, Linkedin, LogIn, Mail, Send, Share2 } from "lucide-react";
 import { useSafeUser } from "@/lib/auth/use-safe-user";
 import { ClerkSignInButton, ClerkSignUpButton } from "@/components/auth/clerk-auth-buttons";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -112,6 +112,13 @@ function SignInRequiredPanel() {
 function SuggestionFormInner() {
   const t = useTranslations("suggest.formNew");
   const tErrors = useTranslations("suggest.formNew.errors");
+  // `locale` is the active route segment (e.g. "en", "es", "fr"). We
+  // use it to build share URLs that include the locale prefix, so the
+  // suggestion page is reachable from social posts, the copy button,
+  // and the view-suggestion link. Without this, social previews and
+  // bookmarks land on /suggest/<slug> which 404s (the real route is
+  // /<locale>/suggest/<slug>).
+  const locale = useLocale();
   const { user } = useSafeUser();
   // Pull the verified primary email once and use it both for the
   // "Posting as" line and for the API request payload. We prefer
@@ -184,7 +191,7 @@ function SuggestionFormInner() {
         return;
       }
       const slug = body.suggestion.slug as string;
-      setShareUrl(`${window.location.origin}/suggest/${slug}`);
+      setShareUrl(`${window.location.origin}/${locale}/suggest/${slug}`);
     } catch {
       setServerError(t("networkError"));
     } finally {
