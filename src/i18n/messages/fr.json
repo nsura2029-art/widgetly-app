@@ -6,7 +6,8 @@
   },
   "header": {
     "nav": {
-      "leaderboard": "Classement"
+      "leaderboard": "Classement",
+      "topSuggesters": "Meilleurs Suggéreurs"
     },
     "actions": {
       "suggestTool": "Suggérer un outil",
@@ -654,5 +655,12 @@
     "saved": "[fr] Saved.",
     "currentUsage": "[fr] Current usage (last 7 days): {used}",
     "error": "[fr] Couldn't save. Check the form and try again."
+  },
+  "topSuggesters": {
+    "title": "Meilleurs Suggéreurs",
+    "headline": "Meilleurs Suggéreurs",
+    "subtitle": "Les personnes qui façonnent la feuille de route de Widgetly. Classées par suggestions acceptées.",
+    "privacyNote": "Les identités sont anonymisées — seul le hash SHA-256 de l'e-mail de chaque contributeur est affiché.",
+    "empty": "Pas encore de suggéreurs. Soyez le premier à proposer une idée d'outil."
   }
 }

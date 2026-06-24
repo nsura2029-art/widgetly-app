@@ -60,7 +60,10 @@ export default function ClientHeader() {
     };
   }, [open]);
 
-  const navLinks = [{ href: "/leaderboard", label: t("header.nav.leaderboard") }];
+  const navLinks = [
+    { href: "/leaderboard", label: t("header.nav.leaderboard") },
+    { href: "/top-suggesters", label: t("header.nav.topSuggesters") },
+  ];
 
   return (
     <motion.header

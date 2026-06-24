@@ -5,7 +5,6 @@ import {
   Crown,
   Sparkles,
   ArrowRight,
-  ArrowUp,
   Award,
   Calendar,
   CalendarDays,
@@ -13,7 +12,6 @@ import {
   Infinity as InfinityIcon,
   Flame,
   Layers,
-  Lightbulb,
 } from "lucide-react";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
@@ -21,7 +19,6 @@ import { PageShell } from "@/components/layout/page-shell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { buildMetadata } from "@/lib/seo";
-import { listTopSuggestions, type TopSuggestion } from "@/lib/d1/suggestions";
 import { ExpandableTools } from "./expandable-tools";
 import {
   getFeaturedCreator,
@@ -150,69 +147,6 @@ function avatarFromSeed(seed: string): { emoji: string; ring: string } {
     emoji: EMOJIS[Math.abs(hash) % EMOJIS.length] ?? "🦊",
     ring: RINGS[Math.abs(hash >> 8) % RINGS.length] ?? RINGS[0]!,
   };
-}
-
-/**
- * Compact card for a top-voted suggestion. Lighter than the full
- * SuggestionBoardClient card on /suggest so the leaderboard stays
- * scannable: rank number, name, category, upvote count, and a link
- * to the suggestion's detail page. Status is shown as a small pill
- * (in-review, building, live, etc.) so the reader can tell which
- * suggestions are already on the way.
- */
-function TopSuggestionCard({ suggestion }: { suggestion: TopSuggestion }) {
-  return (
-    <li className="border-border/60 shadow-soft flex h-full items-start gap-3 rounded-2xl border bg-white p-4 transition-shadow hover:shadow-md">
-      <div className="text-muted flex w-10 shrink-0 flex-col items-center pt-1 text-center">
-        <span className="text-[10px] font-semibold tracking-wider uppercase">Votes</span>
-        <span className="text-foreground text-lg font-bold tabular-nums">
-          {suggestion.votes.toLocaleString()}
-        </span>
-      </div>
-      <div className="min-w-0 flex-1">
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="border-border bg-muted/5 text-muted-foreground inline-flex shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-medium">
-            {suggestion.category}
-          </span>
-          <SuggestionStatusPill status={suggestion.status} />
-        </div>
-        <Link
-          href={`/suggest/${suggestion.slug}`}
-          className="text-foreground hover:text-primary mt-1.5 block truncate text-sm font-semibold"
-        >
-          {suggestion.name}
-        </Link>
-        <div className="text-muted mt-1 inline-flex items-center gap-1 text-xs">
-          <ArrowUp className="text-primary h-3 w-3" aria-hidden="true" />
-          Upvote on the suggestion page
-        </div>
-      </div>
-    </li>
-  );
-}
-
-function SuggestionStatusPill({ status }: { status: TopSuggestion["status"] }) {
-  // Mirrors the badge styling on /suggest so the visual language is
-  // consistent across the two surfaces.
-  const styles: Record<TopSuggestion["status"], string> = {
-    in_review: "border-amber-500/25 bg-amber-500/10 text-amber-700",
-    building: "border-blue-500/25 bg-blue-500/10 text-blue-700",
-    live: "border-emerald-500/25 bg-emerald-500/10 text-emerald-700",
-    rejected: "border-slate-500/25 bg-slate-500/10 text-slate-700",
-  };
-  const labels: Record<TopSuggestion["status"], string> = {
-    in_review: "In review",
-    building: "Building",
-    live: "Live",
-    rejected: "Rejected",
-  };
-  return (
-    <span
-      className={`inline-flex shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-semibold tracking-wide uppercase ${styles[status]}`}
-    >
-      {labels[status]}
-    </span>
-  );
 }
 
 function CreatorAvatar({ seed, size = "md" }: { seed: string; size?: "sm" | "md" | "lg" }) {
@@ -397,11 +331,7 @@ export default async function LeaderboardPage({
   const window = normalizeLeaderboardWindow(sp.window);
   const t = await getTranslations("leaderboard");
 
-  const [featured, ranked, topSuggestions] = await Promise.all([
-    getFeaturedCreator(),
-    getLeaderboard(window, 30),
-    listTopSuggestions(6),
-  ]);
+  const [featured, ranked] = await Promise.all([getFeaturedCreator(), getLeaderboard(window, 30)]);
 
   // Use a locale-agnostic baseHref: the `<Link>` from `@/i18n/navigation`
   // adds the current locale prefix automatically, so prefixing with `/${locale}`
@@ -460,39 +390,6 @@ export default async function LeaderboardPage({
           </div>
         </section>
       )}
-
-      {/* Top Suggestions — community-voted tool ideas ranked by upvotes.
-          Sits between the featured creator and the contributor tab bar so
-          the page reads as: who's shipping -> what's wanted next ->
-          who's shipping recently. Suggestions with status='rejected' are
-          excluded by the helper. */}
-      {topSuggestions.length > 0 ? (
-        <section className="mt-12" aria-labelledby="top-suggestions-heading">
-          <div className="mb-4 flex items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
-              <Lightbulb className="text-primary h-4 w-4" aria-hidden="true" />
-              <h2
-                id="top-suggestions-heading"
-                className="text-foreground text-sm font-semibold tracking-wider uppercase"
-              >
-                Top suggestions
-              </h2>
-            </div>
-            <Button asChild variant="ghost" size="sm">
-              <Link href="/suggest">
-                {t("contributeCta")}
-                <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
-              </Link>
-            </Button>
-          </div>
-
-          <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {topSuggestions.map((suggestion) => (
-              <TopSuggestionCard key={suggestion.slug} suggestion={suggestion} />
-            ))}
-          </ul>
-        </section>
-      ) : null}
 
       {/* Tab bar */}
       <section className="mt-12" aria-labelledby="ranking-heading">

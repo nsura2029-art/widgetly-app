@@ -6,7 +6,8 @@
   },
   "header": {
     "nav": {
-      "leaderboard": "Leaderboard"
+      "leaderboard": "Leaderboard",
+      "topSuggesters": "Top Suggesters"
     },
     "actions": {
       "suggestTool": "Suggest a Tool",
@@ -654,5 +655,12 @@
         "description": "Contributed on 20+ distinct days in a quarter."
       }
     }
+  },
+  "topSuggesters": {
+    "title": "Top Suggesters",
+    "headline": "Top Suggesters",
+    "subtitle": "The people shaping Widgetly's roadmap. Ranked by accepted tool suggestions.",
+    "privacyNote": "Identities are anonymized — only the SHA-256 hash of each contributor's email is shown.",
+    "empty": "No suggesters yet. Be the first to submit a tool idea."
   }
 }

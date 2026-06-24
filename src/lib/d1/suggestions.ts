@@ -8,6 +8,7 @@
  * place.
  */
 
+import { createHash } from "node:crypto";
 import { log } from "@/lib/log";
 import { getD1 } from "./server";
 
@@ -605,4 +606,147 @@ export async function listTopSuggestions(limit = 6): Promise<TopSuggestion[]> {
     }
     throw err;
   }
+}
+
+// ---------------------------------------------------------------------------
+// Top Suggesters (public, privacy-preserving)
+// ---------------------------------------------------------------------------
+//
+// Groups user-submitted suggestions by SHA-256 hash of the submitter's
+// email, counts non-rejected submissions, and returns the top N.
+// Exposing the raw email on a public page would be a privacy issue;
+// the hash is the same across a user's submissions (so they're
+// recognisable as "the same person") without revealing their address.
+//
+// The "featured" suggestion per user is the one with the most upvotes,
+// which gives the page a hook into the actual suggestion content.
+
+export type TopSuggester = {
+  /** Stable, privacy-preserving identifier like "anon_3a9f2c1e". */
+  handle: string;
+  /** Total accepted (non-rejected) suggestions across all time. */
+  totalSuggestions: number;
+  /** Suggestions accepted as 'live' (built and shipped). */
+  liveCount: number;
+  /** Most upvoted suggestion by this user, used as the card's featured link. */
+  featured: {
+    slug: string;
+    toolName: string;
+    category: string;
+    upvotes: number;
+    status: SuggestionStatus;
+  } | null;
+  /** When this user last submitted a suggestion. */
+  lastSubmittedAt: string | null;
+};
+
+export async function listTopSuggesters(
+  limit = 30,
+  opts: { sinceIso?: string } = {}
+): Promise<TopSuggester[]> {
+  try {
+    const db = getD1();
+    // Pull every non-rejected suggestion, then bucket by hashed email
+    // in JS. Doing the bucketing in SQL would require registering a
+    // SQLite hash function in D1, which Cloudflare doesn't allow for
+    // user-defined functions; bucketing in JS is fine because the row
+    // count is bounded by the number of suggestions (low thousands at
+    // most in the near term).
+    const where: string[] = ["status != 'rejected'"];
+    const bindings: unknown[] = [];
+    if (opts.sinceIso) {
+      where.push("created_at >= ?");
+      bindings.push(opts.sinceIso);
+    }
+    const rows = await db
+      .prepare(
+        `SELECT slug, tool_name, category, status, upvotes, email, created_at
+           FROM suggestions
+          WHERE ${where.join(" AND ")}
+          ORDER BY created_at DESC`
+      )
+      .bind(...bindings)
+      .all<{
+        slug: string;
+        tool_name: string;
+        category: string;
+        status: string;
+        upvotes: number;
+        email: string;
+        created_at: string;
+      }>();
+
+    const byHash = new Map<string, TopSuggester & { _rows: typeof rows.results }>();
+    for (const r of rows.results ?? []) {
+      const handle = hashEmail(r.email);
+      const existing = byHash.get(handle);
+      const isLive = r.status === "live";
+      if (!existing) {
+        byHash.set(handle, {
+          handle,
+          totalSuggestions: 1,
+          liveCount: isLive ? 1 : 0,
+          featured: {
+            slug: r.slug,
+            toolName: r.tool_name,
+            category: r.category,
+            upvotes: Number(r.upvotes ?? 0),
+            status: normalizeStatus(r.status),
+          },
+          lastSubmittedAt: String(r.created_at),
+          _rows: [r],
+        });
+        continue;
+      }
+      existing.totalSuggestions += 1;
+      if (isLive) existing.liveCount += 1;
+      if (!existing.featured || Number(r.upvotes ?? 0) > existing.featured.upvotes) {
+        existing.featured = {
+          slug: r.slug,
+          toolName: r.tool_name,
+          category: r.category,
+          upvotes: Number(r.upvotes ?? 0),
+          status: normalizeStatus(r.status),
+        };
+      }
+      const created = String(r.created_at);
+      if (!existing.lastSubmittedAt || created > existing.lastSubmittedAt) {
+        existing.lastSubmittedAt = created;
+      }
+    }
+
+    return Array.from(byHash.values())
+      .map(({ _rows, ...rest }) => rest)
+      .sort((a, b) => {
+        if (b.totalSuggestions !== a.totalSuggestions) {
+          return b.totalSuggestions - a.totalSuggestions;
+        }
+        // Tie-break: live count, then most recent activity.
+        if (b.liveCount !== a.liveCount) return b.liveCount - a.liveCount;
+        return (b.lastSubmittedAt ?? "").localeCompare(a.lastSubmittedAt ?? "");
+      })
+      .slice(0, limit);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    if (msg.includes("no such table") || msg.includes("D1 binding missing")) {
+      return [];
+    }
+    throw err;
+  }
+}
+
+/**
+ * Privacy-preserving user handle derived from an email. We use
+ * SHA-256 + the first 8 hex chars + "anon_" prefix so the same person
+ * is recognisable across submissions (same handle every time) but the
+ * raw email is never stored or displayed publicly.
+ */
+function hashEmail(email: string): string {
+  const normalized = email.trim().toLowerCase();
+  // Sync SHA-256 via Node's createHash. The Web Crypto API is async
+  // which would force this whole helper (and listTopSuggesters) to
+  // become async; node:crypto's createHash is sync and Cloudflare
+  // Workers ship it under the nodejs compat layer.
+  const digest = createHash("sha256").update(normalized).digest("hex");
+  return `anon_${digest.slice(0, 8)}`;
 }

@@ -6,7 +6,8 @@
   },
   "header": {
     "nav": {
-      "leaderboard": "Clasificación"
+      "leaderboard": "Clasificación",
+      "topSuggesters": "Mejores Sugeridores"
     },
     "actions": {
       "suggestTool": "Sugerir una herramienta",
@@ -654,5 +655,12 @@
     "saved": "[es] Saved.",
     "currentUsage": "[es] Current usage (last 7 days): {used}",
     "error": "[es] Couldn't save. Check the form and try again."
+  },
+  "topSuggesters": {
+    "title": "Mejores Sugeridores",
+    "headline": "Mejores Sugeridores",
+    "subtitle": "Las personas que dan forma a la hoja de ruta de Widgetly. Clasificadas por sugerencias aceptadas.",
+    "privacyNote": "Las identidades son anónimas — solo se muestra el hash SHA-256 del correo de cada colaborador.",
+    "empty": "Aún no hay sugeridores. Sé el primero en enviar una idea de herramienta."
   }
 }
