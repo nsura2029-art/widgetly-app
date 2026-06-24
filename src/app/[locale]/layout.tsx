@@ -7,7 +7,6 @@ import { ClerkProvider } from "@clerk/nextjs";
 import { routing } from "../../../next-intl.config";
 import { isSupportedLocale, getDirection } from "@/i18n/config";
 import ClientHeader from "@/components/layout/client-header";
-import { ToolsBanner } from "@/components/layout/tools-banner";
 import { BreadcrumbNav } from "@/components/layout/breadcrumb-nav";
 import { Footer } from "@/components/layout/footer";
 import { ScrollToHash } from "@/components/layout/scroll-to-hash";
@@ -166,7 +165,6 @@ export default async function LocaleLayout({
               <ClientHeader />
 
               <main id="main">
-                <ToolsBanner />
                 <BreadcrumbNav />
                 {children}
               </main>

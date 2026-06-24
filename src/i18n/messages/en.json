@@ -22,7 +22,8 @@
       "suggestTool": "Suggest a tool",
       "signIn": "Sign in to your account",
       "signUp": "Create a new account",
-      "toolsMenu": "Tools menu"
+      "toolsMenu": "Tools menu",
+      "toolsNav": "Tools categories"
     },
     "tools": {
       "trigger": "Tools",
