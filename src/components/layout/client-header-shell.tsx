@@ -94,6 +94,14 @@ export function ClientHeaderShell({ categories }: ClientHeaderShellProps) {
 
   const isMegaOpen = mega.openSlug === TOOLS_SLUG;
 
+  // Ref to the header root element. Used by the click-outside
+  // effect below: any mousedown whose target is NOT contained in
+  // this ref means the user clicked outside the header, which
+  // closes the mega panel. This makes the trigger button's
+  // onClick handler safe to be `open` instead of `toggle` —
+  // clicking the trigger always opens; clicking outside closes.
+  const headerRef = React.useRef<HTMLElement>(null);
+
   // ------------------------------------------------------------------
   // Close both UIs when the viewport grows past the md breakpoint.
   // Without this, opening the mobile sheet on a phone, then rotating
@@ -151,6 +159,38 @@ export function ClientHeaderShell({ categories }: ClientHeaderShellProps) {
     return () => window.removeEventListener("keydown", onKey);
   }, [isMegaOpen, mega]);
 
+  // ------------------------------------------------------------------
+  // Click-outside closes the mega panel. Combined with `onClick={open}`
+  // on the trigger button (instead of `toggle`), this gives the user a
+  // reliable interaction: hover OR click the trigger to open; click
+  // anywhere else to close. Without this, `onClick=toggle` would close
+  // the panel on the very click the user made to "confirm" opening it
+  // after hovering, causing the flicker the user reported.
+  //
+  // Why `mousedown` (not `click`): mousedown fires before the trigger
+  // button's click handler would have a chance to re-open the panel,
+  // and before focus changes can fire onMouseEnter. Using mousedown
+  // for the outside detector + open for the click handler avoids any
+  // order-of-operations races.
+  //
+  // Why we check `headerRef.current?.contains(target)`: the header
+  // root wraps BOTH the trigger button AND the mega panel, so a click
+  // on the panel itself (e.g. on a category tile) is "inside" and
+  // does NOT close — those tiles have their own onClick (the panel's
+  // `onLinkClick` prop) that closes on link navigation.
+  // ------------------------------------------------------------------
+  React.useEffect(() => {
+    if (!isMegaOpen) return;
+    function onMouseDown(e: MouseEvent) {
+      const target = e.target as Node | null;
+      if (target && !headerRef.current?.contains(target)) {
+        mega.close();
+      }
+    }
+    document.addEventListener("mousedown", onMouseDown);
+    return () => document.removeEventListener("mousedown", onMouseDown);
+  }, [isMegaOpen, mega]);
+
   const navLinks = [
     { href: "/leaderboard", label: t("header.nav.leaderboard") },
     { href: "/top-suggesters", label: t("header.nav.topSuggesters") },
@@ -158,6 +198,7 @@ export function ClientHeaderShell({ categories }: ClientHeaderShellProps) {
 
   return (
     <motion.header
+      ref={headerRef}
       initial={{ y: -24, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
@@ -184,14 +225,17 @@ export function ClientHeaderShell({ categories }: ClientHeaderShellProps) {
           className="hidden md:flex md:items-center md:gap-1"
           aria-label={t("header.aria.mainNav")}
         >
-          {/* "Tools" mega-menu trigger — opens the 4-col category tile panel */}
+          {/* "Tools" mega-menu trigger — opens the 4-col category tile panel.
+              `onClick={open}` (not `toggle`) so that the click that follows a
+              hover-open can never accidentally close the panel. The panel
+              closes via click-outside, Esc, route change, or resize. */}
           <button
             type="button"
             aria-haspopup="menu"
             aria-expanded={isMegaOpen}
             aria-controls={MEGA_PANEL_ID}
             aria-label={t("header.aria.toolsMenu")}
-            onClick={() => mega.toggle(TOOLS_SLUG)}
+            onClick={() => mega.open(TOOLS_SLUG)}
             onMouseEnter={() => mega.open(TOOLS_SLUG)}
             onMouseLeave={mega.scheduleClose}
             onFocus={() => mega.open(TOOLS_SLUG)}
