@@ -37,7 +37,7 @@
 
 import * as React from "react";
 
-const CLOSE_DELAY_MS = 300;
+const CLOSE_DELAY_MS = 500;
 
 export type UseMegaMenu = {
   /** The slug of the currently-open panel, or null. */

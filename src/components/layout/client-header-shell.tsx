@@ -320,6 +320,7 @@ export function ClientHeaderShell({ categories }: ClientHeaderShellProps) {
         the same list in its Tools accordion).
       ---------------------------------------------------------------- */}
       <div
+        onMouseEnter={mega.cancelClose}
         className={cn(
           "hidden border-border/60 border-t bg-white/95 backdrop-blur-md md:block",
           // Hide row 2 + disable pointer events while the mega panel is
