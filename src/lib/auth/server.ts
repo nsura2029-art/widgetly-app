@@ -16,14 +16,18 @@
  *   We deliberately do NOT register `clerkMiddleware` in src/middleware.ts
  *   because importing it in the workerd bundle makes the worker fail to
  *   boot (Clerk's SDK pulls `node:crypto.webcrypto` etc. at module-load
- *   time). The trade-off is that Clerk's `auth()` shortcut — which reads
- *   from AsyncLocalStorage populated by clerkMiddleware — does NOT work
- *   here. Instead, every API route that needs the current user must
- *   pass the `NextRequest` to `getUser(request)` / `requireUser(request)`
- *   so we can call `getAuth(request)`, which reads the session cookie
- *   directly and validates it against the Clerk API.
+ *   time). The trade-off is that Clerk's `auth()` and `getAuth()`
+ *   helpers — which both rely on AsyncLocalStorage populated by
+ *   clerkMiddleware — do NOT work in our setup.
+ *
+ * Instead, every API route that needs the current user passes its
+ * `NextRequest` to `getUser(request)` / `requireUser(request)`, which
+ * reads the `__session` cookie directly and verifies it via
+ * `@clerk/backend`'s `verifyToken`. This works without clerkMiddleware
+ * and gives us the verified `sub` (userId). We then fetch the user's
+ * email/name via `clerkClient()`.
  */
-import { auth, currentUser, getAuth } from "@clerk/nextjs/server";
+import { clerkClient, currentUser, verifyToken } from "@clerk/nextjs/server";
 import { HttpError } from "@/lib/api/responses";
 import type { NextRequest } from "next/server";
 
@@ -42,37 +46,27 @@ export type AuthedUser = {
  * Return the current user, or null if not signed in.
  *
  * Pass the `NextRequest` from the route handler if you have one
- * (API routes always do). This uses Clerk's `getAuth(request)` which
- * reads the session cookie directly — it works without clerkMiddleware,
- * which is the situation in this app's worker bundle.
+ * (API routes always do). This is the supported path in this app —
+ * see the file header for why we can't use Clerk's auth() shortcut.
  *
- * Without a request, this falls back to Clerk's `auth()` shortcut. That
- * path needs clerkMiddleware and will return null in our setup; it's
- * kept as a best-effort fallback for places that don't have a request
- * (e.g. server components called outside route handlers).
+ * Without a request, this falls back to Clerk's `currentUser()`
+ * (which also requires clerkMiddleware and is effectively broken
+ * in our setup). It's kept only as a best-effort fallback.
  */
 export async function getUser(request?: NextRequest): Promise<AuthedUser | null> {
   try {
-    const a = request ? getAuth(request) : await auth();
-    // TEMP DIAG — log in all envs so we can see what's happening on stage.
-    console.warn(
-      "[auth:diag] path=%s userId=%s sessionId=%s cookies=%s",
-      request ? "getAuth(request)" : "auth()",
-      a.userId ?? "null",
-      a.sessionId ?? "null",
-      request
-        ? request.cookies
-            .getAll()
-            .map((c) => c.name)
-            .join(",")
-        : "(no req)"
-    );
-    if (!a.userId) return null;
-    return await loadUser(a.userId);
-  } catch (err) {
-    if (process.env.NODE_ENV !== "production") {
-      console.warn("[auth] getUser failed, treating as signed out:", err);
+    if (request) {
+      const userId = await verifySessionFromRequest(request);
+      if (!userId) return null;
+      return await loadUser(userId);
     }
+    // Fallback path — only works when clerkMiddleware is registered,
+    // which is currently never in our worker. Kept for completeness.
+    const u = await currentUser();
+    if (!u) return null;
+    return shapeUser(u);
+  } catch (err) {
+    console.warn("[auth] getUser failed, treating as signed out:", err);
     return null;
   }
 }
@@ -90,20 +84,55 @@ export async function requireUser(request?: NextRequest): Promise<AuthedUser> {
   return u;
 }
 
+/**
+ * Verify the Clerk session JWT from the request's __session cookie.
+ * Returns the userId (sub claim) if valid, null if missing/invalid.
+ *
+ * This is the workaround for Clerk v7 requiring clerkMiddleware even
+ * when you have the request in hand. `verifyToken` does the same
+ * JWT validation + JWKS lookup that `getAuth(request)` would do, but
+ * without the AsyncLocalStorage requirement.
+ */
+async function verifySessionFromRequest(request: NextRequest): Promise<string | null> {
+  const sessionToken =
+    request.cookies.get("__session")?.value ||
+    request.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
+  if (!sessionToken) return null;
+
+  const payload = await verifyToken(sessionToken, {
+    secretKey: process.env.CLERK_SECRET_KEY,
+  });
+  // verifyToken returns null when the token is invalid/expired/wrong
+  // audience. Anything else means we have a verified sub claim.
+  if (!payload) return null;
+  return payload.sub ?? null;
+}
+
 async function loadUser(userId: string): Promise<AuthedUser> {
-  // Prefer the explicit `getAuth` route so we don't accidentally
-  // re-trigger `auth()` and lose the request context.
-  const user = await currentUser();
-  if (!user) {
-    // Defensive: auth() said userId is set but currentUser() came
-    // back null. This can happen briefly during session
-    // transitions. Return a stub.
+  try {
+    const client = await clerkClient();
+    const user = await client.users.getUser(userId);
+    return shapeUser(user);
+  } catch (err) {
+    // Defensive: the JWT is valid (we just verified it) but fetching
+    // the user from Clerk's API failed. Fall back to a stub.
+
+    console.warn("[auth] loadUser via clerkClient failed, returning stub:", err);
     return { userId, email: null, displayName: userId.slice(0, 8) };
   }
+}
+
+function shapeUser(user: {
+  id: string;
+  primaryEmailAddress?: { emailAddress: string } | null;
+  firstName?: string | null;
+  lastName?: string | null;
+  username?: string | null;
+}): AuthedUser {
   const email = user.primaryEmailAddress?.emailAddress ?? null;
   const first = user.firstName ?? "";
   const last = user.lastName ?? "";
   const full = `${first} ${last}`.trim();
-  const displayName = full || user.username || userId.slice(0, 8);
-  return { userId, email, displayName };
+  const displayName = full || user.username || user.id.slice(0, 8);
+  return { userId: user.id, email, displayName };
 }
