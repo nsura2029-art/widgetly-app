@@ -261,6 +261,19 @@
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
     scroll-behavior: smooth;
+    /*
+     * Kill any rogue horizontal scrollbar caused by overflowed
+     * children (the tools-banner chip row uses overflow-x-auto,
+     * tool hero SVGs sometimes extend past the viewport, etc.).
+     *
+     * `clip` (not `hidden`) is intentional: `overflow-x: hidden`
+     * establishes a scroll container, which can break
+     * `position: sticky` and `position: fixed` descendants. `clip`
+     * visually clips overflow without creating a new scroll
+     * context, so sticky headers and the mega-menu panel still
+     * work as expected.
+     */
+    overflow-x: clip;
   }
 
   body {
@@ -275,6 +288,9 @@
       "cv02" 1,
       "cv03" 1,
       "cv04" 1;
+    /* Defensive: belt-and-suspenders with the `html` rule above.
+     * Some browsers / scroll containers clip differently. */
+    overflow-x: clip;
   }
 
   h1,

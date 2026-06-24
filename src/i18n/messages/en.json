@@ -21,7 +21,16 @@
       "homeLink": "{siteName} home",
       "suggestTool": "Suggest a tool",
       "signIn": "Sign in to your account",
-      "signUp": "Create a new account"
+      "signUp": "Create a new account",
+      "toolsMenu": "Tools menu"
+    },
+    "tools": {
+      "trigger": "Tools",
+      "megaTitle": "Browse by category",
+      "megaSubtitle": "{count} categories",
+      "sheetLabel": "Tools",
+      "browseCategory": "Browse {name}",
+      "tileCount": "{count} {count, plural, one {tool} other {tools}}"
     },
     "localePicker": {
       "label": "Select language",
