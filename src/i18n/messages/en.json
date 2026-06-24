@@ -448,7 +448,8 @@
         "emailRequired": "Email is required.",
         "emailMax": "Email must be 254 characters or fewer.",
         "emailInvalid": "Please enter a valid email address."
-      }
+      },
+      "emailFromAccountPrefix": "Posting as {email}. Edit it in your account settings."
     }
   },
   "blog": {

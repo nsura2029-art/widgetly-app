@@ -448,7 +448,8 @@
       "signInTitle": "[es] Sign in to submit a suggestion",
       "signInBody": "[es] We ask you to sign in so we can show you the status of your suggestions, credit you for accepted ideas, and prevent spam. One click, no password to remember.",
       "signInAction": "[es] Sign in",
-      "signUpAction": "[es] Create account"
+      "signUpAction": "[es] Create account",
+      "emailFromAccountPrefix": "Publicando como {email}. Edítalo en la configuración de tu cuenta."
     }
   },
   "blog": {

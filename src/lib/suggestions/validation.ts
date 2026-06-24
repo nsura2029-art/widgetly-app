@@ -65,13 +65,19 @@ export const suggestionFormSchema = z
         { message: SUGGESTION_ERROR_CODES.categoryRequired }
       ),
     urgency: z.enum([...SUGGESTION_URGENCIES] as [SuggestionUrgency, ...SuggestionUrgency[]]),
+    // Email is now optional on the wire — the server route always
+    // overrides it with the Clerk-verified primary email of the
+    // signed-in user. We keep the field in the schema so old clients
+    // and tests that still send it continue to validate cleanly, but
+    // missing/empty values are accepted here.
     email: z
       .string()
       .trim()
       .toLowerCase()
-      .min(1, SUGGESTION_ERROR_CODES.emailRequired)
       .max(254, SUGGESTION_ERROR_CODES.emailMax)
-      .email(SUGGESTION_ERROR_CODES.emailInvalid),
+      .email(SUGGESTION_ERROR_CODES.emailInvalid)
+      .optional()
+      .or(z.literal("")),
   })
   .strict();
 

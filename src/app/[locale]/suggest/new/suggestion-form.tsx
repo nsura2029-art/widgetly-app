@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Check, Clipboard, Linkedin, LogIn, Send, Share2 } from "lucide-react";
+import { Check, Clipboard, Linkedin, LogIn, Mail, Send, Share2 } from "lucide-react";
 import { useSafeUser } from "@/lib/auth/use-safe-user";
 import { ClerkSignInButton, ClerkSignUpButton } from "@/components/auth/clerk-auth-buttons";
 import { useTranslations } from "next-intl";
@@ -29,7 +29,7 @@ const limits = {
   useCase: { min: 20, max: 300 },
 };
 
-const initialForm: SuggestionFormInput = {
+const initialForm: Omit<SuggestionFormInput, "email"> = {
   toolName: "",
   description: "",
   useCase: "",
@@ -41,10 +41,9 @@ const initialForm: SuggestionFormInput = {
   // doesn't fit most suggestions).
   category: "" as SuggestionCategory,
   urgency: "medium",
-  // Email is now sourced from Clerk (verified primary), not
-  // client-provided. The Zod schema still requires the field to
-  // be present, so we keep a non-empty value here.
-  email: "use-clerk-session",
+  // Email is sourced from Clerk (verified primary) — see
+  // `submit()` and the "Posting as" line under the form.
+  // We don't collect it from the user anymore.
 };
 
 function counter(value: string, max: number) {
@@ -114,7 +113,13 @@ function SuggestionFormInner() {
   const t = useTranslations("suggest.formNew");
   const tErrors = useTranslations("suggest.formNew.errors");
   const { user } = useSafeUser();
-  const [form, setForm] = useState<SuggestionFormInput>(initialForm);
+  // Pull the verified primary email once and use it both for the
+  // "Posting as" line and for the API request payload. We prefer
+  // `primaryEmailAddress` (Clerk's verified-primary) but fall back
+  // to the first email address on the user.
+  const userEmail =
+    user?.primaryEmailAddress?.emailAddress ?? user?.emailAddresses?.[0]?.emailAddress ?? null;
+  const [form, setForm] = useState<Omit<SuggestionFormInput, "email">>(initialForm);
   const [errors, setErrors] = useState<FieldErrors>({});
   const [submitting, setSubmitting] = useState(false);
   const [serverError, setServerError] = useState("");
@@ -123,7 +128,10 @@ function SuggestionFormInner() {
 
   const validation = useMemo(() => validateSuggestionForm(form), [form]);
 
-  function update<K extends keyof SuggestionFormInput>(key: K, value: SuggestionFormInput[K]) {
+  function update<K extends keyof Omit<SuggestionFormInput, "email">>(
+    key: K,
+    value: Omit<SuggestionFormInput, "email">[K]
+  ) {
     const next = { ...form, [key]: value };
     setForm(next);
     const parsed = validateSuggestionForm(next);
@@ -156,11 +164,15 @@ function SuggestionFormInner() {
     setSubmitting(true);
     setServerError("");
     try {
-      // Override the client-side email with the Clerk-verified one.
-      // The server route also does this, but we do it here too so
-      // the API request body is well-formed even if the server
-      // version drifts.
-      const payload = { ...parsed.data, email: user?.primaryEmailAddress?.emailAddress ?? "" };
+      // We always send the Clerk-verified primary email as the
+      // submission's contact. The server route also enforces this
+      // (overriding anything the client sends) — this is just so the
+      // API request body is well-formed and matches the schema.
+      const payload = {
+        ...parsed.data,
+        email:
+          user?.primaryEmailAddress?.emailAddress ?? user?.emailAddresses?.[0]?.emailAddress ?? "",
+      };
       const response = await fetch("/api/suggestions", {
         method: "POST",
         headers: { "content-type": "application/json" },
@@ -326,16 +338,22 @@ function SuggestionFormInner() {
         </Field>
       </div>
 
-      <Field label={t("emailLabel")} error={errors.email}>
-        <Input
-          type="email"
-          value={user?.primaryEmailAddress?.emailAddress ?? ""}
-          readOnly
-          placeholder={t("emailPlaceholder")}
-          aria-readonly="true"
-        />
-        <span className="text-muted-foreground mt-1.5 block text-xs">{t("emailFromAccount")}</span>
-      </Field>
+      {/*
+        No email field here — for signed-in users the verified
+        primary email comes from Clerk and is attached automatically
+        (see submit() above). We surface a small "Posting as" line
+        so the user has a clear visual confirmation of which email
+        will receive status updates. The value lives in the same
+        Clerk session that authed the request, so it can't be spoofed.
+      */}
+      {userEmail && (
+        <div className="border-border/60 bg-muted/10 flex items-center gap-3 rounded-xl border px-4 py-3 text-sm">
+          <Mail aria-hidden="true" className="text-muted-foreground h-4 w-4 shrink-0" />
+          <span className="text-muted-foreground">
+            {t("emailFromAccountPrefix", { email: userEmail })}
+          </span>
+        </div>
+      )}
 
       {serverError && (
         <div className="rounded-xl border border-red-500/25 bg-red-500/5 px-4 py-3 text-sm text-red-700">
