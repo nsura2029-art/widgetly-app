@@ -8,49 +8,53 @@
  *
  *  - Server (`client-header.tsx`)  →  fetches `getHeaderToolsData()`
  *  - Client (this file)            →  renders the chrome and the
- *                                      inline category strip / mobile
- *                                      sheet / Clerk auth UI.
+ *                                      "Tools" mega menu trigger +
+ *                                      the always-visible pill strip
+ *                                      + mobile sheet + Clerk auth UI.
  *
- * ## Layout
+ * ## Layout (desktop, md+)
  *
- * Two visible rows on desktop:
- *   - **Row 1** (h-16): brand mark, primary nav (Leaderboard, Top
- *     Suggesters), Suggest CTA, Clerk auth UI, mobile hamburger.
- *   - **Row 2** (h-12): horizontal-scrolling category pill strip
- *     showing every tool category with its icon + live count. The
- *     strip is always visible — no hover or click required — so
- *     users can find a category at a glance without first opening a
- *     mega menu.
+ *   Row 1 (h-16): brand · "Tools ▾" mega-menu trigger · primary nav
+ *                 (Leaderboard, Top Suggesters) · Suggest CTA · Clerk
+ *                 auth UI · mobile hamburger (md:hidden).
+ *   Row 2 (h-12): horizontal-scrolling category pill strip — always
+ *                 visible, shows every category at a glance.
+ *   Mega panel:   when the "Tools ▾" trigger is hovered or clicked,
+ *                 a 4-col tile grid drops down, anchored to the
+ *                 trigger and covering row 2. Closed by Esc, click
+ *                 outside, route change, or resize past md.
  *
- * On mobile (below `md`), the second row is hidden (the Tools
- * category list lives in `MobileNav`'s accordion instead).
+ * On mobile (below `md`) the mega trigger + row 2 are hidden — the
+ * same Tools list lives in `MobileNav`'s accordion instead.
  *
- * ## Why inline pills (not a "Tools" dropdown)
+ * ## Two views of the same data
  *
- * The previous "Tools" mega-menu trigger required a hover/click to
- * surface the category list. SSR rendered the trigger as
- * `opacity:0` (framer-motion initial state) until hydration, so
- * first-paint users saw no tools navigation at all in the header.
+ * The pill strip and the mega panel both render the same 11
+ * categories, just at different densities:
  *
- * Inlining the category list as a pill strip:
- *   - Renders immediately on first paint (no JS needed to see it).
- *   - Saves the user one click per category browse.
- *   - Matches the modern pattern used by Vercel, Linear, Notion
- *     (always-visible mega strip below a compact top row).
+ *   - Pill strip — compact: icon + name + live count badge. Always
+ *     visible, so first-paint users can browse without interacting.
+ *   - Mega panel — rich: 4-col grid of larger tiles with accent-
+ *     tinted icons, exact "N tools" counts, and a "Browse →" CTA per
+ *     tile. Opens on demand when the user wants a fuller view.
+ *
+ * Both come from the same `categories` prop (server-fetched D1 +
+ * static catalog). No extra fetches.
  *
  * ## State machines
  *
- *  1. **Mobile sheet** — managed by `useState`. `MobileNav` owns
- *     the per-category accordion state.
- *  2. **Body scroll lock** — `document.body.style.overflow` while
+ *  1. **Mega menu** — `useMegaMenu`. Standard mega-menu pattern:
+ *     hover-to-open, 120ms close delay on leave, click to toggle,
+ *     Esc / route-change / resize-past-md to close.
+ *  2. **Mobile sheet** — `useState`. `MobileNav` owns the per-
+ *     category accordion state.
+ *  3. **Body scroll lock** — `document.body.style.overflow` while
  *     the mobile sheet is open.
- *
- *  No desktop mega-menu state anymore — the pill strip is static.
  */
 
 import * as React from "react";
 import { motion } from "framer-motion";
-import { Lightbulb, Menu, X } from "lucide-react";
+import { ChevronDown, Lightbulb, Menu, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
@@ -62,10 +66,12 @@ import {
 import { Logo } from "@/components/shared/logo";
 import { Link, usePathname } from "@/i18n/navigation";
 import { useSafeUser } from "@/lib/auth/use-safe-user";
+import { useMegaMenu } from "@/hooks/use-mega-menu";
 import { getIcon } from "@/lib/icons";
 import { type HeaderCategory } from "@/lib/d1/header-tools";
 import { cn } from "@/lib/utils";
 
+import { HeaderMegaPanel } from "./header-mega-panel";
 import { MobileNav } from "./mobile-nav";
 
 export type ClientHeaderShellProps = {
@@ -73,31 +79,39 @@ export type ClientHeaderShellProps = {
 };
 
 const MD_BREAKPOINT = 768;
+const TOOLS_SLUG = "tools";
+const MEGA_PANEL_ID = "header-tools-mega-panel";
 
 export function ClientHeaderShell({ categories }: ClientHeaderShellProps) {
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const pathname = usePathname();
   const t = useTranslations();
+  const mega = useMegaMenu();
   // useSafeUser() is a Clerk-v7-safe wrapper that returns a stub
   // when the publishable key env var is missing, so the header
   // renders the signed-out UI even before Clerk is configured.
   const { isLoaded, isSignedIn } = useSafeUser();
 
+  const isMegaOpen = mega.openSlug === TOOLS_SLUG;
+
   // ------------------------------------------------------------------
-  // Close the mobile sheet when the viewport grows past the md
-  // breakpoint. Without this, opening the sheet on a phone, then
-  // rotating to landscape, would leave the sheet open with no
-  // close button visible (it's hidden on md+).
+  // Close both UIs when the viewport grows past the md breakpoint.
+  // Without this, opening the mobile sheet on a phone, then rotating
+  // to landscape, would leave the sheet open with no close button
+  // visible (it's hidden on md+). Same for the mega panel — the
+  // trigger is hidden on mobile, so leaving it open would dangle.
   // ------------------------------------------------------------------
   React.useEffect(() => {
     const onResize = () => {
       if (window.innerWidth >= MD_BREAKPOINT) {
         setMobileOpen(false);
+      } else {
+        mega.close();
       }
     };
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
-  }, []);
+  }, [mega]);
 
   // ------------------------------------------------------------------
   // Lock body scroll while the mobile sheet is open. The mobile
@@ -114,13 +128,28 @@ export function ClientHeaderShell({ categories }: ClientHeaderShellProps) {
   }, [mobileOpen]);
 
   // ------------------------------------------------------------------
-  // Close the mobile sheet on route change. The new page should
-  // always start with the header chrome in its default state.
+  // Close both UIs on route change. The new page should always
+  // start with the header chrome in its default state.
   // ------------------------------------------------------------------
   React.useEffect(() => {
     setMobileOpen(false);
+    mega.close();
     // eslint-disable-next-line react-hooks/set-state-in-effect
-  }, [pathname]);
+  }, [pathname, mega]);
+
+  // ------------------------------------------------------------------
+  // Esc closes the mega panel immediately (no close delay). Only
+  // listens while the panel is open so we don't pay the cost of a
+  // global keydown listener on every page just for this feature.
+  // ------------------------------------------------------------------
+  React.useEffect(() => {
+    if (!isMegaOpen) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") mega.close();
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [isMegaOpen, mega]);
 
   const navLinks = [
     { href: "/leaderboard", label: t("header.nav.leaderboard") },
@@ -150,11 +179,36 @@ export function ClientHeaderShell({ categories }: ClientHeaderShellProps) {
           <span className="text-lg font-semibold">{t("site.name")}</span>
         </Link>
 
-        {/* Desktop primary nav */}
+        {/* Desktop primary nav: "Tools" mega trigger + Leaderboard + Top Suggesters */}
         <nav
           className="hidden md:flex md:items-center md:gap-1"
           aria-label={t("header.aria.mainNav")}
         >
+          {/* "Tools" mega-menu trigger — opens the 4-col category tile panel */}
+          <button
+            type="button"
+            aria-haspopup="menu"
+            aria-expanded={isMegaOpen}
+            aria-controls={MEGA_PANEL_ID}
+            aria-label={t("header.aria.toolsMenu")}
+            onClick={() => mega.toggle(TOOLS_SLUG)}
+            onMouseEnter={() => mega.open(TOOLS_SLUG)}
+            onMouseLeave={mega.scheduleClose}
+            onFocus={() => mega.open(TOOLS_SLUG)}
+            className={cn(
+              "hover:text-foreground hover:bg-muted/5 text-muted inline-flex items-center gap-1 rounded-lg px-3.5 py-2 text-sm font-medium transition-colors",
+              isMegaOpen && "bg-muted/5 text-foreground"
+            )}
+          >
+            <span>{t("header.tools.trigger")}</span>
+            <ChevronDown
+              className={cn(
+                "h-3.5 w-3.5 opacity-60 transition-transform",
+                isMegaOpen && "rotate-180"
+              )}
+              aria-hidden="true"
+            />
+          </button>
           {navLinks.map((link) => (
             <Link
               key={link.href}
@@ -217,10 +271,16 @@ export function ClientHeaderShell({ categories }: ClientHeaderShellProps) {
 
       {/* ----------------------------------------------------------------
         Row 2 — inline category pill strip (h-12, desktop only)
-        Hidden on mobile because MobileNav already shows the same list
-        in its Tools accordion.
+        Hidden when the mega panel is open (the panel is a richer
+        view of the same categories) and on mobile (MobileNav has
+        the same list in its Tools accordion).
       ---------------------------------------------------------------- */}
-      <div className="hidden border-border/60 border-t bg-white/95 backdrop-blur-md md:block">
+      <div
+        className={cn(
+          "hidden border-border/60 border-t bg-white/95 backdrop-blur-md md:block",
+          isMegaOpen && "invisible"
+        )}
+      >
         <div className="container">
           <nav
             aria-label={t("header.aria.toolsNav")}
@@ -232,6 +292,24 @@ export function ClientHeaderShell({ categories }: ClientHeaderShellProps) {
           </nav>
         </div>
       </div>
+
+      {/* Desktop mega panel — 4-col category tile grid (anchored to
+          the header, covers row 2 when open) */}
+      {isMegaOpen ? (
+        <HeaderMegaPanel
+          id={MEGA_PANEL_ID}
+          categories={categories}
+          labels={{
+            title: t("header.tools.megaTitle"),
+            subtitle: (count) => t("header.tools.megaSubtitle", { count }),
+            browseCategory: (name) => t("header.tools.browseCategory", { name }),
+            tileCount: (count) => t("header.tools.tileCount", { count }),
+          }}
+          onMouseEnter={mega.cancelClose}
+          onMouseLeave={mega.scheduleClose}
+          onLinkClick={mega.close}
+        />
+      ) : null}
 
       {/* Mobile sheet — slides down below the header on small screens */}
       <MobileNav
