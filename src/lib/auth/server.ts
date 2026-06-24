@@ -30,11 +30,25 @@ export type AuthedUser = {
  * Return the current user, or null if not signed in. Cheap — just
  * a JWT check, no DB hit. Use this in pages that should render
  * different content for signed-in vs signed-out visitors.
+ *
+ * IMPORTANT: Clerk's `auth()` can throw in some edge cases (missing
+ * env vars, middleware issues, network blips reaching the Clerk API).
+ * For our use case, any failure to determine the current user
+ * should be treated as "not signed in" — never as a 500. Pages and
+ * routes that need a signed-in user should call `requireUser()`
+ * which throws a proper HttpError(401).
  */
 export async function getUser(): Promise<AuthedUser | null> {
-  const { userId } = await auth();
-  if (!userId) return null;
-  return loadUser(userId);
+  try {
+    const { userId } = await auth();
+    if (!userId) return null;
+    return await loadUser(userId);
+  } catch (err) {
+    if (process.env.NODE_ENV !== "production") {
+      console.warn("[auth] getUser failed, treating as signed out:", err);
+    }
+    return null;
+  }
 }
 
 /**
