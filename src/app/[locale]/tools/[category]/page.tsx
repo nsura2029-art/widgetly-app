@@ -63,6 +63,31 @@ const ACCENT_CLASSES: Record<"primary" | "secondary" | "accent", string> = {
   accent: "bg-accent text-accent-foreground",
 };
 
+/** NotebookLM-style: per-category pastel card surface + accent-tinted
+ *  border. The whole card carries the visual identity of its category
+ *  rather than a uniform muted tint (which is what `bg-muted/5` was
+ *  doing before). Hover deepens the border + slightly saturates the
+ *  bg, paired with `-translate-y-0.5` on the link itself for the lift
+ *  micro-interaction. */
+const CARD_PASTEL_CLASSES: Record<"primary" | "secondary" | "accent", string> = {
+  primary: "border-primary/20 bg-primary/[0.06] hover:border-primary/40 hover:bg-primary/[0.10]",
+  secondary:
+    "border-secondary/20 bg-secondary/[0.06] hover:border-secondary/40 hover:bg-secondary/[0.10]",
+  accent: "border-accent/20 bg-accent/[0.06] hover:border-accent/40 hover:bg-accent/[0.10]",
+};
+
+/** Circular chevron CTA on the right of each card (NotebookLM pattern).
+ *  Idle: tinted with the accent at 10% opacity + accent-colored chevron.
+ *  Hover: fills to the solid accent + flips to the contrast foreground
+ *  token. Decorative (`aria-hidden`) — the whole card is the clickable
+ *  target, not the circle. */
+const CHEVRON_CIRCLE_CLASSES: Record<"primary" | "secondary" | "accent", string> = {
+  primary: "bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground",
+  secondary:
+    "bg-secondary/10 text-secondary group-hover:bg-secondary group-hover:text-secondary-foreground",
+  accent: "bg-accent/10 text-accent group-hover:bg-accent group-hover:text-accent-foreground",
+};
+
 type Params = { category: string };
 
 // This page reads `admin_tools` from D1 at request time, so it MUST be
@@ -273,31 +298,49 @@ export default async function ToolsCategoryPage({ params }: { params: Promise<Pa
               //      Sparkles, but going through `cat.icon` keeps
               //      the visual link to the category badge above.)
               const toolIconName =
-                getToolIconName(cat.slug, t.name) ??
-                inferToolIconName(t.name) ??
-                cat.icon;
+                getToolIconName(cat.slug, t.name) ?? inferToolIconName(t.name) ?? cat.icon;
               const ToolIcon = getIcon(toolIconName);
               return (
                 <li key={t.slug} id={t.slug}>
                   <Link
                     href={`/tools/${cat.slug}/${t.slug}`}
                     prefetch={false}
-                    className="border-border/60 bg-muted/5 hover:border-primary/40 hover:bg-muted/10 group flex items-center gap-2.5 rounded-lg border px-3 py-2.5 text-sm transition-colors"
+                    className={cn(
+                      // NotebookLM-style: per-category pastel surface +
+                      // accent-tinted border so the card carries its
+                      // category's color identity. Hover lifts the card
+                      // and deepens the border for clear focus.
+                      CARD_PASTEL_CLASSES[cat.accent],
+                      "group hover:shadow-soft-lg flex items-center gap-3 rounded-xl border p-3 text-sm transition-all duration-200 hover:-translate-y-0.5"
+                    )}
                   >
                     <span
                       className={cn(
-                        "flex h-7 w-7 shrink-0 items-center justify-center rounded-md",
+                        "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-transform duration-200 group-hover:scale-110",
                         ACCENT_CLASSES[cat.accent]
                       )}
                     >
-                      <ToolIcon className="h-3.5 w-3.5" strokeWidth={2.25} aria-hidden="true" />
+                      <ToolIcon className="h-4 w-4" strokeWidth={2.25} aria-hidden="true" />
                     </span>
                     <span className="text-foreground flex-1 font-medium">{t.name}</span>
                     <span
-                      className="text-muted-foreground group-hover:text-primary text-xs font-medium transition-colors"
+                      className={cn(
+                        "flex h-7 w-7 shrink-0 items-center justify-center rounded-full transition-colors",
+                        CHEVRON_CIRCLE_CLASSES[cat.accent]
+                      )}
                       aria-hidden="true"
                     >
-                      →
+                      <svg
+                        className="h-3.5 w-3.5"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth={2.5}
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M9 18l6-6-6-6" />
+                      </svg>
                     </span>
                   </Link>
                 </li>
@@ -310,7 +353,7 @@ export default async function ToolsCategoryPage({ params }: { params: Promise<Pa
       {/* Explore more */}
       <div className="mt-16">
         <h2 className="text-foreground text-lg font-semibold">More tool categories</h2>
-        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {others.map((o) => {
             const OIcon = ICONS[o.icon] ?? FileText;
             return (
@@ -318,20 +361,47 @@ export default async function ToolsCategoryPage({ params }: { params: Promise<Pa
                 key={o.slug}
                 href={`/tools/${o.slug}`}
                 prefetch={false}
-                className="border-border/60 hover:border-primary/40 group flex items-center gap-3 rounded-xl border bg-white p-3.5 transition-colors"
+                className={cn(
+                  // NotebookLM-style showcase tile: per-category pastel
+                  // surface, 11×11 colored tile, circular chevron CTA.
+                  // Larger radius (rounded-2xl) + extra padding than the
+                  // right-rail cards because this is a category-level
+                  // discovery surface.
+                  CARD_PASTEL_CLASSES[o.accent],
+                  "group hover:shadow-soft-lg flex items-center gap-3 rounded-2xl border p-4 transition-all duration-200 hover:-translate-y-0.5"
+                )}
               >
                 <span
                   className={cn(
-                    "flex h-9 w-9 items-center justify-center rounded-lg",
+                    "shadow-soft flex h-11 w-11 shrink-0 items-center justify-center rounded-xl transition-transform duration-200 group-hover:scale-110",
                     ACCENT_CLASSES[o.accent]
                   )}
                 >
-                  <OIcon className="h-4 w-4" aria-hidden="true" />
+                  <OIcon className="h-5 w-5" aria-hidden="true" />
                 </span>
                 <div className="min-w-0 flex-1">
                   <div className="text-foreground truncate text-sm font-semibold">{o.name}</div>
                   <div className="text-muted truncate text-xs">{o.pitch}</div>
                 </div>
+                <span
+                  className={cn(
+                    "flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-colors",
+                    CHEVRON_CIRCLE_CLASSES[o.accent]
+                  )}
+                  aria-hidden="true"
+                >
+                  <svg
+                    className="h-4 w-4"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={2.5}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M9 18l6-6-6-6" />
+                  </svg>
+                </span>
               </Link>
             );
           })}

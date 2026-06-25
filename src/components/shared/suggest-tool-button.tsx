@@ -513,6 +513,13 @@ export function SuggestToolButton({
         // Tailwind specificity and `rounded-full` is later
         // in the generated CSS.
         "rounded-full",
+        // "Aurora glow" idle breath — uses the existing brand-gradient
+        // shadow colors (declared in globals.css `@keyframes glow-pulse`).
+        // Gated by `motion-safe:` so prefers-reduced-motion users see a
+        // static button (the global reduced-motion override caps the
+        // animation to 0.01ms anyway, but the gate avoids even queuing
+        // the keyframe work).
+        "group motion-safe:animate-glow-pulse",
         // The link is the particle-emitter surface. We
         // position it relative so the absolutely-positioned
         // children (button content + particle overlay) are
@@ -525,7 +532,7 @@ export function SuggestToolButton({
     >
       <span className="relative z-10 flex items-center">
         {label}
-        <ArrowRight className="ml-2" />
+        <ArrowRight className="ml-2 transition-transform duration-200 group-hover:translate-x-1" />
       </span>
 
       {/* Particle overlay — fixed to the viewport so particles

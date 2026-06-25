@@ -240,6 +240,33 @@
   .animate-float {
     animation: float 4s ease-in-out infinite;
   }
+
+  /* SuggestToolButton "Aurora glow" — gentle idle pulse that breathes
+   * the existing brand-gradient shadow (primary #5b6cff → accent
+   * #a855f7). No new colors — reuses the tokens already declared in
+   * the @theme block above so the CTA stays inside Widgetly's palette.
+   * Pair with `motion-safe:` at the call site so prefers-reduced-motion
+   * users see a static button.
+   *
+   * The existing global reduced-motion override (see @layer base below)
+   * caps animation-duration at 0.01ms, so we don't need a per-class
+   * override here. */
+  @keyframes glow-pulse {
+    0%,
+    100% {
+      box-shadow:
+        0 4px 14px -2px rgba(91, 108, 255, 0.4),
+        0 0 24px -8px rgba(168, 85, 247, 0.3);
+    }
+    50% {
+      box-shadow:
+        0 6px 22px -2px rgba(91, 108, 255, 0.55),
+        0 0 40px -6px rgba(168, 85, 247, 0.5);
+    }
+  }
+  .animate-glow-pulse {
+    animation: glow-pulse 3.5s ease-in-out infinite;
+  }
 }
 
 /* -----------------------------------------------------------------------
