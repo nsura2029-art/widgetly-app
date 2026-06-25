@@ -10,6 +10,7 @@ import { ComingSoonBadge } from "@/components/landing/coming-soon-badge";
 import { RandomMascot } from "@/components/landing/mascots";
 import { SearchMockup } from "@/components/landing/search-mockup";
 import { AnimatedBackground } from "@/components/shared/animated-background";
+import { SuggestToolButton } from "@/components/shared/suggest-tool-button";
 
 /**
  * Hero section — the very first thing visitors see. Translated via
@@ -146,12 +147,12 @@ export function Hero({ mascotSeed }: { mascotSeed?: number } = {}) {
               transition={{ delay: 0.55, duration: 0.6 }}
               className="mt-6 flex w-full max-w-sm flex-col gap-3 min-[390px]:flex-row"
             >
-              <Button asChild size="lg" className="w-full">
-                <Link href="/suggest">
-                  {t("suggestTool")}
-                  <ArrowRight className="ml-2" />
-                </Link>
-              </Button>
+              <SuggestToolButton
+                href="/suggest"
+                label={t("suggestTool")}
+                size="lg"
+                className="w-full"
+              />
               <Button asChild size="lg" variant="secondary" className="w-full">
                 <Link href="/tools">
                   {t("browseTools", { defaultValue: "Browse tools" })}
