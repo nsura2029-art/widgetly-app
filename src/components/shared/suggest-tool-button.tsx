@@ -7,40 +7,56 @@
  *
  * Visual behaviour
  * ----------------
- * On hover, the button acts as the spout of a small fountain.
- * Each `mousemove` over the BUTTON spawns a cluster of 2-4
- * tool-category icons that burst upward in a ±55° cone, drift to
- * 180-280 px from the button's top edge, and fade out. Particles
- * render ABOVE the button (z-index 20) so the icons visibly
- * originate from inside the pill, not behind it.
+ * While the cursor is over the button, the button spawns a
+ * continuous 360° fountain of tool-category icons at the
+ * mouse position. Each particle drifts outward with light
+ * physics (initial velocity + drag + slight gravity), spins
+ * slowly as it travels, and fades based on DISTANCE traveled
+ * (not elapsed time) so icons that travel further from the
+ * spawn point disappear first, exactly the opposite of the
+ * classic "explode and equal-fade" pattern.
  *
  * Why a fixed icon pool, not random per spawn?
- *   A small static pool of 28 category + sub-tool icons (defined
- *   in `ICON_POOL` below) keeps the visual identity consistent
+ *   A static pool of ~28 category + sub-tool icons (plus a
+ *   sparkle variant) keeps the visual identity consistent
  *   with the rest of the site — we never get a random Lucide
- *   glyph that doesn't relate to anything on Widgetly. The pool
- *   is the same 11 categories the mega-menu banner uses, with
- *   sub-tools from `TOOLS_SUBGROUPS` mixed in for variety.
+ *   glyph that doesn't relate to anything on Widgetly. Pool
+ *   entries mirror the mega-menu categories / sub-groupings.
+ *
+ * Why a manual RAF loop instead of framer-motion?
+ *   The reference effect (and what feels right for this kind
+ *   of dense, distance-driven particle system) runs at ~60
+ *   physics ticks per second with up to ~80 live particles.
+ *   Putting that through React reconciliation each frame
+ *   would mean thousands of prop diffs per second. We render
+ *   the DOM elements once via React and then mutate their
+ *   `transform`/`opacity` inline each frame; React only
+ *   re-renders when particles are added or removed (which is
+ *   at most a handful of times per second).
  *
  * Performance
  * -----------
- * - The mousemove handler is throttled to one spawn every
- *   `SPAWN_THROTTLE_MS` ms (default 45 ms). A real human mouse
- *   moves through the button in 50-150 ms, so this still gives
- *   3-10 clusters per pass and never overwhelms the renderer.
- * - The active-particle cap (`MAX_PARTICLES = 80`) drops the
- *   oldest particles when exceeded. With a 0.7-1.1 s lifetime
- *   the cap is well above what the throttler produces even on
- *   jittery mice, but the cap means we never grow unbounded.
- * - All animation runs in transform / opacity only — no layout
- *   thrash, no repaints of the parent.
+ * - Particle state lives in a `useRef<Map>` (no React render
+ *   on physics ticks).
+ * - DOM updates are inline `style.transform` / `style.opacity`
+ *   writes on refs (the browser composites the rest).
+ * - `MAX_PARTICLES = 80` caps the live pool; oldest particles
+ *   are dropped first if we ever exceed it.
  * - `prefers-reduced-motion` short-circuits the entire system:
  *   the button renders as a plain CTA with no particles.
+ *
+ * Coordinate system
+ * -----------------
+ * Particles use **viewport** coordinates (`event.clientX/Y`)
+ * because the particle container is `position: fixed` and
+ * fills the viewport. This keeps the math identical to the
+ * vanilla reference and avoids any `getBoundingClientRect`
+ * conversion on every spawn.
  */
 
 import * as React from "react";
 import Link from "next/link";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { useReducedMotion } from "framer-motion";
 import { ArrowRight, Sparkles as SparklesIcon, type LucideIcon } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -52,9 +68,9 @@ import { getIcon } from "@/lib/icons";
 /* Particle pool                                                       */
 /* ------------------------------------------------------------------ */
 
-/** Color tokens for the particle tiles. Mirrors the mega-menu
- *  accent palette so the burst feels like a mini version of the
- *  site nav rather than a random rainbow. */
+/** Color tokens for the category tiles. Mirrors the mega-menu
+ *  accent palette so the burst feels like a mini version of
+ *  the site nav rather than a random rainbow. */
 const ACCENT_TOKENS = {
   primary: { bg: "var(--color-primary)", fg: "var(--color-primary-foreground)" },
   secondary: { bg: "var(--color-secondary)", fg: "var(--color-primary-foreground)" },
@@ -85,18 +101,15 @@ type PoolEntry = {
   icon: string;
   /**
    * Resolved Lucide icon component. Pre-resolved at module
-   * load so the ParticleView can render it directly without
-   * looking it up on every frame (and so the
-   * `react-hooks/static-components` lint rule sees a stable
-   * component identity across renders).
+   * load so the particle renderer can drop it in directly
+   * without looking it up per spawn.
    */
   Icon: LucideIcon;
   /** Background color (CSS color value). */
   bg: string;
   /** Foreground color for the icon glyph. */
   fg: string;
-  /** Visual variant — category tiles are square, sub-tool tiles
-   *  are slightly rounded, sparkles have no tile. */
+  /** Visual variant — drives tile shape in the renderer. */
   kind: ParticleKind;
 };
 
@@ -158,40 +171,91 @@ function buildPool(): PoolEntry[] {
 const ICON_POOL: readonly PoolEntry[] = buildPool();
 
 /* ------------------------------------------------------------------ */
-/* Particle dynamics                                                   */
+/* Physics tuning                                                      */
 /* ------------------------------------------------------------------ */
 
-const SPAWN_THROTTLE_MS = 45;
 const MAX_PARTICLES = 80;
-const CLUSTER_MIN = 2;
-const CLUSTER_MAX = 4;
-const DISTANCE_MIN = 180;
-const DISTANCE_MAX = 280;
-const LIFETIME_MIN = 0.7;
-const LIFETIME_MAX = 1.1;
-const CONE_HALF_ANGLE_DEG = 55;
+const SPAWN_PER_FRAME_MIN = 1;
+const SPAWN_PER_FRAME_MAX = 3;
+const SPAWN_PROBABILITY = 0.8;
 const SPARKLE_PROBABILITY = 0.18;
+const INITIAL_BURST_COUNT = 12;
+const INITIAL_BURST_STAGGER_MS = 20;
+
+/** Speed of newly spawned particles (px/s). The reference
+ *  effect uses 60-180 px/s — gentle drift, not a hard burst. */
+const SPEED_MIN = 60;
+const SPEED_MAX = 180;
+
+/** Per-particle drag coefficient (0-1 fraction per second
+ *  removed from velocity each tick). 0.2-0.5 in the ref. */
+const DRAG_MIN = 0.2;
+const DRAG_MAX = 0.5;
+
+/** Per-particle gravity (px/s²). Slight downward arc. */
+const GRAVITY_MIN = 10;
+const GRAVITY_MAX = 40;
+
+/** Per-particle rotation speed (deg/s). */
+const ROTATION_SPEED_MAX = 200;
+
+/** Per-particle distance cap (px). At maxDistance the
+ *  opacity is 0; particles are reaped at 1.2× that. */
+const MAX_DISTANCE_MIN = 80;
+const MAX_DISTANCE_MAX = 230;
+
+/** Per-particle size scale (tile size multiplier). */
+const SIZE_MIN = 0.85;
+const SIZE_MAX = 1.15;
+
+/** First-frame fade-in window (seconds). Mirrors the ref. */
+const FADE_IN_SECONDS = 0.1;
+
+/* ------------------------------------------------------------------ */
+/* Particle type                                                       */
+/* ------------------------------------------------------------------ */
 
 type Particle = {
   id: number;
   entry: PoolEntry;
-  /** Target offset from the spawn point (px). */
-  tx: number;
-  ty: number;
-  /** Lifetime in seconds. */
-  lifetime: number;
-  /** Slight rotation for variety (degrees). */
+  /** Current viewport x (px). */
+  x: number;
+  /** Current viewport y (px). */
+  y: number;
+  /** Spawn point (viewport coords). Distance fade is measured
+   *  from here. */
+  startX: number;
+  startY: number;
+  /** Velocity (px/s). */
+  vx: number;
+  vy: number;
+  /** Gravity (px/s²). Applied each frame. */
+  gravity: number;
+  /** Drag (0-1 fraction/sec). Multiplicatively bleeds velocity. */
+  drag: number;
+  /** Current rotation (deg). */
   rotation: number;
-  /** Tile scale at spawn (0.8-1.15). */
-  scale: number;
+  /** Rotation speed (deg/s). */
+  rotationSpeed: number;
+  /** Distance at which opacity reaches 0 (px). */
+  maxDistance: number;
+  /** Per-particle tile size multiplier. */
+  size: number;
+  /** Age in seconds (for first-frame fade-in only — fade is
+   *  distance-based thereafter). */
+  age: number;
 };
+
+/* ------------------------------------------------------------------ */
+/* Helpers                                                             */
+/* ------------------------------------------------------------------ */
 
 function rand(min: number, max: number) {
   return min + Math.random() * (max - min);
 }
 
 function pickEntry(): PoolEntry {
-  // Sparkle takes a small share of the spawns so the burst
+  // Sparkle takes a small share of spawns so the burst
   // doesn't read as a uniform grid of category tiles.
   if (Math.random() < SPARKLE_PROBABILITY) {
     return ICON_POOL[ICON_POOL.length - 1]!;
@@ -206,25 +270,26 @@ function pickEntry(): PoolEntry {
   return ICON_POOL[Math.floor(Math.random() * (ICON_POOL.length - 1))]!;
 }
 
-function spawnCluster(): Particle[] {
-  const n = Math.floor(rand(CLUSTER_MIN, CLUSTER_MAX + 0.999));
-  const out: Particle[] = [];
-  for (let i = 0; i < n; i++) {
-    const angleDeg = rand(-CONE_HALF_ANGLE_DEG, CONE_HALF_ANGLE_DEG);
-    const angleRad = (angleDeg * Math.PI) / 180;
-    const distance = rand(DISTANCE_MIN, DISTANCE_MAX);
-    // CSS Y grows downward, so "up" is -cos(angle).
-    out.push({
-      id: Date.now() + Math.random() + i,
-      entry: pickEntry(),
-      tx: Math.sin(angleRad) * distance,
-      ty: -Math.cos(angleRad) * distance,
-      lifetime: rand(LIFETIME_MIN, LIFETIME_MAX),
-      rotation: rand(-30, 30),
-      scale: rand(0.8, 1.15),
-    });
-  }
-  return out;
+function makeParticle(spawnX: number, spawnY: number, id: number): Particle {
+  const angle = Math.random() * Math.PI * 2;
+  const speed = rand(SPEED_MIN, SPEED_MAX);
+  return {
+    id,
+    entry: pickEntry(),
+    x: spawnX,
+    y: spawnY,
+    startX: spawnX,
+    startY: spawnY,
+    vx: Math.cos(angle) * speed,
+    vy: Math.sin(angle) * speed,
+    gravity: rand(GRAVITY_MIN, GRAVITY_MAX),
+    drag: rand(DRAG_MIN, DRAG_MAX),
+    rotation: Math.random() * 360,
+    rotationSpeed: (Math.random() - 0.5) * 2 * ROTATION_SPEED_MAX,
+    maxDistance: rand(MAX_DISTANCE_MIN, MAX_DISTANCE_MAX),
+    size: rand(SIZE_MIN, SIZE_MAX),
+    age: 0,
+  };
 }
 
 /* ------------------------------------------------------------------ */
@@ -243,8 +308,9 @@ interface SuggestToolButtonProps {
 }
 
 /**
- * Render the "Suggest a Tool" CTA with the fountain hover effect.
- * Visually replaces `<Button asChild><Link>...</Link></Button>`.
+ * Render the "Suggest a Tool" CTA with the 360° fountain
+ * hover effect. Visually replaces
+ * `<Button asChild><Link>...</Link></Button>`.
  */
 export function SuggestToolButton({
   href,
@@ -254,52 +320,220 @@ export function SuggestToolButton({
   className,
 }: SuggestToolButtonProps) {
   const prefersReduced = useReducedMotion();
-  const buttonRef = React.useRef<HTMLAnchorElement | null>(null);
-  const [particles, setParticles] = React.useState<Particle[]>([]);
-  const lastSpawnRef = React.useRef(0);
+  const linkRef = React.useRef<HTMLAnchorElement | null>(null);
 
-  // Drop the oldest particles when we exceed the cap. We track
-  // this with a ref so we don't trigger a render just to count.
-  const prune = React.useCallback((current: Particle[]): Particle[] => {
-    if (current.length <= MAX_PARTICLES) return current;
-    return current.slice(current.length - MAX_PARTICLES);
+  // React state — list of live particles. We keep the entry
+  // (icon, colors, kind) in state so the JSX renderer can
+  // produce a tile without ever reading from `particlesRef`
+  // during render (which would break the React rules of
+  // refs-in-render lint). Physics state (x/y/vx/vy/...) stays
+  // in the ref and is mutated directly per frame.
+  const [liveParticles, setLiveParticles] = React.useState<Array<{ id: number; entry: PoolEntry }>>(
+    []
+  );
+  const particlesRef = React.useRef<Map<number, Particle>>(new Map());
+  const elementRefs = React.useRef<Map<number, HTMLSpanElement | null>>(new Map());
+
+  // Last cursor position in viewport coords. Updated by the
+  // mouse handlers; read by the RAF tick to decide where to
+  // spawn new particles.
+  const cursorRef = React.useRef({ x: 0, y: 0 });
+
+  // Hover-gated spawn gate. Read by the RAF tick.
+  const isHoveringRef = React.useRef(false);
+
+  // Monotonic id source. Using a ref + timestamp avoids React
+  // reconciliation churn.
+  const nextIdRef = React.useRef(0);
+
+  // RAF bookkeeping.
+  const rafRef = React.useRef<number | null>(null);
+  const lastTimeRef = React.useRef(0);
+
+  // Mirror of the latest `tick` function so handlers can
+  // schedule frames without holding a stale closure. Updated
+  // in an effect below once `tick` is defined.
+  const tickRef = React.useRef<((timestamp: number) => void) | null>(null);
+
+  /* ----- spawning -------------------------------------------------- */
+
+  const spawnAtCursor = React.useCallback(() => {
+    const id = nextIdRef.current++;
+    const p = makeParticle(cursorRef.current.x, cursorRef.current.y, id);
+    particlesRef.current.set(id, p);
+
+    setLiveParticles((prev) => {
+      const next = prev.length >= MAX_PARTICLES ? prev.slice(1) : prev.slice();
+      next.push({ id, entry: p.entry });
+      return next;
+    });
   }, []);
 
-  const handleMove = React.useCallback(
-    (_e: React.MouseEvent<HTMLAnchorElement>) => {
+  /* ----- mouse handlers -------------------------------------------- */
+
+  const handleEnter = React.useCallback(
+    (e: React.MouseEvent<HTMLAnchorElement>) => {
       if (prefersReduced) return;
-      const now = performance.now();
-      if (now - lastSpawnRef.current < SPAWN_THROTTLE_MS) return;
-      lastSpawnRef.current = now;
-      setParticles((prev) => prune([...prev, ...spawnCluster()]));
+      isHoveringRef.current = true;
+      cursorRef.current = { x: e.clientX, y: e.clientY };
+      // Initial burst — staggered like the reference.
+      for (let i = 0; i < INITIAL_BURST_COUNT; i++) {
+        setTimeout(spawnAtCursor, i * INITIAL_BURST_STAGGER_MS);
+      }
+      // Start RAF if not running. We go through `tickRef` so
+      // this handler doesn't have to declare `tick` as a
+      // dependency (which would force a re-render whenever the
+      // tick callback changes) and never calls a stale `tick`
+      // from a previous render.
+      if (rafRef.current == null) {
+        lastTimeRef.current = 0;
+        const fn = tickRef.current;
+        if (fn) rafRef.current = requestAnimationFrame(fn);
+      }
     },
-    [prefersReduced, prune]
+    [prefersReduced, spawnAtCursor]
   );
 
-  const handleLeave = React.useCallback(() => {
-    // No-op: particles run their full lifetime and unmount
-    // themselves, so the trail doesn't snap-cut on mouseout.
+  const handleMove = React.useCallback((e: React.MouseEvent<HTMLAnchorElement>) => {
+    cursorRef.current = { x: e.clientX, y: e.clientY };
   }, []);
 
-  // Used by the particle's `onAnimationComplete` to remove
-  // itself from the state pool.
-  const handleComplete = React.useCallback((id: number) => {
-    setParticles((prev) => prev.filter((p) => p.id !== id));
+  const handleLeave = React.useCallback(() => {
+    // Don't kill the RAF — let in-flight particles finish
+    // their fade. The tick self-stops when nothing is alive.
+    isHoveringRef.current = false;
   }, []);
+
+  /* ----- RAF loop -------------------------------------------------- */
+
+  const tick = React.useCallback(
+    (timestamp: number) => {
+      const dt = lastTimeRef.current
+        ? Math.min((timestamp - lastTimeRef.current) / 1000, 0.05)
+        : 0.016;
+      lastTimeRef.current = timestamp;
+
+      // ---- physics step ----
+      const dead: number[] = [];
+
+      particlesRef.current.forEach((p, id) => {
+        p.age += dt;
+        p.vy += p.gravity * dt;
+        const dragFactor = 1 - p.drag * dt;
+        p.vx *= dragFactor;
+        p.vy *= dragFactor;
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
+        p.rotation += p.rotationSpeed * dt;
+
+        // Distance-based fade.
+        const dx = p.x - p.startX;
+        const dy = p.y - p.startY;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        let opacity = 1 - distance / p.maxDistance;
+        if (opacity < 0) opacity = 0;
+        if (opacity > 1) opacity = 1;
+        // First-frame fade-in window.
+        if (p.age < FADE_IN_SECONDS) {
+          opacity *= p.age / FADE_IN_SECONDS;
+        }
+
+        // Scale curve — matches the reference: grow fast,
+        // pulse at midpoint, then shrink as the icon leaves.
+        let scale = 1;
+        const distProgress = distance / p.maxDistance;
+        if (distProgress < 0.1) {
+          scale = 0.3 + (distProgress / 0.1) * 0.7;
+        } else if (distProgress > 0.7) {
+          scale = 1 - ((distProgress - 0.7) / 0.3) * 0.6;
+        } else {
+          scale = 1 + Math.sin(distProgress * Math.PI) * 0.1;
+        }
+
+        // Direct DOM mutation — no React render per particle
+        // per frame.
+        const el = elementRefs.current.get(id);
+        if (el) {
+          el.style.transform = `translate3d(${p.x}px, ${p.y}px, 0) translate(-50%, -50%) rotate(${p.rotation}deg) scale(${
+            p.size * scale
+          })`;
+          el.style.opacity = opacity.toFixed(3);
+        }
+
+        if (opacity <= 0.01 || distance > p.maxDistance * 1.2) {
+          dead.push(id);
+        }
+      });
+
+      // ---- reap dead particles (one React render per batch) ----
+      if (dead.length > 0) {
+        dead.forEach((id) => {
+          particlesRef.current.delete(id);
+          elementRefs.current.delete(id);
+        });
+        const deadSet = new Set(dead);
+        setLiveParticles((prev) => prev.filter((p) => !deadSet.has(p.id)));
+      }
+
+      // ---- spawn new ones if still hovering ----
+      if (isHoveringRef.current) {
+        const spawnCount =
+          Math.floor(Math.random() * (SPAWN_PER_FRAME_MAX - SPAWN_PER_FRAME_MIN + 1)) +
+          SPAWN_PER_FRAME_MIN;
+        for (let i = 0; i < spawnCount; i++) {
+          if (Math.random() < SPAWN_PROBABILITY) spawnAtCursor();
+        }
+      }
+
+      // ---- schedule next frame, or self-stop ----
+      if (particlesRef.current.size > 0 || isHoveringRef.current) {
+        const fn = tickRef.current;
+        if (fn) rafRef.current = requestAnimationFrame(fn);
+      } else {
+        rafRef.current = null;
+        lastTimeRef.current = 0;
+      }
+    },
+    [spawnAtCursor]
+  );
+
+  // Mirror the latest `tick` into `tickRef` so handlers can
+  // always call the freshest version. `tick` itself is defined
+  // just above; the ref is read by `handleEnter` before
+  // `requestAnimationFrame` is scheduled.
+  React.useEffect(() => {
+    tickRef.current = tick;
+  }, [tick]);
+
+  // Cancel RAF on unmount.
+  React.useEffect(() => {
+    return () => {
+      if (rafRef.current != null) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
+      tickRef.current = null;
+    };
+  }, []);
+
+  /* ----- render --------------------------------------------------- */
 
   return (
     <Link
-      ref={buttonRef}
+      ref={linkRef}
       href={href}
       aria-label={ariaLabel ?? label}
+      onMouseEnter={handleEnter}
       onMouseMove={handleMove}
       onMouseLeave={handleLeave}
       className={cn(
         buttonVariants({ variant: "default", size }),
-        // The link itself is the particle-emitter surface, so
-        // position it relative and lift it above sibling layout
-        // siblings — but keep overflow: visible so particles can
-        // fly above the button pill.
+        // The link is the particle-emitter surface. We position
+        // it relative so the absolutely-positioned children
+        // (button content + particle overlay) are scoped to it,
+        // and keep overflow: visible so the (fixed) particle
+        // overlay can extend anywhere on the viewport.
         "relative overflow-visible",
         className
       )}
@@ -309,86 +543,58 @@ export function SuggestToolButton({
         <ArrowRight className="ml-2" />
       </span>
 
+      {/* Particle overlay — fixed to the viewport so particles
+       *  can fly in any direction from the cursor without
+       *  hitting the hero section's overflow-hidden clip.
+       *
+       * We render each particle at (0, 0) on first mount and
+       * let the RAF tick write the real position to the DOM on
+       * the next frame; the one-frame at-origin flash is below
+       * 16ms and unnoticeable, and keeps the render body free
+       * of any ref reads (which the React refs-in-render rule
+       * forbids). */}
       {!prefersReduced && (
-        <span aria-hidden="true" className="pointer-events-none absolute inset-0 z-20">
-          <AnimatePresence>
-            {particles.map((p) => (
-              <ParticleView key={p.id} particle={p} onComplete={handleComplete} />
-            ))}
-          </AnimatePresence>
+        <span aria-hidden="true" className="pointer-events-none fixed inset-0 z-30">
+          {liveParticles.map((p) => {
+            const entry = p.entry;
+            return (
+              <span
+                key={p.id}
+                ref={(el) => {
+                  elementRefs.current.set(p.id, el);
+                }}
+                className="absolute top-0 left-0 block will-change-transform"
+                style={{
+                  transform: "translate3d(0, 0, 0) translate(-50%, -50%)",
+                  opacity: 0,
+                }}
+              >
+                <span
+                  className={cn(
+                    "shadow-soft flex items-center justify-center",
+                    entry.kind === "category"
+                      ? "h-8 w-8 rounded-md"
+                      : entry.kind === "sparkle"
+                        ? "h-7 w-7 rounded-full"
+                        : "h-7 w-7 rounded-md",
+                    entry.kind === "category" && "ring-1 ring-white/30"
+                  )}
+                  style={{
+                    background: entry.bg,
+                    color: entry.fg,
+                  }}
+                >
+                  {entry.kind === "sparkle" ? (
+                    <SparklesIcon className="h-4 w-4" />
+                  ) : (
+                    <entry.Icon className="h-4 w-4" strokeWidth={2.25} />
+                  )}
+                </span>
+              </span>
+            );
+          })}
         </span>
       )}
     </Link>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/* Particle renderer                                                   */
-/* ------------------------------------------------------------------ */
-
-function ParticleView({
-  particle,
-  onComplete,
-}: {
-  particle: Particle;
-  onComplete: (id: number) => void;
-}) {
-  const isSparkle = particle.entry.kind === "sparkle";
-  const isCategory = particle.entry.kind === "category";
-  // `Icon` is resolved once at module load inside the pool, so
-  // its identity is stable across re-renders — that's what
-  // makes the `react-hooks/static-components` lint rule happy.
-  const Icon = particle.entry.Icon;
-
-  // Initial / animate targets for the spring. We start the
-  // particle at the spawn point (translate(0,0) relative to
-  // itself, with a small scale-up) and ease it out to (tx, ty)
-  // while shrinking and fading.
-  return (
-    <motion.span
-      aria-hidden="true"
-      className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2"
-      style={{ willChange: "transform, opacity" }}
-      initial={{ x: 0, y: 0, scale: 0.4, opacity: 0, rotate: 0 }}
-      animate={{
-        x: particle.tx,
-        y: particle.ty,
-        scale: particle.scale,
-        opacity: [0, 1, 1, 0.85, 0],
-        rotate: particle.rotation,
-      }}
-      transition={{
-        duration: particle.lifetime,
-        // Slight spring on the way out — overshoots a few
-        // pixels past the target so the motion reads as
-        // physical, not linear.
-        ease: [0.16, 1, 0.3, 1],
-        times: [0, 0.1, 0.55, 0.85, 1],
-        opacity: { duration: particle.lifetime, times: [0, 0.1, 0.55, 0.85, 1] },
-      }}
-      onAnimationComplete={() => onComplete(particle.id)}
-    >
-      <span
-        className={cn(
-          "shadow-soft flex items-center justify-center",
-          isCategory
-            ? "h-7 w-7 rounded-md"
-            : isSparkle
-              ? "h-6 w-6 rounded-full"
-              : "h-6 w-6 rounded-md",
-          isCategory && "ring-1 ring-white/30"
-        )}
-        style={{
-          background: particle.entry.bg,
-          color: particle.entry.fg,
-        }}
-      >
-        {isSparkle ? (
-          <SparklesIcon className="h-3.5 w-3.5" />
-        ) : (
-          <Icon className="h-3.5 w-3.5" strokeWidth={2.25} />
-        )}
-      </span>
-    </motion.span>
   );
 }
