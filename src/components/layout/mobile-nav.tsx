@@ -211,6 +211,19 @@ function CategoryAccordionItem({
 }) {
   const Icon = getIcon(category.iconName);
   const panelId = `mobile-cat-${category.slug}`;
+  // Same accent-aware full-color tile treatment as the desktop pill
+  // strip (`PILL_ACCENT_TILE` in client-header-shell.tsx). Using a
+  // local map (rather than importing) keeps the mobile-nav bundle
+  // independent of the header; the two surfaces share the same
+  // design language but don't share the constant. The previous
+  // hardcoded `bg-primary/10 text-primary` was both visually weak
+  // AND ignored the category accent — every category in the drawer
+  // showed the same primary-tinted square.
+  const ACCENT_TILE: Record<HeaderCategory["accent"], string> = {
+    primary: "bg-primary text-primary-foreground",
+    secondary: "bg-secondary text-secondary-foreground",
+    accent: "bg-accent text-accent-foreground",
+  };
   return (
     <li className="border-border/40 border-b last:border-b-0">
       <button
@@ -222,7 +235,10 @@ function CategoryAccordionItem({
       >
         <span className="flex items-center gap-2.5">
           <span
-            className="bg-primary/10 text-primary inline-flex h-7 w-7 items-center justify-center rounded-md"
+            className={cn(
+              "inline-flex h-7 w-7 items-center justify-center rounded-md",
+              ACCENT_TILE[category.accent] ?? ACCENT_TILE.primary
+            )}
             aria-hidden="true"
           >
             <Icon className="h-3.5 w-3.5" />

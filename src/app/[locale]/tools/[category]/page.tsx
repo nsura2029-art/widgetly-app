@@ -27,7 +27,7 @@ import {
 import { SITE_CONFIG } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { RecordCategoryVisit } from "@/lib/history";
-import { getToolIconName } from "@/lib/tools-subgroups";
+import { getToolIconName, inferToolIconName } from "@/lib/tools-subgroups";
 import { getIcon } from "@/lib/icons";
 
 const ICONS: Record<string, LucideIcon> = {
@@ -44,10 +44,23 @@ const ICONS: Record<string, LucideIcon> = {
   PenLine,
 };
 
+/* Full-color icon-tile treatment used for both the right-rail
+ * tools list and the "explore more" tiles at the bottom of the
+ * page. Replaces the prior `bg-primary/10` (10% opacity) tint
+ * which the user reported was indistinguishable from the
+ * surrounding card surface — iLovePDF / Smallpdf pattern: the
+ * tile is a saturated color block with a contrast glyph inside.
+ *
+ * `text-{accent}-foreground` is the design-system contrast token
+ * paired with `bg-{accent}`, so the icon stays legible on the
+ * saturated background. We avoid `text-white` because some
+ * accents (e.g. amber/yellow in light mode) need a dark glyph
+ * for contrast — the foreground token handles that automatically.
+ */
 const ACCENT_CLASSES: Record<"primary" | "secondary" | "accent", string> = {
-  primary: "bg-primary/10 text-primary",
-  secondary: "bg-secondary/10 text-secondary",
-  accent: "bg-accent/10 text-accent",
+  primary: "bg-primary text-primary-foreground",
+  secondary: "bg-secondary text-secondary-foreground",
+  accent: "bg-accent text-accent-foreground",
 };
 
 type Params = { category: string };
@@ -233,14 +246,36 @@ export default async function ToolsCategoryPage({ params }: { params: Promise<Pa
           </p>
           <ul className="mt-6 grid gap-2 sm:grid-cols-2">
             {liveTools.map((t) => {
-              // Per-tool icon: look the name up in TOOLS_SUBGROUPS
-              // (the same catalog that powers the mega panel). If
-              // we don't have a glyph for this exact name, fall back
-              // to the category icon so we never render an empty
-              // tile. This is the iLovePDF / Smallpdf pattern —
-              // every tool carries its own visual identity instead
-              // of sharing the category glyph.
-              const toolIconName = getToolIconName(cat.slug, t.name) ?? cat.icon;
+              // Per-tool icon, looked up in three passes:
+              //
+              //   1. `getToolIconName(cat.slug, t.name)` — exact-name
+              //      match against the curated TOOLS_SUBGROUPS
+              //      registry. Wins when the tool is in the static
+              //      catalog (the canonical case during initial
+              //      seeding).
+              //
+              //   2. `inferToolIconName(t.name)` — heuristic
+              //      keyword-based inference (PDF ops, AI verbs,
+              //      calculator ops, etc.). This is the fallback
+              //      that covers D1 `admin_tools` rows whose names
+              //      don't appear in the static catalog (e.g. D1
+              //      ships "Ai Grammar Checker" while the static
+              //      catalog has "AI Writer"). Without this, those
+              //      rows would render the category icon (Sparkles
+              //      for AI) and the right rail would look like
+              //      every tool is the same — which is exactly
+              //      what the user reported: "I dont see the new
+              //      icons for … each tool in the category".
+              //
+              //   3. `cat.icon` — the category's own icon, used as
+              //      a final safety net so we NEVER render an
+              //      empty tile. (getIcon() also falls back to
+              //      Sparkles, but going through `cat.icon` keeps
+              //      the visual link to the category badge above.)
+              const toolIconName =
+                getToolIconName(cat.slug, t.name) ??
+                inferToolIconName(t.name) ??
+                cat.icon;
               const ToolIcon = getIcon(toolIconName);
               return (
                 <li key={t.slug} id={t.slug}>

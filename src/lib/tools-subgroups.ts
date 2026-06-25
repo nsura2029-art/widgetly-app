@@ -455,3 +455,180 @@ export function getToolIconName(categorySlug: string, toolName: string): string 
   }
   return undefined;
 }
+
+/* ------------------------------------------------------------------ */
+/* Heuristic per-tool icon inference (D1 / live-data fallback)        */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Keyword → Lucide-icon map used by `inferToolIconName`. Each
+ * entry is `[regex, iconName]`; the FIRST match wins. Regexes are
+ * tested against `toolName.toLowerCase()`.
+ *
+ * Why a heuristic fallback instead of strict lookup?
+ *   The D1 `admin_tools` table is the live source of truth for the
+ *   tools list once the admin pipeline is seeded. Its rows were
+ *   authored independently from the static catalog in
+ *   `TOOLS_CATEGORIES` / `TOOLS_SUBGROUPS`, so most D1 tool names
+ *   don't appear in `TOOLS_SUBGROUPS` (e.g. D1 AI tools: "Ai
+ *   Grammar Checker", "Ai Paraphraser", "Ai Voice Generator" —
+ *   the static subgroup has "AI Writer", "AI Summarizer" instead).
+ *   When `getToolIconName` returns undefined for a D1 row, callers
+ *   were falling back to the CATEGORY icon, which made every
+ *   right-rail row in a category look identical (the user
+ *   reported: "I dont see the new icons for … each tool in the
+ *   category"). This heuristic gives each tool a distinct glyph
+ *   based on what its name says about what it does.
+ *
+ * Order matters: more specific patterns come first ("grammar
+ *   checker" before the generic "check", "pdf to jpg" before
+ *   "pdf to"). Patterns are case-insensitive via the lowercase
+ *   haystack built by `inferToolIconName`.
+ *
+ * Icon names MUST exist in `src/lib/icons.ts`; otherwise
+ * `getIcon()` silently falls back to Sparkles.
+ */
+const TOOL_ICON_KEYWORDS: ReadonlyArray<readonly [RegExp, string]> = [
+  // ----- PDF: organize / optimize -----
+  [/merge|combine|join/, "Combine"],
+  [/split|divide/, "Split"],
+  [/compress|shrink|reduce|minimize/, "Minimize2"],
+  [/rotate/, "RotateCw"],
+  [/reorder|arrange/, "ArrowUpDown"],
+  [/repair|fix\s?pdf|recover/, "Wrench"],
+  [/scan/, "ScanLine"],
+
+  // ----- PDF: security / edit -----
+  [/sign|e-?sign|signature/, "PenTool"],
+  [/fill.*sign|sign.*fill/, "Signature"],
+  [/request.*signature|send.*signature|e-?sign.*request/, "Send"],
+  [/protect|lock|encrypt|password/, "Lock"],
+  [/unlock|decrypt|remove.*password/, "LockOpen"],
+  [/redact/, "EyeOff"],
+  [/watermark|stamp/, "Stamp"],
+  [/page\s?number/, "Hash"],
+  [/crop/, "Crop"],
+  [/compare/, "Eye"],
+  [/ocr|extract\s?text|text.*extract/, "ScanText"],
+  [/edit|modify/, "Edit3"],
+
+  // ----- PDF: format conversions (specific before generic) -----
+  [/to\s?pdf|into\s?pdf|convert.*pdf|pdf.*create/, "FileText"],
+  [/pdf\s?to\s?(jpg|jpeg)/, "Image"],
+  [/pdf\s?to\s?png/, "FileImage"],
+  [/pdf\s?to\s?word|word.*from\s?pdf/, "FileText"],
+  [/pdf\s?to\s?powerpoint|pdf\s?to\s?ppt|ppt.*from\s?pdf/, "Presentation"],
+  [/pdf\s?to\s?excel|pdf\s?to\s?xlsx|excel.*from\s?pdf/, "Sheet"],
+  [/heic.*pdf/, "Camera"],
+
+  // ----- Image operations -----
+  [/resize|scale|expand|enlarge/, "Maximize2"],
+  [/upscale/, "ZoomIn"],
+  [/crop|cut|trim/, "Crop"],
+  [/compressor|compress/, "Minimize2"],
+  [/convert|transform|change\s?format/, "ArrowLeftRight"],
+  [/barcode|qr/, "BarChart3"],
+  [/circle|round/, "Circle"],
+  [/enhance|sharpen|polish/, "Sparkles"],
+  [/remove\s?background|background.*remov/, "Eraser"],
+  [/image\s?to\s?text|picture\s?to\s?text|ocr/, "ScanText"],
+
+  // ----- Video operations -----
+  [/trim|cut\s?video|video.*cut/, "Scissors"],
+  [/audio.*extract|extract.*audio/, "Volume2"],
+  [/subtitle|caption/, "Captions"],
+  [/gif/, "Image"],
+  [/video.*to\s?mp4|to\s?mp4|mp4.*convert/, "Film"],
+  [/video.*to\s?text|video.*transcribe/, "FileText"],
+  [/video.*translat|translat.*video/, "Languages"],
+  [/merge\s?clip|combine\s?clip/, "Combine"],
+
+  // ----- AI: writing / language -----
+  [/grammar|spell\s?check|proofread/, "CheckCircle2"],
+  [/paraphrase|rewrite|rephrase/, "Repeat"],
+  [/summari[sz]e|summary/, "FileText"],
+  [/voice|tts|text\s?to\s?speech|speech\s?to\s?text/, "Volume2"],
+  [/translate|translation/, "Languages"],
+  [/email|reply|mail|cover\s?letter/, "Mail"],
+  [/tone/, "MessageSquare"],
+  [/readability/, "BarChart3"],
+  [/headline|heading|title\s?score/, "Heading"],
+  [/lorem|placeholder\s?text/, "Pilcrow"],
+  [/chat|conversation|qa/, "MessageCircle"],
+
+  // ----- AI: image / vision -----
+  [/image\s?generator|generate\s?image|ai\s?art|text\s?to\s?image/, "ImagePlus"],
+  [/upscale|enlarge\s?image/, "ZoomIn"],
+  [/inpaint|outpaint|edit\s?image\s?with\s?ai/, "Edit3"],
+
+  // ----- AI: career & learning -----
+  [/resume|\bcv\b/, "Briefcase"],
+  [/tutor|teach|learn|course|study\s?guide|flashcard/, "GraduationCap"],
+
+  // ----- Calculator -----
+  [/percentage|percent|%\s?change/, "Percent"],
+  [/age/, "Calendar"],
+  [/\bbmi\b|body\s?mass/, "Heart"],
+  [/mortgage|home\s?loan|house/, "Home"],
+  [/loan|amortiz|interest/, "TrendingUp"],
+  [/tip|gratuity/, "Receipt"],
+  [/currency|exchange|forex/, "DollarSign"],
+  [/calorie|diet|nutrition|macro/, "Apple"],
+  [/scientific|equation|formula/, "Calculator"],
+  [/\bgpa\b|grade\s?point/, "GraduationCap"],
+  [/unit|measurement/, "ArrowLeftRight"],
+
+  // ----- Developer -----
+  [/\bjson\b/, "Braces"],
+  [/\byaml\b/, "CheckCircle2"],
+  [/beautif|format|pretty|prettier/, "Code2"],
+  [/base64|encode|decode/, "Binary"],
+  [/\bjwt\b|token|api\s?key/, "Key"],
+  [/\bdiff\b/, "Eye"],
+  [/regex|regular\s?expression/, "Regex"],
+  [/\buuid\b/, "Hash"],
+
+  // ----- SEO -----
+  [/meta\s?tag/, "Tag"],
+  [/sitemap/, "Map"],
+  [/robots/, "Bot"],
+  [/keyword/, "BarChart3"],
+  [/\bserp\b/, "Eye"],
+  [/page\s?speed|performance|audit|core\s?web/, "Gauge"],
+  [/backlink/, "Link"],
+
+  // ----- Business / generic verbs -----
+  [/generate|create|build/, "Sparkles"],
+  [/analy[sz]e|report|insight|metric/, "BarChart3"],
+  [/search|find|lookup|discover/, "Search"],
+  [/extract/, "FileOutput"],
+  [/remove|delete|erase|strip/, "Eraser"],
+  [/add|insert|append/, "FilePlus"],
+  [/view|preview|read/, "Eye"],
+];
+
+/**
+ * Heuristically infer a Lucide icon name for a tool based on
+ * keywords in its display name. Used as a SECOND-PASS fallback
+ * by callers (e.g. /en/tools/[category]) when
+ * `getToolIconName(cat, name)` returns undefined — typically
+ * because the tool was sourced from D1 `admin_tools` with a name
+ * that doesn't appear in the static `TOOLS_SUBGROUPS` registry.
+ *
+ * Returns the icon name string (e.g. `"Combine"`) or `undefined`
+ * if no keyword matched. Callers should fall back to the
+ * category icon in that case (so the row still has a glyph
+ * instead of rendering an empty tile).
+ *
+ * Pure display-only fallback — the icon has no semantic meaning
+ * beyond "what does this tool roughly do". Lookup is
+ * case-insensitive; first match wins.
+ */
+export function inferToolIconName(toolName: string): string | undefined {
+  if (!toolName) return undefined;
+  const haystack = toolName.toLowerCase();
+  for (const [pattern, icon] of TOOL_ICON_KEYWORDS) {
+    if (pattern.test(haystack)) return icon;
+  }
+  return undefined;
+}

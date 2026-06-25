@@ -64,28 +64,38 @@ export type HeaderMegaPanelProps = {
 
 /* Accent → tailwind class mapping for the highlighted icon tile.
  *
- * Boosted from the prior `bg-primary/10` / `text-primary` pair to a
- * more saturated, larger color block — this is the iLovePDF /
- * Smallpdf pattern where the colored icon tile IS the visual
- * hierarchy (the category name and tool count are secondary).
+ * The iLovePDF / Smallpdf mega-menu pattern: the colored tile IS
+ * the visual hierarchy — full-saturation background paired with
+ * the matching design-system foreground token
+ * (`*-foreground`), so the icon reads as a white/contrast glyph
+ * inside a solid color block. This replaced the prior
+ * `bg-primary/20` (20% opacity) treatment that the user reported
+ * as "I dont see the new icons for categories" — the tint was
+ * too subtle to register as a highlighted state.
  *
- * Each accent key gets a saturated background, the matching
- * foreground, a soft inset highlight (shadow-inner) for the glossy
- * tile look, and a hover state that deepens both the background
- * and the ring around the tile.
+ * Each accent gets:
+ *  - `bg-{accent}` — full color fill (no opacity tint)
+ *  - `text-{accent}-foreground` — contrast token from the design
+ *    system, so the icon stays legible on the saturated bg
+ *  - `ring-1 ring-{accent}/40` — a soft outline that defines the
+ *    tile edge against any background, without doubling up on a
+ *    hard border
+ *  - `shadow-sm` — slight elevation so the tile pops off the card
  */
 const ACCENT_TILE: Record<HeaderCategory["accent"], string> = {
-  primary: "bg-primary/20 text-primary ring-primary/25",
-  secondary: "bg-secondary/20 text-secondary-foreground ring-secondary/30",
-  accent: "bg-accent/25 text-accent-foreground ring-accent/30",
+  primary: "bg-primary text-primary-foreground ring-primary/40 shadow-sm",
+  secondary: "bg-secondary text-secondary-foreground ring-secondary/40 shadow-sm",
+  accent: "bg-accent text-accent-foreground ring-accent/40 shadow-sm",
 };
 
-/* Hover-deepener — applied via group-hover on the tile to give the
- * icon tile a richer color when the cursor is over the card. */
+/* Hover-deepener — applied via group-hover on the tile. We
+ * darken the ring + bump elevation rather than re-tinting the
+ * background (the bg is already at full saturation, so further
+ * opacity tweaks don't read). */
 const ACCENT_TILE_HOVER: Record<HeaderCategory["accent"], string> = {
-  primary: "group-hover:bg-primary/30 group-hover:ring-primary/40",
-  secondary: "group-hover:bg-secondary/30 group-hover:ring-secondary/40",
-  accent: "group-hover:bg-accent/35 group-hover:ring-accent/40",
+  primary: "group-hover:ring-primary/70 group-hover:shadow-md",
+  secondary: "group-hover:ring-secondary/70 group-hover:shadow-md",
+  accent: "group-hover:ring-accent/70 group-hover:shadow-md",
 };
 
 export function HeaderMegaPanel({

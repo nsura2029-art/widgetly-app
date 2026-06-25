@@ -504,15 +504,17 @@ export function ClientHeaderShell({ categories }: ClientHeaderShellProps) {
 /* ------------------------------------------------------------------ */
 
 /* Accent → tailwind class for the highlighted icon chip inside the
- * pill strip. Same color philosophy as the mega panel: saturated,
- * color-coded by accent. Mirrors the iLovePDF / Smallpdf mega-menu
- * pattern where every category reads as a color block first and a
- * word second.
+ * pill strip. Same color philosophy as the mega panel: full
+ * saturation, color-coded by accent, with the matching
+ * `-foreground` token so the icon glyph stays legible. The
+ * previous `bg-primary/20` (20% opacity) treatment was too subtle
+ * to read as "highlighted" — the user reported "I dont see the
+ * new icons for categories". Full color fixes that.
  */
 const PILL_ACCENT_TILE: Record<HeaderCategory["accent"], string> = {
-  primary: "bg-primary/20 text-primary",
-  secondary: "bg-secondary/20 text-secondary-foreground",
-  accent: "bg-accent/25 text-accent-foreground",
+  primary: "bg-primary text-primary-foreground",
+  secondary: "bg-secondary text-secondary-foreground",
+  accent: "bg-accent text-accent-foreground",
 };
 
 function CategoryPill({ category }: { category: HeaderCategory }) {
