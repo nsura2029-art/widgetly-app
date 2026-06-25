@@ -8,31 +8,36 @@
  * Visual behaviour
  * ----------------
  * While the cursor is over the button, the button spawns a
- * continuous 360° fountain of tool-category icons at the
+ * continuous 360° fountain of category emojis at the
  * mouse position. Each particle drifts outward with light
  * physics (initial velocity + drag + slight gravity), spins
  * slowly as it travels, and fades based on DISTANCE traveled
  * (not elapsed time) so icons that travel further from the
- * spawn point disappear first, exactly the opposite of the
- * classic "explode and equal-fade" pattern.
+ * spawn point disappear first — fully visible at birth,
+ * invisible by the time they've drifted ~150 px.
  *
- * Why a fixed icon pool, not random per spawn?
- *   A static pool of ~28 category + sub-tool icons (plus a
- *   sparkle variant) keeps the visual identity consistent
- *   with the rest of the site — we never get a random Lucide
- *   glyph that doesn't relate to anything on Widgetly. Pool
- *   entries mirror the mega-menu categories / sub-groupings.
+ * When the mouse leaves (or the touch ends) spawning stops
+ * instantly; any in-flight particles finish their own fade
+ * out naturally. The RAF loop self-terminates when nothing
+ * is alive.
+ *
+ * Why a fixed emoji pool, not random per spawn?
+ *   A static pool of 12 hand-picked category emojis keeps
+ *   the visual identity consistent — we never get a random
+ *   Unicode glyph that doesn't relate to anything on
+ *   Widgetly. Each emoji carries a brand color that drives
+ *   both the tile background and a soft, layered
+ *   `box-shadow` glow halo.
  *
  * Why a manual RAF loop instead of framer-motion?
- *   The reference effect (and what feels right for this kind
- *   of dense, distance-driven particle system) runs at ~60
- *   physics ticks per second with up to ~80 live particles.
- *   Putting that through React reconciliation each frame
- *   would mean thousands of prop diffs per second. We render
- *   the DOM elements once via React and then mutate their
- *   `transform`/`opacity` inline each frame; React only
- *   re-renders when particles are added or removed (which is
- *   at most a handful of times per second).
+ *   The fountain runs at ~60 physics ticks per second with
+ *   up to ~80 live particles. Putting that through React
+ *   reconciliation each frame would mean thousands of prop
+ *   diffs per second. We render the DOM elements once via
+ *   React and then mutate their `transform`/`opacity`
+ *   inline each frame; React only re-renders when particles
+ *   are added or removed (which is at most a handful of
+ *   times per second).
  *
  * Performance
  * -----------
@@ -44,6 +49,13 @@
  *   are dropped first if we ever exceed it.
  * - `prefers-reduced-motion` short-circuits the entire system:
  *   the button renders as a plain CTA with no particles.
+ *
+ * Touch support
+ * -------------
+ * `onTouchStart` / `onTouchMove` / `onTouchEnd` mirror the
+ * mouse handlers (using `touches[0].clientX/Y`) so the
+ * fountain fires on mobile too. A tap-and-hold yields a
+ * short burst; the standard navigation click still works.
  *
  * Coordinate system
  * -----------------
@@ -57,118 +69,65 @@
 import * as React from "react";
 import Link from "next/link";
 import { useReducedMotion } from "framer-motion";
-import { ArrowRight, Sparkles as SparklesIcon, type LucideIcon } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { TOOLS_CATEGORIES } from "@/lib/tools-categories";
-import { TOOLS_SUBGROUPS } from "@/lib/tools-subgroups";
-import { getIcon } from "@/lib/icons";
 
 /* ------------------------------------------------------------------ */
-/* Particle pool                                                       */
+/* Particle pool — 12 hand-picked category emojis, each tied to a     */
+/* brand color that drives both the tile background and a soft,       */
+/* layered box-shadow glow halo. Static (not derived from the          */
+/* categories data) so the fountain's visual identity stays stable    */
+/* across deploys and the brand team can tweak colors without         */
+/* touching the renderer.                                             */
 /* ------------------------------------------------------------------ */
-
-/** Color tokens for the category tiles. Mirrors the mega-menu
- *  accent palette so the burst feels like a mini version of
- *  the site nav rather than a random rainbow. */
-const ACCENT_TOKENS = {
-  primary: { bg: "var(--color-primary)", fg: "var(--color-primary-foreground)" },
-  secondary: { bg: "var(--color-secondary)", fg: "var(--color-primary-foreground)" },
-  accent: { bg: "var(--color-accent)", fg: "var(--color-primary-foreground)" },
-} as const;
-
-/** Sub-tool accent color map. Mirrors `AccentColor` in
- *  `tools-subgroups.ts` but kept local so this file has no
- *  upstream coupling beyond the data the burst actually needs. */
-const SUB_ACCENT_BG: Record<string, string> = {
-  red: "#ef4444",
-  green: "#22c55e",
-  blue: "#3b82f6",
-  indigo: "#6366f1",
-  purple: "#a855f7",
-  orange: "#f97316",
-  pink: "#ec4899",
-  teal: "#14b8a6",
-  amber: "#f59e0b",
-  cyan: "#06b6d4",
-};
-
-type ParticleKind = "category" | "subtool" | "sparkle";
 
 type PoolEntry = {
   id: string;
-  /** Lucide icon name (kept for debugging / data-attributes). */
-  icon: string;
-  /**
-   * Resolved Lucide icon component. Pre-resolved at module
-   * load so the particle renderer can drop it in directly
-   * without looking it up per spawn.
-   */
-  Icon: LucideIcon;
-  /** Background color (CSS color value). */
-  bg: string;
-  /** Foreground color for the icon glyph. */
-  fg: string;
-  /** Visual variant — drives tile shape in the renderer. */
-  kind: ParticleKind;
+  /** Unicode emoji rendered inside the tile. */
+  emoji: string;
+  /** Brand color (hex). Drives both the tile background and the
+   *  pre-computed `box-shadow` glow. */
+  color: string;
+  /** Pre-computed `box-shadow` value for the per-category glow.
+   *  Two layered halos (12 px tight, 28 px wide) keep the
+   *  effect subtle but legible against any hero background. */
+  glow: string;
 };
 
-function buildPool(): PoolEntry[] {
-  const entries: PoolEntry[] = [];
-
-  // 11 main categories. Use their brand accent as the tile bg.
-  for (const cat of TOOLS_CATEGORIES) {
-    entries.push({
-      id: `cat-${cat.slug}`,
-      icon: cat.icon,
-      Icon: getIcon(cat.icon),
-      bg: ACCENT_TOKENS[cat.accent].bg,
-      fg: ACCENT_TOKENS[cat.accent].fg,
-      kind: "category",
-    });
-  }
-
-  // A curated mix of sub-tools from the categories that have
-  // sub-groupings. We take up to 3 from each subgroup so the
-  // pool stays small and predictable. Each sub-tool's tile
-  // uses the subgroup's accent color.
-  const seen = new Set<string>();
-  for (const groups of Object.values(TOOLS_SUBGROUPS)) {
-    for (const g of groups) {
-      for (const item of g.items.slice(0, 3)) {
-        const key = `${g.accent}-${item.icon}`;
-        if (seen.has(key)) continue;
-        seen.add(key);
-        entries.push({
-          id: `sub-${g.accent}-${item.icon}`,
-          icon: item.icon,
-          Icon: getIcon(item.icon),
-          bg: SUB_ACCENT_BG[g.accent] ?? ACCENT_TOKENS.primary.bg,
-          fg: "#ffffff",
-          kind: "subtool",
-        });
-        if (entries.length >= 28) break;
-      }
-      if (entries.length >= 28) break;
-    }
-    if (entries.length >= 28) break;
-  }
-
-  // Sparkle variant — uses the Sparkles icon on a soft amber
-  // tile. Rendered ~18% of the time to break up the icon grid.
-  entries.push({
-    id: "sparkle",
-    icon: "Sparkles",
-    Icon: getIcon("Sparkles"),
-    bg: "rgba(245, 158, 11, 0.18)",
-    fg: "#f59e0b",
-    kind: "sparkle",
-  });
-
-  return entries;
+/** Helper: build a two-layer glow string from a hex color and
+ *  the two alpha stops we want for the inner/outer halo. We
+ *  convert hex → rgba once at module load so the per-frame
+ *  RAF tick never spends time parsing colors. */
+function glowFor(hex: string, innerA: number, outerA: number): string {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `0 0 12px rgba(${r}, ${g}, ${b}, ${innerA}), 0 0 28px rgba(${r}, ${g}, ${b}, ${outerA})`;
 }
 
-const ICON_POOL: readonly PoolEntry[] = buildPool();
+const ICON_POOL: readonly PoolEntry[] = [
+  { id: "pdf", emoji: "📄", color: "#ef4444", glow: glowFor("#ef4444", 0.55, 0.25) },
+  { id: "image", emoji: "🖼️", color: "#3b82f6", glow: glowFor("#3b82f6", 0.55, 0.25) },
+  { id: "video", emoji: "🎬", color: "#a855f7", glow: glowFor("#a855f7", 0.55, 0.25) },
+  { id: "ai", emoji: "🤖", color: "#6366f1", glow: glowFor("#6366f1", 0.55, 0.25) },
+  { id: "calculator", emoji: "🧮", color: "#f59e0b", glow: glowFor("#f59e0b", 0.55, 0.25) },
+  { id: "converter", emoji: "🔄", color: "#14b8a6", glow: glowFor("#14b8a6", 0.55, 0.25) },
+  { id: "seo", emoji: "🔍", color: "#22c55e", glow: glowFor("#22c55e", 0.55, 0.25) },
+  { id: "education", emoji: "🎓", color: "#06b6d4", glow: glowFor("#06b6d4", 0.55, 0.25) },
+  { id: "developer", emoji: "💻", color: "#475569", glow: glowFor("#475569", 0.55, 0.25) },
+  { id: "business", emoji: "💼", color: "#f97316", glow: glowFor("#f97316", 0.55, 0.25) },
+  { id: "writing", emoji: "✍️", color: "#ec4899", glow: glowFor("#ec4899", 0.55, 0.25) },
+  // Sparkle: slightly stronger glow because the burst's
+  // background-tile hue is the lightest in the palette and
+  // needs more punch to read against the hero gradient.
+  { id: "sparkle", emoji: "⭐", color: "#fbbf24", glow: glowFor("#fbbf24", 0.6, 0.3) },
+];
+
+/** Probability that any given spawn is the sparkle variant.
+ *  Kept low so the burst reads as the categories, with sparkle
+ *  acting as a punctuation accent. */
+const SPARKLE_PROBABILITY = 0.12;
 
 /* ------------------------------------------------------------------ */
 /* Physics tuning                                                      */
@@ -178,7 +137,6 @@ const MAX_PARTICLES = 80;
 const SPAWN_PER_FRAME_MIN = 1;
 const SPAWN_PER_FRAME_MAX = 3;
 const SPAWN_PROBABILITY = 0.8;
-const SPARKLE_PROBABILITY = 0.18;
 const INITIAL_BURST_COUNT = 12;
 const INITIAL_BURST_STAGGER_MS = 20;
 
@@ -199,10 +157,12 @@ const GRAVITY_MAX = 40;
 /** Per-particle rotation speed (deg/s). */
 const ROTATION_SPEED_MAX = 200;
 
-/** Per-particle distance cap (px). At maxDistance the
- *  opacity is 0; particles are reaped at 1.2× that. */
-const MAX_DISTANCE_MIN = 80;
-const MAX_DISTANCE_MAX = 230;
+/** Per-particle distance cap (px). At maxDistance the opacity
+ *  is 0; particles are reaped at 1.2× that. Tightened to
+ *  120-180 (mean 150) so the burst stays close to the button
+ *  — per the spec, icons fade out around ~150 px from spawn. */
+const MAX_DISTANCE_MIN = 120;
+const MAX_DISTANCE_MAX = 180;
 
 /** Per-particle size scale (tile size multiplier). */
 const SIZE_MIN = 0.85;
@@ -369,22 +329,26 @@ export function SuggestToolButton({
     });
   }, []);
 
-  /* ----- mouse handlers -------------------------------------------- */
+  /* ----- mouse + touch handlers ------------------------------------ */
 
-  const handleEnter = React.useCallback(
-    (e: React.MouseEvent<HTMLAnchorElement>) => {
+  /** Begin the fountain at a viewport-coordinate spawn point.
+   *  Used by `onMouseEnter` (with `e.clientX/Y`) and by
+   *  `onTouchStart` (with `e.touches[0].clientX/Y`) so the
+   *  same burst + RAF bootstrap runs on desktop and mobile. */
+  const beginHover = React.useCallback(
+    (p: { x: number; y: number }) => {
       if (prefersReduced) return;
       isHoveringRef.current = true;
-      cursorRef.current = { x: e.clientX, y: e.clientY };
+      cursorRef.current = p;
       // Initial burst — staggered like the reference.
       for (let i = 0; i < INITIAL_BURST_COUNT; i++) {
         setTimeout(spawnAtCursor, i * INITIAL_BURST_STAGGER_MS);
       }
       // Start RAF if not running. We go through `tickRef` so
       // this handler doesn't have to declare `tick` as a
-      // dependency (which would force a re-render whenever the
-      // tick callback changes) and never calls a stale `tick`
-      // from a previous render.
+      // dependency (which would force a re-render whenever
+      // the tick callback changes) and never calls a stale
+      // `tick` from a previous render.
       if (rafRef.current == null) {
         lastTimeRef.current = 0;
         const fn = tickRef.current;
@@ -394,8 +358,11 @@ export function SuggestToolButton({
     [prefersReduced, spawnAtCursor]
   );
 
-  const handleMove = React.useCallback((e: React.MouseEvent<HTMLAnchorElement>) => {
-    cursorRef.current = { x: e.clientX, y: e.clientY };
+  /** Update the spawn point without restarting the burst —
+   *  fires on every mouse-move and touch-move while the
+   *  pointer is over the button. */
+  const updateCursor = React.useCallback((p: { x: number; y: number }) => {
+    cursorRef.current = p;
   }, []);
 
   const handleLeave = React.useCallback(() => {
@@ -524,16 +491,31 @@ export function SuggestToolButton({
       ref={linkRef}
       href={href}
       aria-label={ariaLabel ?? label}
-      onMouseEnter={handleEnter}
-      onMouseMove={handleMove}
+      onMouseEnter={(e) => beginHover({ x: e.clientX, y: e.clientY })}
+      onMouseMove={(e) => updateCursor({ x: e.clientX, y: e.clientY })}
       onMouseLeave={handleLeave}
+      onTouchStart={(e) => {
+        const t = e.touches[0];
+        if (t) beginHover({ x: t.clientX, y: t.clientY });
+      }}
+      onTouchMove={(e) => {
+        const t = e.touches[0];
+        if (t) updateCursor({ x: t.clientX, y: t.clientY });
+      }}
+      onTouchEnd={handleLeave}
       className={cn(
         buttonVariants({ variant: "default", size }),
-        // The link is the particle-emitter surface. We position
-        // it relative so the absolutely-positioned children
-        // (button content + particle overlay) are scoped to it,
-        // and keep overflow: visible so the (fixed) particle
-        // overlay can extend anywhere on the viewport.
+        // Pill shape — `rounded-full` wins over the shadcn
+        // default (`rounded-md`) because both have the same
+        // Tailwind specificity and `rounded-full` is later
+        // in the generated CSS.
+        "rounded-full",
+        // The link is the particle-emitter surface. We
+        // position it relative so the absolutely-positioned
+        // children (button content + particle overlay) are
+        // scoped to it, and keep overflow: visible so the
+        // (fixed) particle overlay can extend anywhere on
+        // the viewport.
         "relative overflow-visible",
         className
       )}
@@ -570,25 +552,24 @@ export function SuggestToolButton({
                 }}
               >
                 <span
-                  className={cn(
-                    "shadow-soft flex items-center justify-center",
-                    entry.kind === "category"
-                      ? "h-8 w-8 rounded-md"
-                      : entry.kind === "sparkle"
-                        ? "h-7 w-7 rounded-full"
-                        : "h-7 w-7 rounded-md",
-                    entry.kind === "category" && "ring-1 ring-white/30"
-                  )}
+                  className="flex h-9 w-9 items-center justify-center rounded-full"
                   style={{
-                    background: entry.bg,
-                    color: entry.fg,
+                    background: entry.color,
+                    boxShadow: entry.glow,
                   }}
                 >
-                  {entry.kind === "sparkle" ? (
-                    <SparklesIcon className="h-4 w-4" />
-                  ) : (
-                    <entry.Icon className="h-4 w-4" strokeWidth={2.25} />
-                  )}
+                  <span
+                    aria-hidden="true"
+                    style={{
+                      fontSize: 20,
+                      lineHeight: 1,
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    {entry.emoji}
+                  </span>
                 </span>
               </span>
             );
