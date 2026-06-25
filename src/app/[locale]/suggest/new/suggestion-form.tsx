@@ -8,12 +8,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  SUGGESTION_CATEGORIES,
-  SUGGESTION_URGENCIES,
-  type SuggestionCategory,
-  type SuggestionUrgency,
-} from "@/lib/d1/suggestions";
+import { SUGGESTION_CATEGORIES, type SuggestionCategory } from "@/lib/d1/suggestions";
 import {
   SUGGESTION_ERROR_CODES,
   validateSuggestionForm,
@@ -264,7 +259,7 @@ function SuggestionFormInner() {
   return (
     <form
       onSubmit={submit}
-      className="border-border/60 shadow-soft mt-8 space-y-5 rounded-2xl border bg-white/80 p-5 backdrop-blur sm:p-7"
+      className="border-border/60 shadow-soft space-y-5 rounded-2xl border bg-white/80 p-5 backdrop-blur sm:p-7"
     >
       <Field
         label={t("toolNameLabel")}
@@ -297,6 +292,24 @@ function SuggestionFormInner() {
         />
       </Field>
 
+      <Field label={t("categoryLabel")} error={errors.category}>
+        <select
+          value={form.category}
+          onChange={(event) => update("category", event.target.value as SuggestionCategory)}
+          className="border-border h-12 w-full rounded-xl border bg-white px-4 text-sm"
+          required
+        >
+          <option value="" disabled>
+            {t("categoryPlaceholder")}
+          </option>
+          {SUGGESTION_CATEGORIES.map((category) => (
+            <option key={category} value={category}>
+              {category}
+            </option>
+          ))}
+        </select>
+      </Field>
+
       <Field
         label={t("useCaseLabel")}
         error={errors.useCase}
@@ -311,39 +324,6 @@ function SuggestionFormInner() {
           required
         />
       </Field>
-
-      <div className="grid gap-5 sm:grid-cols-2">
-        <Field label={t("categoryLabel")} error={errors.category}>
-          <select
-            value={form.category}
-            onChange={(event) => update("category", event.target.value as SuggestionCategory)}
-            className="border-border h-12 w-full rounded-xl border bg-white px-4 text-sm"
-            required
-          >
-            <option value="" disabled>
-              {t("categoryPlaceholder")}
-            </option>
-            {SUGGESTION_CATEGORIES.map((category) => (
-              <option key={category} value={category}>
-                {category}
-              </option>
-            ))}
-          </select>
-        </Field>
-        <Field label={t("urgencyLabel")} error={errors.urgency}>
-          <select
-            value={form.urgency}
-            onChange={(event) => update("urgency", event.target.value as SuggestionUrgency)}
-            className="border-border h-12 w-full rounded-xl border bg-white px-4 text-sm capitalize"
-          >
-            {SUGGESTION_URGENCIES.map((urgency) => (
-              <option key={urgency} value={urgency}>
-                {t(`urgency${urgency.charAt(0).toUpperCase()}${urgency.slice(1)}` as const)}
-              </option>
-            ))}
-          </select>
-        </Field>
-      </div>
 
       {/*
         No email field here — for signed-in users the verified
@@ -368,13 +348,25 @@ function SuggestionFormInner() {
         </div>
       )}
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-muted text-xs">{t("rateLimit")}</p>
-        <Button type="submit" size="lg" disabled={submitting || !validation.success}>
-          {submitting ? t("submitting") : t("submit")}
-          <Send className="h-4 w-4" />
-        </Button>
-      </div>
+      <p className="text-muted text-xs">{t("rateLimit")}</p>
+
+      {/*
+        Big Green CTA — emerald `success` variant on size `xl`. Width
+        is full on mobile (so the button is easy to thumb-tap) and
+        auto on desktop (so it doesn't sprawl across the column).
+        Disabled until the form passes client-side validation, or
+        while a submission is in flight (prevents double-submit).
+      */}
+      <Button
+        type="submit"
+        variant="success"
+        size="xl"
+        className="w-full text-base font-semibold sm:w-auto"
+        disabled={submitting || !validation.success}
+      >
+        {submitting ? t("submitting") : t("submit")}
+        <Send className="h-4 w-4" />
+      </Button>
     </form>
   );
 }

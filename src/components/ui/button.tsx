@@ -17,6 +17,13 @@ const buttonVariants = cva(
         ghost: "bg-transparent text-foreground hover:bg-muted/5",
         link: "text-primary underline-offset-4 hover:underline bg-transparent px-0",
         dark: "bg-dark text-white hover:bg-dark/90 shadow-soft hover:shadow-soft-lg",
+        // "success" — high-contrast green CTA used for the Submit-Idea
+        // page's primary action ("Submit Idea & Start Earning Wits").
+        // The emerald-500 → emerald-600 gradient matches the rewards
+        // card's "Goes Live" tier so the user clicks a button in the
+        // same colour as the payout they were just shown.
+        success:
+          "bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-[0_8px_24px_-6px_rgba(16,185,129,0.55)] hover:from-emerald-600 hover:to-emerald-700 hover:shadow-[0_10px_28px_-6px_rgba(16,185,129,0.7)] hover:brightness-110",
       },
       size: {
         default: "h-11 px-5 py-2.5",
