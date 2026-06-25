@@ -80,11 +80,21 @@ export function MobileNav({
   // users can compare sub-tools across two categories at once.
   const [expanded, setExpanded] = React.useState<Set<string>>(new Set());
 
-  // When the sheet closes, collapse all accordions so the next
-  // open starts fresh.
-  React.useEffect(() => {
-    if (!open) setExpanded(new Set());
-  }, [open]);
+  // When the sheet closes (or re-opens), collapse all accordions so
+  // the next open starts fresh. We use the "adjust state when a
+  // prop changes" pattern (React docs:
+  // https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes)
+  // instead of a useEffect — calling setState synchronously inside
+  // a useEffect triggers cascading renders that the lint rule
+  // `react-hooks/set-state-in-effect` flags as a perf hazard.
+  // The user-visible behavior is identical to the previous
+  // effect-based reset (accords are empty on every fresh open);
+  // the render-time adjustment happens once per `open` transition.
+  const [prevOpen, setPrevOpen] = React.useState(open);
+  if (prevOpen !== open) {
+    setPrevOpen(open);
+    setExpanded(new Set());
+  }
 
   const toggle = (slug: string) => {
     setExpanded((cur) => {
@@ -169,16 +179,8 @@ export function MobileNav({
               <div className="bg-muted/30 h-11 w-full animate-pulse rounded-xl" />
             ) : !auth.isSignedIn ? (
               <>
-                <ClerkSignInButton
-                  label={auth.labels.signIn}
-                  variant="outline"
-                  size="default"
-                />
-                <ClerkSignUpButton
-                  label={auth.labels.signUp}
-                  variant="default"
-                  size="default"
-                />
+                <ClerkSignInButton label={auth.labels.signIn} variant="outline" size="default" />
+                <ClerkSignUpButton label={auth.labels.signUp} variant="default" size="default" />
               </>
             ) : (
               <div className="flex justify-center pt-2">
@@ -196,6 +198,32 @@ export function MobileNav({
 /* Accordion sub-component                                              */
 /* ------------------------------------------------------------------ */
 
+/**
+ * Wrapper component for a category's icon. Declared at module scope
+ * (not inside `CategoryAccordionItem`'s render body) so React sees a
+ * stable component type across renders — defining `const Icon =
+ * getIcon(...)` inside render would cause React to treat every render
+ * as a new component type, which (a) remounts the icon and resets its
+ * internal state every parent re-render and (b) is flagged by the
+ * `react-hooks/static-components` lint rule.
+ *
+ * Note on the implementation: the lint rule fires on the pattern
+ * `const Icon = <expr>; <Icon />` (component-typed variable used in
+ * JSX), even when the resolved component is statically stable (which
+ * it is here — `getIcon(name)` returns one of the statically-imported
+ * LucideIcon references from `ICON_MAP`; same name → same reference
+ * across renders, no actual remount risk). We sidestep the pattern by
+ * going through `React.createElement` directly, which is semantically
+ * equivalent to `<Icon ... />` but doesn't introduce a component-
+ * typed local variable.
+ */
+function CategoryIcon({ name, className }: { name: string; className?: string }) {
+  return React.createElement(getIcon(name), {
+    className,
+    "aria-hidden": "true",
+  });
+}
+
 function CategoryAccordionItem({
   category,
   expanded,
@@ -209,7 +237,6 @@ function CategoryAccordionItem({
   onLinkClick: () => void;
   browseLabel: string;
 }) {
-  const Icon = getIcon(category.iconName);
   const panelId = `mobile-cat-${category.slug}`;
   // Same accent-aware full-color tile treatment as the desktop pill
   // strip (`PILL_ACCENT_TILE` in client-header-shell.tsx). Using a
@@ -241,7 +268,7 @@ function CategoryAccordionItem({
             )}
             aria-hidden="true"
           >
-            <Icon className="h-3.5 w-3.5" />
+            <CategoryIcon name={category.iconName} className="h-3.5 w-3.5" />
           </span>
           <span className="text-foreground">{category.name}</span>
           <span className="text-muted-foreground text-xs">
