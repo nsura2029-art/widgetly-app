@@ -44,8 +44,8 @@
  * ## State machines
  *
  *  1. **Mega menu** — `useMegaMenu`. Standard mega-menu pattern:
- *     hover-to-open, 120ms close delay on leave, click to toggle,
- *     Esc / route-change / resize-past-md to close.
+ *     click-to-toggle, 500ms close delay on leave, Esc /
+ *     route-change / resize-past-md to close.
  *  2. **Mobile sheet** — `useState`. `MobileNav` owns the per-
  *     category accordion state.
  *  3. **Body scroll lock** — `document.body.style.overflow` while
@@ -84,6 +84,7 @@ const MEGA_PANEL_ID = "header-tools-mega-panel";
 
 export function ClientHeaderShell({ categories }: ClientHeaderShellProps) {
   const [mobileOpen, setMobileOpen] = React.useState(false);
+  const [staticMenuOpen, setStaticMenuOpen] = React.useState(false);
   const pathname = usePathname();
   const t = useTranslations();
   const mega = useMegaMenu();
@@ -92,7 +93,10 @@ export function ClientHeaderShell({ categories }: ClientHeaderShellProps) {
   // renders the signed-out UI even before Clerk is configured.
   const { isLoaded, isSignedIn } = useSafeUser();
 
-  const isMegaOpen = mega.openSlug === TOOLS_SLUG;
+  const { openSlug, close: closeMega, toggle: toggleMega, scheduleClose, cancelClose } = mega;
+  const megaRef = React.useRef(mega);
+  const isMegaOpen = openSlug === TOOLS_SLUG;
+  const suppressNextTriggerClickRef = React.useRef(false);
 
   // Ref to the header root element. Used by the click-outside
   // effect below: any mousedown whose target is NOT contained in
@@ -101,6 +105,7 @@ export function ClientHeaderShell({ categories }: ClientHeaderShellProps) {
   // onClick handler safe to be `open` instead of `toggle` —
   // clicking the trigger always opens; clicking outside closes.
   const headerRef = React.useRef<HTMLElement>(null);
+  const toolsTriggerRef = React.useRef<HTMLButtonElement>(null);
 
   // ------------------------------------------------------------------
   // Close both UIs when the viewport grows past the md breakpoint.
@@ -114,12 +119,12 @@ export function ClientHeaderShell({ categories }: ClientHeaderShellProps) {
       if (window.innerWidth >= MD_BREAKPOINT) {
         setMobileOpen(false);
       } else {
-        mega.close();
+        closeMega();
       }
     };
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
-  }, [mega]);
+  }, [closeMega]);
 
   // ------------------------------------------------------------------
   // Lock body scroll while the mobile sheet is open. The mobile
@@ -134,6 +139,19 @@ export function ClientHeaderShell({ categories }: ClientHeaderShellProps) {
       document.body.style.overflow = prev;
     };
   }, [mobileOpen]);
+
+  React.useEffect(() => {
+    if (!staticMenuOpen) return;
+
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        setStaticMenuOpen(false);
+      }
+    }
+
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [staticMenuOpen]);
 
   // ------------------------------------------------------------------
   // Close both UIs on route change. The new page should always
@@ -150,8 +168,9 @@ export function ClientHeaderShell({ categories }: ClientHeaderShellProps) {
   React.useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setMobileOpen(false);
-    mega.close();
-  }, [pathname, mega]);
+    setStaticMenuOpen(false);
+    closeMega();
+  }, [pathname, closeMega]);
 
   // ------------------------------------------------------------------
   // Esc closes the mega panel immediately (no close delay). Only
@@ -161,11 +180,13 @@ export function ClientHeaderShell({ categories }: ClientHeaderShellProps) {
   React.useEffect(() => {
     if (!isMegaOpen) return;
     function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") mega.close();
+      if (e.key === "Escape") {
+        closeMega();
+      }
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [isMegaOpen, mega]);
+  }, [isMegaOpen, closeMega]);
 
   // ------------------------------------------------------------------
   // Click-outside closes the mega panel. Combined with `onClick={open}`
@@ -198,7 +219,6 @@ export function ClientHeaderShell({ categories }: ClientHeaderShellProps) {
   // event closed the panel. By reading `mega` through a ref, the
   // effect only re-runs when `isMegaOpen` actually changes.
   // ------------------------------------------------------------------
-  const megaRef = React.useRef(mega);
   // Sync the ref inside an effect so the React Compiler's
   // "no ref access during render" rule is satisfied. The effect runs
   // after every commit with no dependency array, so the ref always
@@ -206,24 +226,37 @@ export function ClientHeaderShell({ categories }: ClientHeaderShellProps) {
   // handler next fires.
   React.useEffect(() => {
     megaRef.current = mega;
-  });
+  }, [mega]);
 
   React.useEffect(() => {
     if (!isMegaOpen) return;
-    function onMouseDown(e: MouseEvent) {
+    function onPointerDown(e: PointerEvent) {
       const target = e.target as Node | null;
-      if (target && !headerRef.current?.contains(target)) {
+      if (!target) return;
+
+      if (toolsTriggerRef.current?.contains(target)) {
+        suppressNextTriggerClickRef.current = true;
+        e.preventDefault();
+        e.stopPropagation();
+        megaRef.current.close();
+        return;
+      }
+
+      if (!headerRef.current?.contains(target)) {
         megaRef.current.close();
       }
     }
-    document.addEventListener("mousedown", onMouseDown);
-    return () => document.removeEventListener("mousedown", onMouseDown);
+    document.addEventListener("pointerdown", onPointerDown, true);
+    return () => document.removeEventListener("pointerdown", onPointerDown, true);
   }, [isMegaOpen]);
 
-  const navLinks = [
-    { href: "/leaderboard", label: t("header.nav.leaderboard") },
-    { href: "/top-suggesters", label: t("header.nav.topSuggesters") },
-  ];
+  const navLinks = React.useMemo(
+    () => [
+      { href: "/leaderboard", label: t("header.nav.leaderboard") },
+      { href: "/top-suggesters", label: t("header.nav.topSuggesters") },
+    ],
+    [t]
+  );
 
   return (
     <motion.header
@@ -255,19 +288,34 @@ export function ClientHeaderShell({ categories }: ClientHeaderShellProps) {
           aria-label={t("header.aria.mainNav")}
         >
           {/* "Tools" mega-menu trigger — opens the 4-col category tile panel.
-              `onClick={open}` (not `toggle`) so that the click that follows a
-              hover-open can never accidentally close the panel. The panel
-              closes via click-outside, Esc, route change, or resize. */}
+              click toggles the panel. Hover/focus only cancel pending
+              close timers so pointer travel between trigger and panel
+              stays forgiving without opening before the click lands. */}
           <button
+            ref={toolsTriggerRef}
             type="button"
             aria-haspopup="menu"
             aria-expanded={isMegaOpen}
             aria-controls={MEGA_PANEL_ID}
             aria-label={t("header.aria.toolsMenu")}
-            onClick={() => mega.open(TOOLS_SLUG)}
-            onMouseEnter={() => mega.open(TOOLS_SLUG)}
-            onMouseLeave={mega.scheduleClose}
-            onFocus={() => mega.open(TOOLS_SLUG)}
+            onClick={() => {
+              if (suppressNextTriggerClickRef.current) {
+                suppressNextTriggerClickRef.current = false;
+                return;
+              }
+
+              toggleMega(TOOLS_SLUG);
+            }}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                event.stopPropagation();
+                toggleMega(TOOLS_SLUG);
+              }
+            }}
+            onMouseEnter={cancelClose}
+            onMouseLeave={scheduleClose}
+            onFocus={cancelClose}
             className={cn(
               "hover:text-foreground hover:bg-muted/5 text-muted inline-flex items-center gap-1 rounded-lg px-3.5 py-2 text-sm font-medium transition-colors",
               isMegaOpen && "bg-muted/5 text-foreground"
@@ -282,6 +330,47 @@ export function ClientHeaderShell({ categories }: ClientHeaderShellProps) {
               aria-hidden="true"
             />
           </button>
+          <div className="relative">
+            <button
+              type="button"
+              aria-haspopup="menu"
+              aria-expanded={staticMenuOpen}
+              aria-controls="header-static-tools-menu"
+              onClick={() => setStaticMenuOpen((open) => !open)}
+              className={cn(
+                "hover:text-foreground hover:bg-muted/5 text-muted inline-flex items-center gap-1 rounded-lg px-3.5 py-2 text-sm font-medium transition-colors",
+                staticMenuOpen && "bg-muted/5 text-foreground"
+              )}
+            >
+              <span>Static menu</span>
+              <ChevronDown
+                className={cn(
+                  "h-3.5 w-3.5 opacity-60 transition-transform",
+                  staticMenuOpen && "rotate-180"
+                )}
+                aria-hidden="true"
+              />
+            </button>
+            {staticMenuOpen ? (
+              <div
+                id="header-static-tools-menu"
+                role="menu"
+                className="border-border/70 shadow-soft absolute top-full left-0 z-50 mt-2 w-56 rounded-lg border bg-white p-2"
+              >
+                {categories.slice(0, 5).map((category) => (
+                  <Link
+                    key={category.slug}
+                    href={`/tools/${category.slug}`}
+                    role="menuitem"
+                    onClick={() => setStaticMenuOpen(false)}
+                    className="hover:bg-muted/5 text-foreground block rounded-md px-3 py-2 text-sm transition-colors"
+                  >
+                    {category.name}
+                  </Link>
+                ))}
+              </div>
+            ) : null}
+          </div>
           {navLinks.map((link) => (
             <Link
               key={link.href}
@@ -307,16 +396,8 @@ export function ClientHeaderShell({ categories }: ClientHeaderShellProps) {
             <div className="bg-muted/30 h-9 w-32 animate-pulse rounded-lg" />
           ) : !isSignedIn ? (
             <>
-              <ClerkSignInButton
-                label={t("header.actions.signIn")}
-                variant="ghost"
-                size="sm"
-              />
-              <ClerkSignUpButton
-                label={t("header.actions.signUp")}
-                variant="outline"
-                size="sm"
-              />
+              <ClerkSignInButton label={t("header.actions.signIn")} variant="ghost" size="sm" />
+              <ClerkSignUpButton label={t("header.actions.signUp")} variant="outline" size="sm" />
             </>
           ) : (
             <ClerkUserButton />
@@ -349,9 +430,9 @@ export function ClientHeaderShell({ categories }: ClientHeaderShellProps) {
         the same list in its Tools accordion).
       ---------------------------------------------------------------- */}
       <div
-        onMouseEnter={mega.cancelClose}
+        onMouseEnter={cancelClose}
         className={cn(
-          "hidden border-border/60 border-t bg-white/95 backdrop-blur-md md:block",
+          "border-border/60 hidden border-t bg-white/95 backdrop-blur-md md:block",
           // Hide row 2 + disable pointer events while the mega panel is
           // open. `invisible` (visibility:hidden) hides the pill strip
           // visually but pointer-event handling is browser-inconsistent
@@ -386,9 +467,9 @@ export function ClientHeaderShell({ categories }: ClientHeaderShellProps) {
             browseCategory: (name) => t("header.tools.browseCategory", { name }),
             tileCount: (count) => t("header.tools.tileCount", { count }),
           }}
-          onMouseEnter={mega.cancelClose}
-          onMouseLeave={mega.scheduleClose}
-          onLinkClick={mega.close}
+          onMouseEnter={cancelClose}
+          onMouseLeave={scheduleClose}
+          onLinkClick={closeMega}
         />
       ) : null}
 
@@ -435,6 +516,8 @@ function CategoryPill({ category }: { category: HeaderCategory }) {
       )}
       aria-label={category.name}
     >
+      {/* Category icon names are data from D1/static catalog; resolve them at render. */}
+      {/* eslint-disable-next-line react-hooks/static-components */}
       <Icon className="h-3.5 w-3.5" aria-hidden="true" />
       <span className="whitespace-nowrap">{category.name}</span>
       <span
