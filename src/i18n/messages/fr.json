@@ -160,6 +160,37 @@
       "subtitle": "Des éditeurs PDF aux rédacteurs IA — plus de 500 outils gratuits, zéro installation",
       "badge": "Plus de 500 outils disponibles",
       "exploreCta": "Explorer tous les outils"
+    },
+    "mooseHero": {
+      "eyebrow": "Outils gratuits · zéro installation",
+      "title": "Tous les outils dont vous avez besoin au même endroit",
+      "subtitle": "À portée de main. Rapide, simple et 100 % gratuit.",
+      "askPrompt": "Vous ne trouvez pas l'outil qu'il vous faut ?",
+      "askHeadline": "Soumettez votre idée → Gagnez des Wits + de vraies récompenses",
+      "askBody": "Devenez une Légende Widgetly. Les meilleures idées sont construites vite et rapportent à leurs créateurs un paiement unique + une part des bénéfices des clients professionnels.",
+      "cta": "Soumettre une idée et commencer à gagner",
+      "ctaBrowse": "Voir les meilleures idées",
+      "hook": "Soumettez l'outil de vos rêves anonymement et gagnez de vraies récompenses lors de son lancement. Paiement unique + part des bénéfices des entreprises."
+    },
+    "missions": {
+      "eyebrow": "Missions du moment",
+      "title": "Gagnez dès votre première idée",
+      "subtitle": "Deux récompenses à débloquer cette semaine. Pas d'abonnés, pas de portfolio, pas d'approbation préalable.",
+      "missionsFirstTitle": "Premier envoi",
+      "missionsFirstReward": "+50 Wits + Badge Nouveau",
+      "missionsFirstBody": "Publiez votre première idée d'outil et la plateforme vous offre vos premiers Wits + le badge Nouveau sur votre profil.",
+      "missionsUpvotesTitle": "Obtenez 10 votes",
+      "missionsUpvotesReward": "Badge Pousse Virale",
+      "missionsUpvotesBody": "Atteignez 10 votes de la communauté sur une seule idée et débloquez le badge Pousse Virale — votre raccourci vers le classement.",
+      "missionsCta": "Démarrer votre première mission"
+    },
+    "miniLeaderboard": {
+      "eyebrow": "Top idées de la semaine",
+      "title": "Ce qui rapporte déjà",
+      "subtitle": "Les deux idées qui mènent actuellement le classement de la communauté — et les créateurs qui en tirent des gains.",
+      "viewAll": "Voir le classement complet",
+      "upvotes": "votes",
+      "wits": "Wits"
     }
   },
   "faq": {

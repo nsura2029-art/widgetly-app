@@ -170,6 +170,37 @@
       "subtitle": "From PDF editors to AI writers — 500+ free tools, zero installs",
       "badge": "500+ tools available",
       "exploreCta": "Explore All Tools"
+    },
+    "mooseHero": {
+      "eyebrow": "Free tools · zero installs",
+      "title": "Every tool you need in one place",
+      "subtitle": "At your fingertips. Fast, simple, and 100% free.",
+      "askPrompt": "Can't find a tool you need?",
+      "askHeadline": "Submit your idea → Earn Wits + Real Rewards",
+      "askBody": "Be a Widget Legend. Top ideas get built fast and pay their creators one-time cash + profit share from business users.",
+      "cta": "Submit Idea & Start Earning",
+      "ctaBrowse": "Browse top ideas",
+      "hook": "Submit your dream tool anonymously and earn real rewards when it launches. One-time payout + profit share from businesses."
+    },
+    "missions": {
+      "eyebrow": "Current Missions",
+      "title": "Earn from your very first idea",
+      "subtitle": "Two unlockable rewards you can hit this week. No followers, no portfolio, no prior approvals.",
+      "missionsFirstTitle": "First Submission",
+      "missionsFirstReward": "+50 Wits + Newbie Badge",
+      "missionsFirstBody": "Post your first tool idea and the platform hands you your first Wits + the Newbie badge on your profile.",
+      "missionsUpvotesTitle": "Get 10 upvotes",
+      "missionsUpvotesReward": "Viral Sprout Badge",
+      "missionsUpvotesBody": "Hit 10 community upvotes on any single idea and unlock the Viral Sprout badge — your fast track to the leaderboard.",
+      "missionsCta": "Start your first mission"
+    },
+    "miniLeaderboard": {
+      "eyebrow": "Top Ideas This Week",
+      "title": "What's already paying out",
+      "subtitle": "The two ideas currently leading the community leaderboard — and the creators earning from them.",
+      "viewAll": "View full leaderboard",
+      "upvotes": "upvotes",
+      "wits": "Wits"
     }
   },
   "faq": {

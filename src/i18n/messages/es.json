@@ -160,6 +160,37 @@
       "subtitle": "Desde editores de PDF hasta redactores de IA — más de 500 herramientas gratis, sin instalaciones",
       "badge": "Más de 500 herramientas disponibles",
       "exploreCta": "Explorar todas las herramientas"
+    },
+    "mooseHero": {
+      "eyebrow": "Herramientas gratis · sin instalaciones",
+      "title": "Todas las herramientas que necesitas en un solo lugar",
+      "subtitle": "Al alcance de tu mano. Rápidas, sencillas y 100 % gratis.",
+      "askPrompt": "¿No encuentras una herramienta que necesitas?",
+      "askHeadline": "Envía tu idea → Gana Wits + recompensas reales",
+      "askBody": "Sé una Leyenda de Widgetly. Las mejores ideas se construyen rápido y pagan a sus creadores con un pago único + una parte de las ganancias de los usuarios empresariales.",
+      "cta": "Enviar idea y empezar a ganar",
+      "ctaBrowse": "Ver las mejores ideas",
+      "hook": "Envía la herramienta de tus sueños de forma anónima y gana recompensas reales cuando se lance. Pago único + parte de las ganancias de las empresas."
+    },
+    "missions": {
+      "eyebrow": "Misiones actuales",
+      "title": "Gana desde tu primera idea",
+      "subtitle": "Dos recompensas desbloqueables que puedes conseguir esta semana. Sin seguidores, sin portafolio, sin aprobaciones previas.",
+      "missionsFirstTitle": "Primer envío",
+      "missionsFirstReward": "+50 Wits + Insignia Novato",
+      "missionsFirstBody": "Publica tu primera idea de herramienta y la plataforma te entrega tus primeros Wits + la insignia Novato en tu perfil.",
+      "missionsUpvotesTitle": "Consigue 10 votos",
+      "missionsUpvotesReward": "Insignia Brote Viral",
+      "missionsUpvotesBody": "Alcanza 10 votos de la comunidad en una sola idea y desbloquea la insignia Brote Viral — tu atajo a la clasificación.",
+      "missionsCta": "Empieza tu primera misión"
+    },
+    "miniLeaderboard": {
+      "eyebrow": "Mejores ideas esta semana",
+      "title": "Lo que ya está pagando",
+      "subtitle": "Las dos ideas que actualmente lideran la clasificación — y los creadores que están ganando con ellas.",
+      "viewAll": "Ver clasificación completa",
+      "upvotes": "votos",
+      "wits": "Wits"
     }
   },
   "faq": {

@@ -10,6 +10,12 @@ import { WrenchMascot } from "./wrench";
 /**
  * All available mascots. Add/remove entries here to change the pool
  * the random picker draws from. Each entry must render a single `<svg>`.
+ *
+ * MooseMascot is intentionally NOT in the random pool — it's the
+ * Widgetly brand mascot and is used directly in the homepage hero
+ * (and the new "Submit Idea" CTA panel) where its identity matters.
+ * The tool-themed mascots stay in the rotation for landing cards
+ * and category teasers.
  */
 const MASCOTS = [SearchMascot, CalculatorMascot, ImageMascot, PdfMascot, WrenchMascot] as const;
 
@@ -96,3 +102,4 @@ export { CalculatorMascot } from "./calculator";
 export { ImageMascot } from "./image";
 export { PdfMascot } from "./pdf";
 export { WrenchMascot } from "./wrench";
+export { MooseMascot } from "./moose";

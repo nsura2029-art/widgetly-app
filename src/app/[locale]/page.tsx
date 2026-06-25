@@ -1,6 +1,8 @@
 import { setRequestLocale } from "next-intl/server";
 import { softwareApplicationJsonLd } from "@/lib/seo";
-import { Hero } from "@/components/landing/hero";
+import { MooseHero } from "@/components/landing/moose-hero";
+import { CurrentMissions } from "@/components/landing/current-missions";
+import { MiniLeaderboardTeaser } from "@/components/landing/mini-leaderboard";
 import { Features } from "@/components/landing/features";
 import { Categories } from "@/components/landing/categories";
 import { SocialProof } from "@/components/landing/social-proof";
@@ -37,8 +39,25 @@ import { SeoCopy } from "@/components/landing/seo-copy";
 
 /**
  * Single-page landing — sections composed in a deliberate funnel:
- * Hero → Features → Categories → SocialProof → SEO copy →
- * CategoriesShowcase.
+ * MooseHero → Current Missions → Mini Leaderboard Teaser → Features →
+ * Categories → SocialProof → SEO copy → CategoriesShowcase.
+ *
+ * The previous typewriter-audience Hero was retired in favour of
+ * `<MooseHero />`: a big banner with the brand mascot (Moose), the
+ * same headline ("Every tool you need in one place") and the rewards
+ * funnel CTA pointing at `/suggest/new`. The audience-rotation word
+ * effect is gone — research showed visitors bounced on the typewriter
+ * without understanding it was a CTA. The new banner states the CTA
+ * in plain prose ("Submit your idea → Earn Wits + Real Rewards").
+ *
+ * `<CurrentMissions />` (next section) makes the reward tiers visible
+ * before the visitor commits to the form: "First Submission → +50
+ * Wits + Newbie Badge" and "Get 10 upvotes → Viral Sprout Badge".
+ *
+ * `<MiniLeaderboardTeaser />` shows the top 2 ideas by upvote count
+ * to deliver social proof that the suggestion loop actually pays out.
+ * The full leaderboard lives at `/suggest` (no separate top-suggesters
+ * page on the home funnel).
  *
  * The Waitlist section was removed in 2026-06 per product decision:
  * the public launch is close enough that the friction of email signup
@@ -79,9 +98,11 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdApp) }}
       />
-      {/* No mascotSeed prop — RandomMascot falls back to useId() so
-          every visitor sees the build-time pick. Stable for hydration. */}
-      <Hero />
+      {/* New rewards-driven funnel: brand-mascot banner → missions strip
+          → top ideas teaser, before the existing product/SEO sections. */}
+      <MooseHero />
+      <CurrentMissions />
+      <MiniLeaderboardTeaser />
       <Features />
       <Categories />
       <SocialProof />
