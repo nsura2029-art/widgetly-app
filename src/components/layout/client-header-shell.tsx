@@ -462,8 +462,6 @@ export function ClientHeaderShell({ categories }: ClientHeaderShellProps) {
           id={MEGA_PANEL_ID}
           categories={categories}
           labels={{
-            title: t("header.tools.megaTitle"),
-            subtitle: (count) => t("header.tools.megaSubtitle", { count }),
             browseCategory: (name) => t("header.tools.browseCategory", { name }),
             tileCount: (count) => t("header.tools.tileCount", { count }),
           }}
@@ -505,6 +503,18 @@ export function ClientHeaderShell({ categories }: ClientHeaderShellProps) {
 /* CategoryPill — single chip in the inline category strip.            */
 /* ------------------------------------------------------------------ */
 
+/* Accent → tailwind class for the highlighted icon chip inside the
+ * pill strip. Same color philosophy as the mega panel: saturated,
+ * color-coded by accent. Mirrors the iLovePDF / Smallpdf mega-menu
+ * pattern where every category reads as a color block first and a
+ * word second.
+ */
+const PILL_ACCENT_TILE: Record<HeaderCategory["accent"], string> = {
+  primary: "bg-primary/20 text-primary",
+  secondary: "bg-secondary/20 text-secondary-foreground",
+  accent: "bg-accent/25 text-accent-foreground",
+};
+
 function CategoryPill({ category }: { category: HeaderCategory }) {
   const Icon = getIcon(category.iconName);
   return (
@@ -512,13 +522,26 @@ function CategoryPill({ category }: { category: HeaderCategory }) {
       href={category.href}
       className={cn(
         "border-border/60 bg-background text-foreground/85 hover:border-primary/40 hover:bg-primary/5 hover:text-foreground",
-        "inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full border px-3 text-xs font-medium transition-colors"
+        "inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full border pr-3 pl-1.5 text-xs font-medium transition-colors"
       )}
       aria-label={category.name}
     >
-      {/* Category icon names are data from D1/static catalog; resolve them at render. */}
-      {/* eslint-disable-next-line react-hooks/static-components */}
-      <Icon className="h-3.5 w-3.5" aria-hidden="true" />
+      {/* Highlighted icon chip — small, saturated, matches the mega
+          panel tile color so the two views feel like the same UI
+          surface. Sits flush against the pill edge (`-ml-1` is
+          avoided; we use `pl-1.5` on the pill + flush `h-7 w-7`
+          tile instead). */}
+      <span
+        aria-hidden="true"
+        className={cn(
+          "flex h-7 w-7 shrink-0 items-center justify-center rounded-full",
+          PILL_ACCENT_TILE[category.accent] ?? PILL_ACCENT_TILE.primary
+        )}
+      >
+        {/* Category icon names are data from D1/static catalog; resolve them at render. */}
+        {/* eslint-disable-next-line react-hooks/static-components */}
+        <Icon className="h-3.5 w-3.5" strokeWidth={2.25} aria-hidden="true" />
+      </span>
       <span className="whitespace-nowrap">{category.name}</span>
       <span
         className="text-muted-foreground bg-muted/40 inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-semibold tabular-nums"

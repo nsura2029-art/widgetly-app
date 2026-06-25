@@ -421,3 +421,37 @@ export const FEATURED_WITH_SUBGROUPS: readonly string[] = Object.keys(TOOLS_SUBG
     // accidentally promote it to the banner.
     TOOLS_CATEGORIES.some((c) => c.slug === slug)
 );
+
+/* ------------------------------------------------------------------ */
+/* Per-tool icon lookup                                                */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Look up the icon for a single tool in a category. Scans the
+ * category's `TOOLS_SUBGROUPS` for a sub-tool whose `name` matches
+ * (case-insensitive, whitespace-trimmed). Returns the Lucide icon
+ * name (e.g. "Combine") or `undefined` if no subgroup has an entry
+ * for that tool.
+ *
+ * Used by `/en/tools/[category]` to render a relevant icon next to
+ * each example in the right rail — instead of repeating the
+ * category icon for every row (which is what the page did before
+ * this change). The iLovePDF / Smallpdf model is "every tool has a
+ * visual identity", so each row should carry its own glyph.
+ *
+ * The lookup is intentionally forgiving: tools shipped before
+ * subgroups were defined still render with the category icon as a
+ * fallback, so adding new examples to `TOOLS_CATEGORIES` doesn't
+ * silently lose icons. See `getToolIconName` callers.
+ */
+export function getToolIconName(categorySlug: string, toolName: string): string | undefined {
+  const groups = TOOLS_SUBGROUPS[categorySlug];
+  if (!groups) return undefined;
+  const needle = toolName.trim().toLowerCase();
+  for (const group of groups) {
+    for (const item of group.items) {
+      if (item.name.trim().toLowerCase() === needle) return item.icon;
+    }
+  }
+  return undefined;
+}

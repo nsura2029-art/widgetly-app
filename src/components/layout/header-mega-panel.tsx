@@ -12,8 +12,9 @@
  * - One row of category tiles in a responsive grid (1 / 2 / 3 / 4
  *   columns by breakpoint). Each tile is a `<Link>` to the category
  *   browse page.
- * - The header (title + subtitle) lives inside the panel itself so
- *   it's always in the same place regardless of category count.
+ * - No internal title or count subtitle — the trigger button above
+ *   already labels the panel ("Tools"), and the tile grid is the
+ *   visual hierarchy. Keeps the drop-down tight on first paint.
  *
  * ## Content per tile
  *
@@ -43,10 +44,6 @@ import { type HeaderCategory } from "@/lib/d1/header-tools";
 import { cn } from "@/lib/utils";
 
 export type HeaderMegaPanelLabels = {
-  /** e.g. "Browse by category" */
-  title: string;
-  /** e.g. "{count} categories" — count is filled in by the caller. */
-  subtitle: (count: number) => string;
   /** e.g. "Browse {name} →" — name is filled in by the caller. */
   browseCategory: (name: string) => string;
   /** e.g. "{count} {count, plural, one {tool} other {tools}}" */
@@ -65,12 +62,30 @@ export type HeaderMegaPanelProps = {
   onLinkClick?: () => void;
 };
 
-/* Accent → tailwind class mapping. Mirrors the design tokens used
- * elsewhere in the app so the tile icons match the brand palette. */
+/* Accent → tailwind class mapping for the highlighted icon tile.
+ *
+ * Boosted from the prior `bg-primary/10` / `text-primary` pair to a
+ * more saturated, larger color block — this is the iLovePDF /
+ * Smallpdf pattern where the colored icon tile IS the visual
+ * hierarchy (the category name and tool count are secondary).
+ *
+ * Each accent key gets a saturated background, the matching
+ * foreground, a soft inset highlight (shadow-inner) for the glossy
+ * tile look, and a hover state that deepens both the background
+ * and the ring around the tile.
+ */
 const ACCENT_TILE: Record<HeaderCategory["accent"], string> = {
-  primary: "bg-primary/10 text-primary",
-  secondary: "bg-secondary/15 text-secondary-foreground",
-  accent: "bg-accent/20 text-accent-foreground",
+  primary: "bg-primary/20 text-primary ring-primary/25",
+  secondary: "bg-secondary/20 text-secondary-foreground ring-secondary/30",
+  accent: "bg-accent/25 text-accent-foreground ring-accent/30",
+};
+
+/* Hover-deepener — applied via group-hover on the tile to give the
+ * icon tile a richer color when the cursor is over the card. */
+const ACCENT_TILE_HOVER: Record<HeaderCategory["accent"], string> = {
+  primary: "group-hover:bg-primary/30 group-hover:ring-primary/40",
+  secondary: "group-hover:bg-secondary/30 group-hover:ring-secondary/40",
+  accent: "group-hover:bg-accent/35 group-hover:ring-accent/40",
 };
 
 export function HeaderMegaPanel({
@@ -85,7 +100,7 @@ export function HeaderMegaPanel({
     <div
       id={id}
       role="region"
-      aria-label={labels.title}
+      aria-label="Tools categories"
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
       className={cn(
@@ -125,26 +140,15 @@ export function HeaderMegaPanel({
       )}
     >
       <div className="container py-6">
-        {/* Panel header — title + count */}
-        <div className="mb-4 flex items-baseline justify-between">
-          <h2 className="text-base font-semibold tracking-tight">{labels.title}</h2>
-          <p className="text-muted-foreground text-xs">
-            {labels.subtitle(categories.length)}
-          </p>
-        </div>
-
-        {/* Category tile grid */}
+        {/* Category tile grid — no title/subtitle; the trigger button
+            already labels the panel, and the tile names are the
+            primary signal. Keeps the drop-down feeling tight. */}
         <ul
           role="list"
           className="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
         >
           {categories.map((cat) => (
-            <CategoryTile
-              key={cat.slug}
-              category={cat}
-              labels={labels}
-              onLinkClick={onLinkClick}
-            />
+            <CategoryTile key={cat.slug} category={cat} labels={labels} onLinkClick={onLinkClick} />
           ))}
         </ul>
       </div>
@@ -176,22 +180,26 @@ function CategoryTile({
           "group flex h-full items-start gap-3 rounded-xl border p-3 transition-colors"
         )}
       >
-        {/* Tinted icon square */}
+        {/* Tinted icon square — larger, saturated, glossy */}
         <span
           aria-hidden="true"
           className={cn(
-            "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg",
-            ACCENT_TILE[category.accent] ?? ACCENT_TILE.primary
+            // Slightly bigger tile so the highlighted color is the
+            // first thing the eye lands on. ring-1 + ring-inset gives
+            // the iLovePDF "stamped" feel without a hard border.
+            "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl",
+            "shadow-inner ring-1 transition-colors ring-inset",
+            ACCENT_TILE[category.accent] ?? ACCENT_TILE.primary,
+            ACCENT_TILE_HOVER[category.accent] ?? ACCENT_TILE_HOVER.primary
           )}
         >
-          <Icon className="h-5 w-5" />
+          {/* eslint-disable-next-line react-hooks/static-components */}
+          <Icon className="h-5 w-5" strokeWidth={2.25} />
         </span>
 
         {/* Name + count + browse CTA */}
         <span className="flex min-w-0 flex-1 flex-col">
-          <span className="text-foreground truncate text-sm font-semibold">
-            {category.name}
-          </span>
+          <span className="text-foreground truncate text-sm font-semibold">{category.name}</span>
           <span className="text-muted-foreground text-xs">
             {labels.tileCount(category.liveCount)}
           </span>

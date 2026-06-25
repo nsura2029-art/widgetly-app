@@ -27,6 +27,8 @@ import {
 import { SITE_CONFIG } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { RecordCategoryVisit } from "@/lib/history";
+import { getToolIconName } from "@/lib/tools-subgroups";
+import { getIcon } from "@/lib/icons";
 
 const ICONS: Record<string, LucideIcon> = {
   FileText,
@@ -81,8 +83,6 @@ export default async function ToolsCategoryPage({ params }: { params: Promise<Pa
   const { category } = await params;
   const cat = getToolsCategory(category);
   if (!cat) notFound();
-
-  const Icon = ICONS[cat.icon] ?? FileText;
 
   // Tools shown in the right-rail menu grid. Two sources, in order:
   //   1. D1 admin_tools where status='live' for this category — the
@@ -232,31 +232,42 @@ export default async function ToolsCategoryPage({ params }: { params: Promise<Pa
               : "Every tool currently live in this category. New ones ship every month."}
           </p>
           <ul className="mt-6 grid gap-2 sm:grid-cols-2">
-            {liveTools.map((t) => (
-              <li key={t.slug} id={t.slug}>
-                <Link
-                  href={`/tools/${cat.slug}/${t.slug}`}
-                  prefetch={false}
-                  className="border-border/60 bg-muted/5 hover:border-primary/40 hover:bg-muted/10 group flex items-center gap-2.5 rounded-lg border px-3 py-2.5 text-sm transition-colors"
-                >
-                  <span
-                    className={cn(
-                      "flex h-7 w-7 shrink-0 items-center justify-center rounded-md",
-                      ACCENT_CLASSES[cat.accent]
-                    )}
+            {liveTools.map((t) => {
+              // Per-tool icon: look the name up in TOOLS_SUBGROUPS
+              // (the same catalog that powers the mega panel). If
+              // we don't have a glyph for this exact name, fall back
+              // to the category icon so we never render an empty
+              // tile. This is the iLovePDF / Smallpdf pattern —
+              // every tool carries its own visual identity instead
+              // of sharing the category glyph.
+              const toolIconName = getToolIconName(cat.slug, t.name) ?? cat.icon;
+              const ToolIcon = getIcon(toolIconName);
+              return (
+                <li key={t.slug} id={t.slug}>
+                  <Link
+                    href={`/tools/${cat.slug}/${t.slug}`}
+                    prefetch={false}
+                    className="border-border/60 bg-muted/5 hover:border-primary/40 hover:bg-muted/10 group flex items-center gap-2.5 rounded-lg border px-3 py-2.5 text-sm transition-colors"
                   >
-                    <Icon className="h-3.5 w-3.5" aria-hidden="true" />
-                  </span>
-                  <span className="text-foreground flex-1 font-medium">{t.name}</span>
-                  <span
-                    className="text-muted-foreground group-hover:text-primary text-xs font-medium transition-colors"
-                    aria-hidden="true"
-                  >
-                    →
-                  </span>
-                </Link>
-              </li>
-            ))}
+                    <span
+                      className={cn(
+                        "flex h-7 w-7 shrink-0 items-center justify-center rounded-md",
+                        ACCENT_CLASSES[cat.accent]
+                      )}
+                    >
+                      <ToolIcon className="h-3.5 w-3.5" strokeWidth={2.25} aria-hidden="true" />
+                    </span>
+                    <span className="text-foreground flex-1 font-medium">{t.name}</span>
+                    <span
+                      className="text-muted-foreground group-hover:text-primary text-xs font-medium transition-colors"
+                      aria-hidden="true"
+                    >
+                      →
+                    </span>
+                  </Link>
+                </li>
+              );
+            })}
           </ul>
         </div>
       </div>
