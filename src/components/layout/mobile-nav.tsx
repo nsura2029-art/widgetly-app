@@ -112,14 +112,45 @@ export function MobileNav({
       aria-modal="true"
       aria-hidden={!open}
       className={cn(
-        "border-border/60 overflow-hidden border-t bg-white/95 backdrop-blur-xl transition-all md:hidden",
-        open ? "max-h-[85vh] opacity-100" : "max-h-0 opacity-0"
+        // Sheet chrome. `overflow-hidden` keeps the slide animation
+        // clean (no content leaks past the rounded corners during
+        // collapse). The actual scroll lives on the inner container.
+        // `bg-background/95` (instead of hardcoded `bg-white/95`)
+        // makes the sheet dark-mode aware.
+        // `max-h-[85dvh]` prefers the *dynamic* viewport height —
+        // when the mobile URL bar collapses, the sheet grows with it
+        // instead of staying pinned to the smallest viewport (which
+        // is what the old `85vh` did, causing a visual jump on iOS
+        // Safari / Android Chrome). Browsers without `dvh` support
+        // fall back to `vh` via the property that Tailwind emits
+        // alongside the arbitrary value.
+        "border-border/60 bg-background/95 overflow-hidden border-t backdrop-blur-xl transition-all md:hidden",
+        open ? "max-h-[85dvh] opacity-100" : "pointer-events-none max-h-0 opacity-0"
       )}
     >
-      <div className="container flex max-h-[85vh] flex-col gap-1 overflow-y-auto py-4">
-        {/* Close button (sticky at top so it's always reachable
-            when the user has scrolled deep into the sheet). */}
-        <div className="mb-1 flex items-center justify-between">
+      {/*
+        Inner scroll region.
+        - `min-h-0` is the canonical flexbox-overflow fix: without
+          it, a flex column child can grow past its `max-h` cap
+          (Flexbox gives children an implicit `min-height: auto`,
+          which means "don't shrink me"). Setting `min-h-0` lets the
+          85dvh cap actually constrain the scroll height.
+        - `scrollbar-none` suppresses the native vertical scrollbar
+          chrome on all three engines while keeping scroll behavior.
+        - `overflow-x-hidden` is the explicit horizontal lock —
+          prevents any oversized child (long category name + count
+          + chevron) from leaking a horizontal scrollbar.
+        - `overscroll-contain` keeps scroll chaining from bouncing
+          the page behind the sheet.
+        - Bottom padding uses `env(safe-area-inset-bottom)` so the
+          iPhone home indicator doesn't cover the last menu item.
+       */}
+      <div className="container flex max-h-[85dvh] min-h-0 scrollbar-none flex-col gap-1 overflow-x-hidden overflow-y-auto overscroll-contain px-4 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-6">
+        {/* Close button — sticky at top so it stays reachable when
+            the user has scrolled deep into a long category list.
+            The sticky background matches the sheet bg so content
+            scrolls behind it cleanly. */}
+        <div className="bg-background/95 supports-[backdrop-filter]:bg-background/80 sticky top-0 z-10 -mx-4 mb-1 flex items-center justify-between px-4 py-1 backdrop-blur-xl sm:-mx-6 sm:px-6">
           <span className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
             Menu
           </span>
@@ -127,7 +158,7 @@ export function MobileNav({
             type="button"
             onClick={onClose}
             aria-label={labels.closeMenu}
-            className="hover:bg-muted/5 inline-flex h-9 w-9 items-center justify-center rounded-md transition-colors"
+            className="hover:bg-muted/5 active:bg-muted/10 -mr-2 inline-flex h-9 w-9 items-center justify-center rounded-md transition-colors"
           >
             <X className="h-4 w-4" aria-hidden="true" />
           </button>
@@ -258,26 +289,39 @@ function CategoryAccordionItem({
         aria-expanded={expanded}
         aria-controls={panelId}
         onClick={onToggle}
-        className="hover:bg-muted/5 flex w-full items-center justify-between rounded-lg px-3 py-3 text-sm font-medium transition-colors"
+        className="hover:bg-muted/5 active:bg-muted/10 flex w-full min-w-0 items-center justify-between gap-2 rounded-lg px-3 py-3 text-sm font-medium transition-colors"
       >
-        <span className="flex items-center gap-2.5">
+        {/*
+          Left cluster (icon + name + count):
+          - `min-w-0` is the canonical flexbox-overflow fix for the
+            child of a `flex` parent: without it, the row can grow
+            past the container's width when the category name is
+            long, causing a horizontal scrollbar on the sheet.
+          - `flex-1` + `min-w-0` lets the name truncate (via
+            `truncate`) instead of pushing siblings (the live count
+            and the chevron) off-screen.
+          - `shrink-0` on the icon and live-count badge keeps them
+            pinned at their natural widths — only the name gives
+            way under pressure.
+        */}
+        <span className="flex min-w-0 flex-1 items-center gap-2.5">
           <span
             className={cn(
-              "inline-flex h-7 w-7 items-center justify-center rounded-md",
+              "inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md",
               ACCENT_TILE[category.accent] ?? ACCENT_TILE.primary
             )}
             aria-hidden="true"
           >
             <CategoryIcon name={category.iconName} className="h-3.5 w-3.5" />
           </span>
-          <span className="text-foreground">{category.name}</span>
-          <span className="text-muted-foreground text-xs">
+          <span className="text-foreground truncate">{category.name}</span>
+          <span className="text-muted-foreground shrink-0 text-xs">
             {category.liveCount} {category.liveCount === 1 ? "tool" : "tools"}
           </span>
         </span>
         <ChevronDown
           className={cn(
-            "text-muted-foreground h-4 w-4 transition-transform",
+            "text-muted-foreground h-4 w-4 shrink-0 transition-transform",
             expanded && "rotate-180"
           )}
           aria-hidden="true"

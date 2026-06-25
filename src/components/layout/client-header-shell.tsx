@@ -446,7 +446,7 @@ export function ClientHeaderShell({ categories }: ClientHeaderShellProps) {
         <div className="container">
           <nav
             aria-label={t("header.aria.toolsNav")}
-            className="flex h-12 items-center gap-1 overflow-x-auto"
+            className="flex h-12 scrollbar-none items-center gap-1 overflow-x-auto"
           >
             {categories.map((cat) => (
               <CategoryPill key={cat.slug} category={cat} />
