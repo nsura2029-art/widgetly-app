@@ -45,8 +45,11 @@
  *   on physics ticks).
  * - DOM updates are inline `style.transform` / `style.opacity`
  *   writes on refs (the browser composites the rest).
- * - `MAX_PARTICLES = 80` caps the live pool; oldest particles
- *   are dropped first if we ever exceed it.
+ * - `MAX_PARTICLES = 180` caps the live pool; oldest particles
+ *   are dropped first if we ever exceed it. Raised from 80 so
+ *   arcs can complete their full ~150 px trajectory before
+ *   being evicted — gives the fountain its discrete-arcs look
+ *   rather than a tight particle cloud.
  * - `prefers-reduced-motion` short-circuits the entire system:
  *   the button renders as a plain CTA with no particles.
  *
@@ -133,12 +136,12 @@ const SPARKLE_PROBABILITY = 0.12;
 /* Physics tuning                                                      */
 /* ------------------------------------------------------------------ */
 
-const MAX_PARTICLES = 80;
+const MAX_PARTICLES = 180;
 const SPAWN_PER_FRAME_MIN = 1;
-const SPAWN_PER_FRAME_MAX = 3;
-const SPAWN_PROBABILITY = 0.8;
-const INITIAL_BURST_COUNT = 12;
-const INITIAL_BURST_STAGGER_MS = 20;
+const SPAWN_PER_FRAME_MAX = 2;
+const SPAWN_PROBABILITY = 0.5;
+const INITIAL_BURST_COUNT = 5;
+const INITIAL_BURST_STAGGER_MS = 12;
 
 /** Speed of newly spawned particles (px/s). The reference
  *  effect uses 60-180 px/s — gentle drift, not a hard burst. */
