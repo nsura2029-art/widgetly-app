@@ -82,6 +82,19 @@ const MD_BREAKPOINT = 768;
 const TOOLS_SLUG = "tools";
 const MEGA_PANEL_ID = "header-tools-mega-panel";
 
+// -------------------------------------------------------------------------
+// Dev-only "Static menu" dropdown in the primary nav.
+//
+// A stripped-down alternative to the Tools mega panel: shows the first
+// 5 categories in a small popover, hard-codes its label, no i18n, no
+// framer-motion, no hover-tolerance. Useful for QA / debugging.
+//
+// Set to `true` to bring it back next to the Tools mega trigger.
+// Default `false` keeps the production header minimal — only the
+// branded Tools ▾ mega menu remains in the primary nav.
+// -------------------------------------------------------------------------
+const SHOW_STATIC_MENU = false;
+
 export function ClientHeaderShell({ categories }: ClientHeaderShellProps) {
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const [staticMenuOpen, setStaticMenuOpen] = React.useState(false);
@@ -330,47 +343,49 @@ export function ClientHeaderShell({ categories }: ClientHeaderShellProps) {
               aria-hidden="true"
             />
           </button>
-          <div className="relative">
-            <button
-              type="button"
-              aria-haspopup="menu"
-              aria-expanded={staticMenuOpen}
-              aria-controls="header-static-tools-menu"
-              onClick={() => setStaticMenuOpen((open) => !open)}
-              className={cn(
-                "hover:text-foreground hover:bg-muted/5 text-muted inline-flex items-center gap-1 rounded-lg px-3.5 py-2 text-sm font-medium transition-colors",
-                staticMenuOpen && "bg-muted/5 text-foreground"
-              )}
-            >
-              <span>Static menu</span>
-              <ChevronDown
+          {SHOW_STATIC_MENU ? (
+            <div className="relative">
+              <button
+                type="button"
+                aria-haspopup="menu"
+                aria-expanded={staticMenuOpen}
+                aria-controls="header-static-tools-menu"
+                onClick={() => setStaticMenuOpen((open) => !open)}
                 className={cn(
-                  "h-3.5 w-3.5 opacity-60 transition-transform",
-                  staticMenuOpen && "rotate-180"
+                  "hover:text-foreground hover:bg-muted/5 text-muted inline-flex items-center gap-1 rounded-lg px-3.5 py-2 text-sm font-medium transition-colors",
+                  staticMenuOpen && "bg-muted/5 text-foreground"
                 )}
-                aria-hidden="true"
-              />
-            </button>
-            {staticMenuOpen ? (
-              <div
-                id="header-static-tools-menu"
-                role="menu"
-                className="border-border/70 shadow-soft absolute top-full left-0 z-50 mt-2 w-56 rounded-lg border bg-white p-2"
               >
-                {categories.slice(0, 5).map((category) => (
-                  <Link
-                    key={category.slug}
-                    href={`/tools/${category.slug}`}
-                    role="menuitem"
-                    onClick={() => setStaticMenuOpen(false)}
-                    className="hover:bg-muted/5 text-foreground block rounded-md px-3 py-2 text-sm transition-colors"
-                  >
-                    {category.name}
-                  </Link>
-                ))}
-              </div>
-            ) : null}
-          </div>
+                <span>Static menu</span>
+                <ChevronDown
+                  className={cn(
+                    "h-3.5 w-3.5 opacity-60 transition-transform",
+                    staticMenuOpen && "rotate-180"
+                  )}
+                  aria-hidden="true"
+                />
+              </button>
+              {staticMenuOpen ? (
+                <div
+                  id="header-static-tools-menu"
+                  role="menu"
+                  className="border-border/70 shadow-soft absolute top-full left-0 z-50 mt-2 w-56 rounded-lg border bg-white p-2"
+                >
+                  {categories.slice(0, 5).map((category) => (
+                    <Link
+                      key={category.slug}
+                      href={`/tools/${category.slug}`}
+                      role="menuitem"
+                      onClick={() => setStaticMenuOpen(false)}
+                      className="hover:bg-muted/5 text-foreground block rounded-md px-3 py-2 text-sm transition-colors"
+                    >
+                      {category.name}
+                    </Link>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+          ) : null}
           {navLinks.map((link) => (
             <Link
               key={link.href}
