@@ -95,6 +95,22 @@ const MEGA_PANEL_ID = "header-tools-mega-panel";
 // -------------------------------------------------------------------------
 const SHOW_STATIC_MENU = false;
 
+// -------------------------------------------------------------------------
+// Row 2 — inline category pill strip (h-12, sits under Row 1).
+//
+// Always-visible horizontal-scrolling chip strip of every category,
+// with the live tool count. Useful for browsing-without-interacting
+// but adds a second header band; the user asked to hide it for a
+// cleaner look. The Tools mega panel still has the same categories
+// in a richer 4-col grid (set `SHOW_PILL_STRIP = true` to bring the
+// pill strip back alongside it).
+//
+// Default `false` removes the second header band entirely. The strip
+// is also `hidden md:block` so it never appeared on mobile anyway —
+// the mobile sheet has its own Tools accordion.
+// -------------------------------------------------------------------------
+const SHOW_PILL_STRIP = false;
+
 export function ClientHeaderShell({ categories }: ClientHeaderShellProps) {
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const [staticMenuOpen, setStaticMenuOpen] = React.useState(false);
@@ -443,32 +459,37 @@ export function ClientHeaderShell({ categories }: ClientHeaderShellProps) {
         Hidden when the mega panel is open (the panel is a richer
         view of the same categories) and on mobile (MobileNav has
         the same list in its Tools accordion).
+
+        Wrapped in SHOW_PILL_STRIP so the user can hide the whole
+        row for a cleaner header without losing the wiring.
       ---------------------------------------------------------------- */}
-      <div
-        onMouseEnter={cancelClose}
-        className={cn(
-          "border-border/60 hidden border-t bg-white/95 backdrop-blur-md md:block",
-          // Hide row 2 + disable pointer events while the mega panel is
-          // open. `invisible` (visibility:hidden) hides the pill strip
-          // visually but pointer-event handling is browser-inconsistent
-          // for invisible elements, so we also add `pointer-events-none`
-          // to guarantee the cursor passes straight through to the
-          // panel below. This removes any chance of a "dead zone"
-          // between the trigger and the panel.
-          isMegaOpen && "pointer-events-none invisible"
-        )}
-      >
-        <div className="container">
-          <nav
-            aria-label={t("header.aria.toolsNav")}
-            className="flex h-12 scrollbar-none items-center gap-1 overflow-x-auto"
-          >
-            {categories.map((cat) => (
-              <CategoryPill key={cat.slug} category={cat} />
-            ))}
-          </nav>
+      {SHOW_PILL_STRIP ? (
+        <div
+          onMouseEnter={cancelClose}
+          className={cn(
+            "border-border/60 hidden border-t bg-white/95 backdrop-blur-md md:block",
+            // Hide row 2 + disable pointer events while the mega panel is
+            // open. `invisible` (visibility:hidden) hides the pill strip
+            // visually but pointer-event handling is browser-inconsistent
+            // for invisible elements, so we also add `pointer-events-none`
+            // to guarantee the cursor passes straight through to the
+            // panel below. This removes any chance of a "dead zone"
+            // between the trigger and the panel.
+            isMegaOpen && "pointer-events-none invisible"
+          )}
+        >
+          <div className="container">
+            <nav
+              aria-label={t("header.aria.toolsNav")}
+              className="flex h-12 scrollbar-none items-center gap-1 overflow-x-auto"
+            >
+              {categories.map((cat) => (
+                <CategoryPill key={cat.slug} category={cat} />
+              ))}
+            </nav>
+          </div>
         </div>
-      </div>
+      ) : null}
 
       {/* Desktop mega panel — 4-col category tile grid (anchored to
           the header, covers row 2 when open) */}
